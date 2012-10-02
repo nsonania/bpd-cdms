@@ -23,12 +23,12 @@ Student = mongoose.model "Student", new mongoose.Schema
 
 mongoose.connection.once "open", ->
 	courses = [{
-		number: "MATH C191"
-		name: "Mathematics 1"
+		number: "ES C241"
+		name: "Electrical Sciences 1"
 	}
 	{
-		number: "MATH C192"
-		name: "Mathematics 2"
+		number: "ENGG C111"
+		name: "Electrical and Electronics Technology"
 	}]
 	for item in courses
 		course = new Course item
