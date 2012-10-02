@@ -1,4 +1,4 @@
-bpd-comp-reg
+bpd-cdms
 ============
 
 BPD — Centralized Data Management System.
