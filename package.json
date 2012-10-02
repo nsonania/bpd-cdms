@@ -1,7 +1,11 @@
 {
-	"title": "BPD - Centralized Data Management System",
+	"name": "BPD-CDMS",
 	"version": "0.0.1",
-	"description": "A computerized registration system for BITS Pilani, Dubai Campus.",
+	"author": [
+		"Gautham Badhrinathan",
+		"Anish Agarwal"
+	],
+	"description": "BPD — Centralized Data Management System",
 	"engines": {
 		"node": "~0.8.1",
 		"npm": "~1.0"
