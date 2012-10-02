@@ -1,4 +1,4 @@
 bpd-comp-reg
 ============
 
-BPD computerized registration system.
+BPD — Centralized Data Management System.
