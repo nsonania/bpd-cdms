@@ -1,1 +1,1 @@
-web: iced db.coffee
+web: iced web.coffee

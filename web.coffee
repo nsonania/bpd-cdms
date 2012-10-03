@@ -1,19 +1,15 @@
 express = require "express"
 http = require "http"
 socket_io = require "socket.io"
-request = require "request"
-url = require "url"
 md5 = require "MD5"
-connect = require "connect"
-cookie = require "cookie"
-mongoose = require "mongoose"
 {spawn} = require "child_process"
+db = require "./db"
 
 cp = spawn "cake", ["build"]
 await cp.on "exit", defer code
 return console.log "Build failed! Run 'cake build' to display build errors." if code isnt 0
 
-expressServer = express.createServer()
+expressServer = express()
 expressServer.configure ->
 
 	expressServer.use express.bodyParser()
@@ -28,6 +24,10 @@ server = http.createServer expressServer
 io = socket_io.listen server
 io.set "log level", 0
 io.sockets.on "connection", (socket) ->
-	# ...
+	socket.on "login", (data, callback) ->
+		db.getStudent data, callback
+	socket.on "courses", (data, callback) ->
+		db.getCourses data, callback
+	socket.on "submit", (data, callback) ->
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
