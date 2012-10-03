@@ -39,19 +39,21 @@ $(document).ready ->
 		$("#addcourse_button").removeAttr "disabled"
 
 	$("#addcourse_button").click ->
-		tcourse = selectedCourse
+		cid = $("#newcourse_select").children(":selected").attr("nbr").split("_").join(" ")
+		tcourse = selectedCourse = course = _(courses).select((x) -> x.number is cid)[0]
 		cid = parseInt($("#section_select").children(":selected").text())
 		slots = selectedCourse.sections[cid - 1].timetableSlots
 		$("#c#{slot.day}#{slot.hour}").append "<div>#{selectedCourse.number}</div>" for slot in slots
 		validateSlots()
-		$("#selcourses").append "<tr><td>#{selectedCourse.number}</td><td>#{selectedCourse.name}</td><td>#{cid}</td><td><button>X</button></td></tr>"
+		$("#selcourses").append "<tr cc='#{selectedCourse.number}'><td>#{selectedCourse.number}</td><td>#{selectedCourse.name}</td><td>#{cid}</td><td><button>X</button></td></tr>"
 		$("#selcourses td button").last().click ->
 			$(_($("#c#{slot.day}#{slot.hour}").children()).select((x) -> $(x).text() is tcourse.number)[0]).remove() for slot in slots
 			$(this).parent().parent().remove()
-			removedCourses = _(removedCourses).select (x) -> x isnt tcourse
-			courses.push tcourse
+			# removedCourses = _(removedCourses).select (x) -> x isnt tcourse
+			# courses.push tcourse
 			$("#newcourse_select").html("")
-			for course, i in courses
+			crcs = _(courses).select((x) -> not $("#selcourses").text().match(x.number)?)
+			for course, i in crcs
 				$("#newcourse_select").append "<option nbr='#{course.number.split(" ").join("_")}'>#{course.number}: #{course.name}</option>"
 			$("#section_select").html("")
 			$("#addcourse_button, #section_select").attr disabled: "disabled"
@@ -64,10 +66,11 @@ $(document).ready ->
 				for section in course.sections
 					$("#section_select").append "<option>#{section.number}</option>"
 				$("#section_select, #addcourse_button").removeAttr "disabled"
-		removedCourses.push tcourse
-		courses = _(courses).difference(removedCourses)
+		# removedCourses.push tcourse
+		# courses = _(courses).difference(removedCourses)
 		$("#newcourse_select").html("")
-		for course, i in courses
+		crcs = _(courses).select((x) -> not $("#selcourses").text().match(x.number)?)
+		for course, i in crcs
 			$("#newcourse_select").append "<option nbr='#{course.number.split(" ").join("_")}'>#{course.number}: #{course.name}</option>"
 		$("#section_select").html("")
 		$("#addcourse_button, #section_select").attr disabled: "disabled"
@@ -86,4 +89,4 @@ $(document).ready ->
 			for j in [1..9]
 				$("#c#{i}#{j}").css backgroundColor: if $("#c#{i}#{j}").children().length > 1 then "red" else "white"
 				if $("#c#{i}#{j}").children().length > 1 then flag = false
-		$("submit_button").attr disabled: if flag then "" else "disabled"
+		if flag then $("#submit_button").removeAttr "disabled" else $("#submit_button").attr disabled: "disabled"

@@ -1,7 +1,8 @@
 mongoose = require "mongoose"
 _ = require "underscore"
 
-mongoose.connect "mongodb://#{process.env.DB_USER}:#{process.env.DB_PASSWORD}@ds037837.mongolab.com:37837/bpd-cdms"
+# mongoose.connect "mongodb://#{process.env.DB_USER}:#{process.env.DB_PASSWORD}@ds037837.mongolab.com:37837/bpd-cdms"		#MongoLab (Cloud)
+mongoose.connect "mongodb://localhost:27017/bpd-cdms"																		#Local
 
 Course = mongoose.model "Course", new mongoose.Schema
 	number: String
