@@ -8,6 +8,9 @@ lib-cov
 *.gz
 *.sublime-*
 
+lib/page.css
+lib/page.js
+
 pids
 logs
 results

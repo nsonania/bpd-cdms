@@ -3,7 +3,10 @@
 <html lang="en">
 	<head>
 		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>BPDC - Courses Registration</title>
+		<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+		<link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<link rel="stylesheet" href="page.css" type="text/css" charset="utf-8">
 		<script src="jquery-1.7.2.min.js" type="text/javascript" charset="utf-8"></script>
 		<script src="underscore-min.js" type="text/javascript" charset="utf-8"></script>
@@ -12,6 +15,44 @@
 		<script src="page.js" type="text/javascript" charset="utf-8"></script>
 	</head>
 	<body>
-
+		<div class="navbar navbar-inverse navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<a class="brand" href="#">BPDC - Registration System</a>
+				</div>
+			</div>
+		</div>
+		<div class="container">
+			<div class="hero-unit">
+				<h1>2nd Semester, 2012 - 2013</h1>
+				<p>This wizard will guide you to register for your courses this semester step-by step. Remember that all your changes are saved when you logout and you can continue from where you left of when you login again.</p>
+			</div>
+			<div class="row">
+				<div class="span6 offset3">
+					<div class="well">
+						<form class="form-horizontal">
+							<legend>Login</legend>
+							<div class="control-group">
+								<label class="control-label" for="input-studentid">Student Id</label>
+								<div class="controls">
+									<input class="span3" type="text" id="input-studentid" placeholder="Student Id">
+								</div>
+							</div>
+							<div class="control-group">
+								<label class="control-label" for="input-password">Password</label>
+								<div class="controls">
+									<input class="span3" type="text" id="input-password" placeholder="Password">
+								</div>
+							</div>
+							<div class="control-group">
+								<div class="controls">
+									<button type="submit" class="btn btn-primary">Login</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>
