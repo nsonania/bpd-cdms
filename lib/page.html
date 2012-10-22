@@ -18,17 +18,17 @@
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
-					<a class="brand" href="#">BPDC - Registration System</a>
+					<div class="brand">BPDC - Registration System</div>
 				</div>
 			</div>
 		</div>
-		<div class="container">
-			<div class="hero-unit">
+		<div id="login-container" class="container hide">
+			<div id="semester-hero" class="hero-unit">
 				<h1>2nd Semester, 2012 - 2013</h1>
-				<p>This wizard will guide you to register for your courses this semester step-by step. Remember that all your changes are saved when you logout and you can continue from where you left of when you login again.</p>
+				<p>This process will guide you to register for your courses for this semester step-by step. Remember that all your changes are saved when you logout and you can continue from where you left off when you login again.</p>
 			</div>
 			<div class="row">
-				<div class="span6 offset3">
+				<div id="loginbox" class="span6 offset3">
 					<div class="well">
 						<form class="form-horizontal">
 							<legend>Login</legend>
@@ -41,7 +41,7 @@
 							<div class="control-group">
 								<label class="control-label" for="input-password">Password</label>
 								<div class="controls">
-									<input class="span3" type="text" id="input-password" placeholder="Password">
+									<input class="span3" type="password" id="input-password" placeholder="Password">
 								</div>
 							</div>
 							<div class="control-group">
@@ -51,6 +51,176 @@
 							</div>
 						</form>
 					</div>
+				</div>
+			</div>
+		</div>
+		<div id="main-container" class="container">
+			<div class="breadcrumb">
+				<li><a>Courses</a><span class="divider">&nbsp;&gt;</span></li>
+				<li><span>Timetable</span><span class="divider">&nbsp;&gt;</span></li>
+				<li><span class="muted">Finalize</span></li>
+			</div>
+			<div class="hero-unit">
+				<h1>Build Your Timetable</h1>
+				<p>Choose your sections to fill in your Timetable Schedule. When you select a particular section, the associated time-slots are reserved instantaneously. <em>Green</em> denotes a successful registration, <em>Yellow</em> denotes that only 5 seats are left in that section and <em>Red</em> denotes that the section has reached its capacity.</p>
+			</div>
+			<div class="row">
+				<div id="courses-sections">
+					<p class="lead center">Courses</p>
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th style="width: 15%">Comp. Code</th>
+								<th style="width: 15%">Course No.</th>
+								<th>Course Name</th>
+								<th style="width: 200px">Section / Faculty</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>201</td>
+								<td>BITS C331</td>
+								<td>Computer Project</td>
+								<td class="btn-toolbar">
+									<div class="btn-group">
+										<a class="btn dropdown-toggle" data-toggle="dropdown">Lecture: 2 <span class="caret"></span></a>
+										<ul class="dropdown-menu">
+											<li class="error"><a><strong>1</strong>: Dr. Anand Kumar</a></li>
+											<li class="success"><a><strong>2</strong>: Prof. Dr. R. K. Mittal</a></li>
+										</ul>
+									</div>
+									<div class="btn-group">
+										<a class="btn dropdown-toggle" data-toggle="dropdown">Lab: 5 <span class="caret"></span></a>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<hr>
+			<div class="row">
+				<div id="timetable-grid" class="span10 offset1">
+					<p class="lead center">Timetable</p>
+					<table class="table table-bordered small center-nonfirst">
+						<thead>
+							<tr>
+								<th style="width: 16%"></th>
+								<th style="width: 12%">Sunday</th>
+								<th style="width: 12%">Monday</th>
+								<th style="width: 12%">Tuesday</th>
+								<th style="width: 12%">Wednesday</th>
+								<th style="width: 12%">Thursday</th>
+								<th style="width: 12%">Friday</th>
+								<th style="width: 12%">Saturday</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>7:30 AM - 8:20 AM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>8:25 AM - 9:15 AM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>9:20 AM - 10:10 AM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>10:15 AM - 11:05 AM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>11:10 AM - 12:00 PM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>12:05 PM - 12:55 PM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>1:00 PM - 1:50 PM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>1:55 PM - 2:45 PM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>2:50 PM - 3:40 PM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td colspan="8"></td>
+							</tr>
+							<tr>
+								<td>6:30 PM - 9:30 PM</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
 			</div>
 		</div>
