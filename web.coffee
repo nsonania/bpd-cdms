@@ -24,10 +24,38 @@ server = http.createServer expressServer
 io = socket_io.listen server
 io.set "log level", 0
 io.sockets.on "connection", (socket) ->
+
 	socket.on "login", (data, callback) ->
-		db.getStudent data, callback
-	socket.on "courses", (data, callback) ->
-		db.getCourses data, callback
-	socket.on "submit", (data, callback) ->
+		db.Student.findOne studentId: data.studentId.toUpperCase(), password: data.password, (err, student) ->
+			return callback success: false unless student?
+			socket.set "studentId", student.get("studentId"), (err) ->
+				callback
+					success: true
+					student:
+						studentId: student.get "studentId"
+						name: student.get "name"
+
+	socket.on "initializeSectionsScreen", (callback) ->
+		socket.get "studentId", (err, studentId) ->
+			return callback success: false unless studentId?
+			db.Student.findOne studentId: studentId, (err, student) ->
+				db.Course.find().where("_id").in(x.course for x in student.get("selectedcourses")).lean().exec (err, selectedcourses) ->
+					callback
+						success: true
+						selectedcourses:
+							for course in selectedcourses
+								compcode: course.compcode
+								number: course.number
+								name: course.name
+								isProject: course.isProject
+								hasLectures: course.hasLectures
+								hasLab: course.hasLab
+								lectureSections: if course.hasLectures then number: section.number, instructor: section.instructor for section in course.lectureSections
+								labSections: if course.hasLab then number: section.number, instructor: section.instructor for section in course.labSections
+								selectedLectureSection: course.selectedLectureSection
+								selectedLabSection: course.selectedLabSection
+								supervisor: course.supervisor
+								reserved: course.reserved
+
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"

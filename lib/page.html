@@ -9,6 +9,7 @@
 		<link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 		<link rel="stylesheet" href="page.css" type="text/css" charset="utf-8">
 		<script src="jquery-1.7.2.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="md5.js"></script>
 		<script src="underscore-min.js" type="text/javascript" charset="utf-8"></script>
 		<script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 		<script src="socket.io/socket.io.js"></script>
@@ -19,6 +20,21 @@
 			<div class="navbar-inner">
 				<div class="container">
 					<div class="brand">BPDC - Registration System</div>
+					<ul class="nav pull-right hide">
+						<li><a id="current-student"></a></li>
+						<li class="divider-vertical"></li>
+						<li><a>Logout</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div id="prelogin-container" class="container">
+			<div class="row">
+				<div class="well span4 offset4">
+					<div class="lead center">Please Wait</div>
+					<div class="progress progress-striped active">
+						<div class="bar" style="width: 100%"></div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -30,12 +46,12 @@
 			<div class="row">
 				<div id="loginbox" class="span6 offset3">
 					<div class="well">
-						<form class="form-horizontal">
+						<div class="form-horizontal">
 							<legend>Login</legend>
 							<div class="control-group">
 								<label class="control-label" for="input-studentid">Student Id</label>
 								<div class="controls">
-									<input class="span3" type="text" id="input-studentid" placeholder="Student Id">
+									<input class="span3" type="text" id="input-studentid" placeholder="Student Id" rel="tooltip" title="Example: 2010AAPS486U" data-trigger="focus" data-placement="right">
 								</div>
 							</div>
 							<div class="control-group">
@@ -46,15 +62,15 @@
 							</div>
 							<div class="control-group">
 								<div class="controls">
-									<button type="submit" class="btn btn-primary">Login</button>
+									<button id="submit-login" class="btn btn-primary">Login</button>
 								</div>
 							</div>
-						</form>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div id="main-container" class="container">
+		<div id="main-container" class="container hide">
 			<div class="breadcrumb">
 				<li><a>Courses</a><span class="divider">&nbsp;&gt;</span></li>
 				<li><span>Timetable</span><span class="divider">&nbsp;&gt;</span></li>
@@ -62,7 +78,7 @@
 			</div>
 			<div class="hero-unit">
 				<h1>Build Your Timetable</h1>
-				<p>Choose your sections to fill in your Timetable Schedule. When you select a particular section, the associated time-slots are reserved instantaneously. <em>Green</em> denotes a successful registration, <em>Yellow</em> denotes that only 5 seats are left in that section and <em>Red</em> denotes that the section has reached its capacity.</p>
+				<p>Choose your sections to fill in your Timetable Schedule. Your selections are not reserved unless you click the <em>Reserve</em> buttons next to each of the courses (wherever applicable). <em>Green</em> denotes that more than 5 seats are available, <em>Yellow</em> denotes that only 5 seats are left and <em>Red</em> denotes that the section has reached its capacity.</p>
 			</div>
 			<div class="row">
 				<div id="courses-sections">
@@ -74,27 +90,9 @@
 								<th style="width: 15%">Course No.</th>
 								<th>Course Name</th>
 								<th style="width: 200px">Section / Faculty</th>
+								<th style="width: 1px">Reserve</th>
 							</tr>
 						</thead>
-						<tbody>
-							<tr>
-								<td>201</td>
-								<td>BITS C331</td>
-								<td>Computer Project</td>
-								<td class="btn-toolbar">
-									<div class="btn-group">
-										<a class="btn dropdown-toggle" data-toggle="dropdown">Lecture: 2 <span class="caret"></span></a>
-										<ul class="dropdown-menu">
-											<li class="error"><a><strong>1</strong>: Dr. Anand Kumar</a></li>
-											<li class="success"><a><strong>2</strong>: Prof. Dr. R. K. Mittal</a></li>
-										</ul>
-									</div>
-									<div class="btn-group">
-										<a class="btn dropdown-toggle" data-toggle="dropdown">Lab: 5 <span class="caret"></span></a>
-									</div>
-								</td>
-							</tr>
-						</tbody>
 					</table>
 				</div>
 			</div>
