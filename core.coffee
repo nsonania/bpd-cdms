@@ -40,25 +40,35 @@ exports.canOfferSection = (student_id, sectionInfo) ->
 			sectionInfo.section = sectionInfo.labSection
 		studentsAffected sectionInfo.course_id, (student_ids, course_ids) ->
 			db.Student.find(_id: $in: student_ids).lean().exec (err, leftStudents) ->
-				db.Course.find(_id: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x).select("_id lectureSections labSections").lean().exec (err, course_sections) ->
+				db.Course.find
+					_id: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x
+				.select("_id lectureSections labSections").lean().exec (err, course_sections) ->
 					db.Student.find
 						selectedcourses: $elemMatch:
 							course: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x
 							reserved: true
 					.lean().exec (err, doneStudents) ->
-						doneStudents = _(doneStudents)
-							.groupBy (x) ->
-								x. #by course, then by section
-							.groupBy (x) ->
-								selcourse = _(x.selectedcourses).find (y) -> y.course is course._id and y.reserved
-								if sectionInfo.lectureSection?
-									selcourse.selectedLectureSection
-								else if sectionInfo.labSection?
-									selcourse.selectedLabSection
+						doneStudents = do ->
+							ret = {}
+							await for x in course_sections
+								ret[x] = {}
+								if x.lectureSections?
+									for y in x.lectureSections
+										_(doneStudents).find
+											selectedcourses: $elemMatch:
+												course: db.Types.ObjectId.fromString(x._id)
+												selectedLectureSection: y.number
+										.count defer err, ret[x][y]
+								if x.labSections?
+									for y in x.labSections
+										_(doneStudents).find
+											selectedcourses: $elemMatch:
+												course: db.Types.ObjectId.fromString(x._id)
+												selectedLabSection: y.number
+										.count defer err, ret[x][y]
 
 
-
-
+###
 exports.canOfferSection = (student_id, sectionInfo) ->
 	db.Course.findById(sectionInfo.course).lean().exec (err, course) ->
 		if sectionInfo.lectureSection?
@@ -90,3 +100,4 @@ exports.canOfferSection = (student_id, sectionInfo) ->
 				return false
 
 			recAssignCheck [student: student, section: sectionInfo.section], 0
+###
