@@ -5,68 +5,85 @@ studentsAffected = (course_id, callback) ->
 	student_ids = []
 	course_ids = []
 	recfn = (course_id, callback) ->
-		db.Student.find
-			_id: $nin: _(student_ids).map (x) -> db.Types.ObjectId.fromString x
-			selectedcourses: $elemMatch:
-				course: db.Types.ObjectId.fromString(course_id)
-				isPsc: true
-				reserved: $ne: true
-		.lean().exec (err, newStudents) ->
-			course_ids.push course_id
-			unless newStudents.length is 0
-				student_ids.push newStudents...
-				newCourses = _.chain(newStudents)
-					.map (x) -> _(x.selectedcourses)
-						.select (y) ->
-							y.isPsc and not y.reserved
-						.map (y) ->
-							y.course
-					.flatten().uniq().difference(course_ids).value()
-				innerRec = ->
-					if newCourses.length > 0
-						recfn newCourses.pop(), -> innerRec()
-					else
-						callback()
-				innerRec()
+		await db.Student.find
+				_id: $nin: _(student_ids).map (x) -> db.Types.ObjectId.fromString x
+				selectedcourses: $elemMatch:
+					course: db.Types.ObjectId.fromString(course_id)
+					isPsc: true
+					reserved: $ne: true
+			.lean().exec defer err, newStudents
+		course_ids.push course_id
+		unless newStudents.length is 0
+			student_ids.push newStudents...
+			newCourses = _.chain(newStudents)
+				.map (x) -> _(x.selectedcourses)
+					.select (y) ->
+						y.isPsc and not y.reserved
+					.map (y) ->
+						y.course
+				.flatten().uniq().difference(course_ids).value()
+			innerRec = ->
+				if newCourses.length > 0
+					recfn newCourses.pop(), -> innerRec()
+				else
+					callback()
+			innerRec()
 	recfn course_id, -> callback student_ids, course_ids
 
-exports.canOfferSection = (student_id, sectionInfo) ->
-	db.Course.findById(sectionInfo.course).lean().exec (err, course) ->
-		if sectionInfo.lectureSection?
-			course.sections = course.lectureSections
-			sectionInfo.section = sectionInfo.lectureSection
-		else if sectionInfo.labSection?
-			course.sections = course.labSections
-			sectionInfo.section = sectionInfo.labSection
-		studentsAffected sectionInfo.course_id, (student_ids, course_ids) ->
-			db.Student.find(_id: $in: student_ids).lean().exec (err, leftStudents) ->
-				db.Course.find
-					_id: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x
-				.select("_id lectureSections labSections").lean().exec (err, course_sections) ->
-					db.Student.find
-						selectedcourses: $elemMatch:
-							course: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x
-							reserved: true
-					.lean().exec (err, doneStudents) ->
-						doneStudents = do ->
-							ret = {}
-							await for x in course_sections
-								ret[x] = {}
-								if x.lectureSections?
-									for y in x.lectureSections
-										_(doneStudents).find
-											selectedcourses: $elemMatch:
-												course: db.Types.ObjectId.fromString(x._id)
-												selectedLectureSection: y.number
-										.count defer err, ret[x][y]
-								if x.labSections?
-									for y in x.labSections
-										_(doneStudents).find
-											selectedcourses: $elemMatch:
-												course: db.Types.ObjectId.fromString(x._id)
-												selectedLabSection: y.number
-										.count defer err, ret[x][y]
-
+exports.canOfferSection = (student_id, sectionInfo, callback) ->
+	await db.Course.findById(sectionInfo.course).lean().exec defer err, course
+	if sectionInfo.lectureSection?
+		course.sections = course.lectureSections
+		sectionInfo.section = sectionInfo.lectureSection
+	else if sectionInfo.labSection?
+		course.sections = course.labSections
+		sectionInfo.section = sectionInfo.labSection
+	await studentsAffected sectionInfo.course_id, defer student_ids, course_ids
+	await db.Student.find(_id: $in: student_ids).lean().exec defer err, leftStudents
+	await db.Course.find
+			_id: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x
+		.select("_id lectureSections labSections").lean().exec defer err, course_sections
+	await db.Student.find
+			selectedcourses: $elemMatch:
+				course: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x
+				reserved: true
+		.lean().exec defer err, doneStudents
+	capacitiesDone = {}
+	await for x in course_sections
+		capacitiesDone[x] = {}
+		if x.lectureSections?
+			for y in x.lectureSections
+				_(doneStudents).find
+					selectedcourses: $elemMatch:
+						course: db.Types.ObjectId.fromString(x._id)
+						selectedLectureSection: y.number
+				.count defer err, capacitiesDone[x._id].lectureSections[y.number]
+		if x.labSections?
+			for y in x.labSections
+				_(doneStudents).find
+					selectedcourses: $elemMatch:
+						course: db.Types.ObjectId.fromString(x._id)
+						selectedLabSection: y.number
+				.count defer err, capacitiesDone[x._id].labSections[y.number]
+	leftStudents = _([_(leftStudents).find (x) -> x._id = student_id]).union _(leftStudents).select (x) -> x._id isnt student_id
+	recAssignCheck = (assignments, depth) ->
+		lastAssignment = _(assignments).last()
+		if assignments.length > 0
+			return false unless _(lastAssignment.courses).all((assignment_course) ->
+				if course.lectureSection?
+					return false if _(_(course_sections).find((x) -> x._id is assignment_course.course).lectureSections).any((section) ->
+						section.capacity <
+						capacitiesDone[assignment_course.course].lectureSections[assignment_course.section] +
+						_(assignments).count((x) -> _(x.courses).any (y) -> y.course is assignment_course.course and y.lectureSection is course.lectureSection)))
+				if course.labSection?
+					return false if _(_(course_sections).find((x) -> x._id is assignment_course.course).labSections).any((section) ->
+						section.capacity <
+						capacitiesDone[assignment_course.course].labSections[assignment_course.section] +
+						_(assignments).count((x) -> _(x.courses).any (y) -> y.course is assignment_course.course and y.labSection is course.labSection)))
+				true
+		return true if depth is leftStudents.length
+		thisStudent = leftStudents[depth]
+		for course in 
 
 ###
 exports.canOfferSection = (student_id, sectionInfo) ->
