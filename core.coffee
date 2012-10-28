@@ -66,57 +66,89 @@ exports.canOfferSection = (student_id, sectionInfo, callback) ->
 						selectedLabSection: y.number
 				.count defer err, capacitiesDone[x._id].labSections[y.number]
 	leftStudents = _([_(leftStudents).find (x) -> x._id = student_id]).union _(leftStudents).select (x) -> x._id isnt student_id
-	recAssignCheck = (assignments, depth) ->
-		lastAssignment = _(assignments).last()
+	recAssignCheck = (assignments) ->
 		if assignments.length > 0
-			return false unless _(lastAssignment.courses).all((assignment_course) ->
+			lastAssignment = _(assignments).last()
+			res1 = _(lastAssignment.courses).all (assignment_course) ->
 				if course.lectureSection?
-					return false if _(_(course_sections).find((x) -> x._id is assignment_course.course).lectureSections).any((section) ->
+					res2 = _(_(course_sections).find((x) -> x._id is assignment_course.course).lectureSections).any (section) ->
 						section.capacity <
 						capacitiesDone[assignment_course.course].lectureSections[assignment_course.section] +
-						_(assignments).count((x) -> _(x.courses).any (y) -> y.course is assignment_course.course and y.lectureSection is course.lectureSection)))
+						_(assignments).count (x) -> _(x.courses).any (y) -> y.course is assignment_course.course and y.lectureSection is course.lectureSection
+					return false if res2
 				if course.labSection?
-					return false if _(_(course_sections).find((x) -> x._id is assignment_course.course).labSections).any((section) ->
+					res2 = _(_(course_sections).find((x) -> x._id is assignment_course.course).labSections).any (section) ->
 						section.capacity <
 						capacitiesDone[assignment_course.course].labSections[assignment_course.section] +
-						_(assignments).count((x) -> _(x.courses).any (y) -> y.course is assignment_course.course and y.labSection is course.labSection)))
+						_(assignments).count (x) -> _(x.courses).any (y) -> y.course is assignment_course.course and y.labSection is course.labSection
+					return false if res2
 				true
-		return true if depth is leftStudents.length
-		thisStudent = leftStudents[depth]
-		thisAssignment = student_id: thisStudent._id, courses: []
-		for course in _(thisStudent.selectedcourses).select (x) -> x.reserved isnt true
-			# ...
+			return false unless res1
+		return true if _(leftStudents).all (x) -> x._id in _(assignments).map (y) -> y.student._id
+		thisStudent = _(_(leftStudents).select (x) -> x._id not in _(assignments).map (y) -> y.student._id).first()
+		thisAssignment = student_id: thisStudent._id
+		thisCourses = _(thisStudent.selectedcourses).map (x) -> selection: x, course: _(course_sections).find (y) -> y._id is x.course_sections.course
+		doneCourses = _(thisCourses).select (x) -> x.selection.reserved
+		leftCourses = _(thisCourses).difference doneCourses
+		recAssignSection = (section_assignments, todo) ->
+			if todo is "lab" and _(leftCourses).all((x) -> x._id in _(section_assignments).map (y) -> y.course)
+				return recAssignCheck _(assignments).union [student: thisStudent, course: section_assignments]
+			takenSlots = do ->
+				ret = []
+				for x in doneCourses
+					if (k = _(thisStudent.selectedcourses).find((y) -> y.course is x._id).selectedLectureSection)?
+						ret.push _(x.lectureSections).find((y) -> y.number is k).timeslots...
+					if (k = _(thisStudent.selectedcourses).find((y) -> y.course is x._id).selectedLabSection)?
+						ret.push _(x.labSections).find((y) -> y.number is k).timeslots...
+				for x in section_assignments
+					if x.selectedLectureSection?
+						ret.push _(_(leftCourses).find((y) -> y._id is x.course).lectureSections).select((y) -> y.number is x.selectedLectureSection).timeslots...
+					if x.selectedLabSection?
+						ret.push _(_(leftCourses).find((y) -> y._id is x.course).labSections).select((y) -> y.number is x.selectedLabSection).timeslots...
 
-###
-exports.canOfferSection = (student_id, sectionInfo) ->
-	db.Course.findById(sectionInfo.course).lean().exec (err, course) ->
-		if sectionInfo.lectureSection?
-			course.sections = course.lectureSections
-			sectionInfo.section = sectionInfo.lectureSection
-		else if sectionInfo.labSection?
-			course.sections = course.labSections
-			sectionInfo.section = sectionInfo.labSection
-		db.Student.find(selectedcourses: $elemMatch: course: db.Types.ObjectId.fromString course._id).lean().exec (err, students) ->
-			_(students).each (x) -> x.thisCourse = _(x.selectedcourses).find (y) -> y.course is course._id
-			student = _(students).find (x) -> x._id is student_id
-			leftStudents = _(students).select (x) -> x.thisCourse.isPsc and not x.thisCourse.reserved and x._id isnt student._id
-			doneStudents = _.chain(students)
-				.select (x) ->
-					x.thisCourse.reserved and x._id isnt student._id
-				.groupBy (x) ->
-					selcourse = _(x.selectedcourses).find (y) -> y.course is course._id and y.reserved
-					if sectionInfo.lectureSection?
-						selcourse.selectedLectureSection
-					else if sectionInfo.labSection?
-						selcourse.selectedLabSection
-				.value()
-
-			recAssignCheck = (assignments, depth) ->
-				return false if _(assignments).count((x) -> x.section is _(assignments).last().section) > _(assignments).last().section.capacity
-				return true if depth is leftStudents.length
-				for section in course.sections # +when no clash with already registered courses; 
-					return true if recAssignCheck _(assignments).union([student: leftStudents[depth], section: section]), depth + 1 
-				return false
-
-			recAssignCheck [student: student, section: sectionInfo.section], 0
-###
+			if todo is "lecture"
+				courseToAssign = _(_(leftCourses).select (x) -> x._id not in _(section_assignments).map (y) -> y.course).first()
+				if courseToAssign.hasLectures
+					for x in courseToAssign.lectureSections
+						continue if _(x.timeslots).intersection(takenSlots).length > 0
+						continue unless recAssignSection _(section_assignments).union [course: courseToAssign._id, selectedLectureSection: x.number], "lab"
+						return true
+					return false
+				else
+					return recAssignSection _(section_assignments).union [course: courseToAssign._id], "lab"
+			else if todo is "lab"
+				courseToAssign = _(leftCourses).find (x) -> x._id is _(section_assignments).last().course
+				if courseToAssign.hasLab
+					for x in courseToAssign.labSections
+						continue if _(x.timeslots).intersection(takenSlots).length > 0
+						oldAssignment = (sa = _(section_assignments).union([])).pop()
+						continue unless recAssignSection _(sa).union [
+							course: oldAssignment.course
+							selectedLectureSection: oldAssignment.selectedLectureSection
+							selectedLabSection: x.number
+						], "lecture"
+						return true
+					return false
+				else
+					return recAssignSection section_assignments, "lecture"
+			else if todo is "lecture+"
+				courseToAssign = _(leftCourses).find (x) -> x._id is _(section_assignments).last().course
+				if courseToAssign.hasLectures
+					for x in courseToAssign.lectureSections
+						continue if _(x.timeslots).intersection(takenSlots).length > 0
+						oldAssignment = (sa = _(section_assignments).union([])).pop()
+						continue unless recAssignSection _(sa).union [
+							course: oldAssignment.course
+							selectedLectureSection: x.number
+							selectedLabSection: oldAssignment.selectedLabSection
+						], "lecture"
+						return true
+					return false
+				else
+					return recAssignSection section_assignments, "lecture"
+		recAssignSection (if assignments.length > 0 then [] else [
+			course: sectionInfo.course_id
+			selectedLectureSection: if sectionInfo.lectureSection? sectionInfo.section
+			selectedLabSection: if sectionInfo.labSection? sectionInfo.section
+		]), if sectionInfo.lectureSection? then "lab" else "lecture+"
+	recAssignCheck()
