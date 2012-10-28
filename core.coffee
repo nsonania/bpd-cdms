@@ -1,5 +1,5 @@
 db = require "./db"
-_ = require	"underscore"
+_ = require "underscore"
 
 studentsAffected = (course_id, callback) ->
 	student_ids = []
@@ -39,33 +39,23 @@ exports.canOfferSection = (student_id, sectionInfo, callback) ->
 		course.sections = course.labSections
 		sectionInfo.section = sectionInfo.labSection
 	await studentsAffected sectionInfo.course_id, defer student_ids, course_ids
-	await db.Student.find(_id: $in: student_ids).lean().exec defer err, leftStudents
-	await db.Course.find
-			_id: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x
+	await db.Student.find(_id: $in: _(student_ids).map (x) -> db.Types.ObjectId.fromString x).lean().exec defer err, leftStudents
+	await db.Course.find(_id: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x)
 		.select("_id lectureSections labSections").lean().exec defer err, course_sections
-	await db.Student.find
-			selectedcourses: $elemMatch:
-				course: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x
-				reserved: true
+	await db.Student.find selectedcourses: $elemMatch: reserved: true, course: $in: _(course_ids).map (x) -> db.Types.ObjectId.fromString x
 		.lean().exec defer err, doneStudents
 	capacitiesDone = {}
-	await for x in course_sections
+	for x in course_sections
 		capacitiesDone[x] = {}
 		if x.lectureSections?
 			for y in x.lectureSections
-				_(doneStudents).find
-					selectedcourses: $elemMatch:
-						course: db.Types.ObjectId.fromString(x._id)
-						selectedLectureSection: y.number
-				.count defer err, capacitiesDone[x._id].lectureSections[y.number]
+				capacitiesDone[x._id].lectureSections[y.number] =
+					_(doneStudents).select((z) -> _(z.selectedcourses).any (w) -> w.course is x._id and w.selectedLectureSection is y.number).length
 		if x.labSections?
 			for y in x.labSections
-				_(doneStudents).find
-					selectedcourses: $elemMatch:
-						course: db.Types.ObjectId.fromString(x._id)
-						selectedLabSection: y.number
-				.count defer err, capacitiesDone[x._id].labSections[y.number]
-	leftStudents = _([_(leftStudents).find (x) -> x._id = student_id]).union _(leftStudents).select (x) -> x._id isnt student_id
+				capacitiesDone[x._id].labSections[y.number] =
+					_(doneStudents).select((z) -> _(z.selectedcourses).any (w) -> w.course is x._id and w.selectedLabSection is y.number).length
+	leftStudents = _([_(leftStudents).find (x) -> x._id = student_id]).union _(leftStudents).select (x) -> x._id isnt student_id #handle
 	recAssignCheck = (assignments) ->
 		if assignments.length > 0
 			lastAssignment = _(assignments).last()
@@ -146,9 +136,10 @@ exports.canOfferSection = (student_id, sectionInfo, callback) ->
 					return false
 				else
 					return recAssignSection section_assignments, "lecture"
+		startWith = 
 		recAssignSection (if assignments.length > 0 then [] else [
 			course: sectionInfo.course_id
-			selectedLectureSection: if sectionInfo.lectureSection? sectionInfo.section
-			selectedLabSection: if sectionInfo.labSection? sectionInfo.section
-		]), if sectionInfo.lectureSection? then "lab" else "lecture+"
+			selectedLectureSection: if sectionInfo.lectureSection? then sectionInfo.section
+			selectedLabSection: if sectionInfo.labSection? then sectionInfo.section
+		]), (if sectionInfo.lectureSection? then "lab" else "lecture+")
 	recAssignCheck()
