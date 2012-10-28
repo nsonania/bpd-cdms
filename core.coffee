@@ -83,7 +83,9 @@ exports.canOfferSection = (student_id, sectionInfo, callback) ->
 				true
 		return true if depth is leftStudents.length
 		thisStudent = leftStudents[depth]
-		for course in 
+		thisAssignment = student_id: thisStudent._id, courses: []
+		for course in _(thisStudent.selectedcourses).select (x) -> x.reserved isnt true
+			# ...
 
 ###
 exports.canOfferSection = (student_id, sectionInfo) ->
