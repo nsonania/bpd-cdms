@@ -124,7 +124,6 @@ $(document).ready ->
 										"#{if course.hasLectures then hasLectures() else ""}\n#{if course.hasLab then hasLab() else ""}"
 								}
 							</td>
-							<td>#{if course.isProject then "" else '<button class="btn btn-primary"><i class="icon-ok icon-white"></i></button>'}</td>
 						</tr>
 						"""
 					$(elem).appendTo("#courses-sections table tbody")

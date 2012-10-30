@@ -10,3 +10,4 @@ mongoose.connect "mongodb://localhost:27017/bpd-cdms"																		#Local
 exports.Course = mongoose.model "Course", new Schema {}, strict: false
 exports.Student = mongoose.model "Student", new Schema {}, strict: false
 exports.Types = mongoose.Types
+exports.objectIdFromString = mongoose.Types.ObjectId.fromString

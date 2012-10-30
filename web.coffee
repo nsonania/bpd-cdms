@@ -4,6 +4,7 @@ socket_io = require "socket.io"
 md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
+core = "./core"
 
 cp = spawn "cake", ["build"]
 await cp.on "exit", defer code
@@ -39,7 +40,7 @@ io.sockets.on "connection", (socket) ->
 		socket.get "studentId", (err, studentId) ->
 			return callback success: false unless studentId?
 			db.Student.findOne studentId: studentId, (err, student) ->
-				db.Course.find().where("_id").in(x.course for x in student.get("selectedcourses")).lean().exec (err, selectedcourses) ->
+				db.Course.find().where("_id").in(x.course for x in student.get("selectedcourses")).lean().exec (err, selectedcourses) -> #redo
 					callback
 						success: true
 						selectedcourses:
@@ -50,8 +51,16 @@ io.sockets.on "connection", (socket) ->
 								isProject: course.isProject
 								hasLectures: course.hasLectures
 								hasLab: course.hasLab
-								lectureSections: if course.hasLectures then number: section.number, instructor: section.instructor for section in course.lectureSections
-								labSections: if course.hasLab then number: section.number, instructor: section.instructor for section in course.labSections
+								lectureSections: if course.hasLectures then for section in course.lectureSections
+									await core.sectionStatus course_id: course._id, section_number: section.number, isLectureSection: true, defer status
+									number: section.number
+									instructor: section.instructor
+									status: status
+								labSections: if course.hasLab then for section in course.labSections
+									await core.sectionStatus course_id: course._id, section_number: section.number, isLabSection: true, defer status
+									number: section.number
+									instructor: section.instructor
+									status: status
 								selectedLectureSection: course.selectedLectureSection
 								selectedLabSection: course.selectedLabSection
 								supervisor: course.supervisor
