@@ -1,10 +1,7 @@
 express = require "express"
 http = require "http"
 socket_io = require "socket.io"
-md5 = require "MD5"
 {spawn} = require "child_process"
-db = require "./db"
-core = "./core"
 
 cp = spawn "cake", ["build"]
 await cp.on "exit", defer code
