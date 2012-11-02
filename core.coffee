@@ -1,6 +1,7 @@
 db = require "./db"
 uap = require "./uap"
 
+# Handle Core / Elective Slots
 exports.sectionStatus = (sectionInfo, callback) ->
 	db.Student.find(reserved: true, selectedcourses: $elemmatch: course_id: db.objectIdFromString(sectionInfo.course_id), section_number: sectionInfo.section_number).count (err, doneCount) ->
 		db.Course.findById(sectionInfo.course_id).lean (err, course) ->

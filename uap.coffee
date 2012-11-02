@@ -2,8 +2,10 @@ _ = require "underscore"
 
 methods = [
 	"select", "filter"
-	"find"
+	"find", "detect"
 	"map", "detect"
+	"any", "all"
+	"union", "intersection", "difference"
 ]
 
 for method in methods

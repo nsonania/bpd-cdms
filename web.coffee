@@ -66,5 +66,19 @@ io.sockets.on "connection", (socket) ->
 								supervisor: course.supervisor
 								reserved: course.reserved
 
+	socket.on "chooseSection", (courseInfo) ->
+		socket.get "studentId", (err, studentId) ->
+			return callback success: false unless studentId?
+			db.Student.findOne studentId: studentId, (err, student) ->
+				db.Course.find(_id: $elemmatch: db.objectIdFromString(student.selectedcourses.map (x) -> x.course_id)).lean (err, courses) ->
+					thisCourse = courses.find (x) -> x._id is courseInfo.course_id
+					timeslots = thisCourse.sections.find((x) -> x.number is courseInfo.section_number).timeslots
+					student.selectedcourses
+						.select((x) -> x.selectedLabSection? or x.selectedLectureSection?)
+						.map((x) -> lecture: x.selectedLectureSection, lab: x.selectedLabSection, course: courses.find (y) -> y._id is x.course_id).any (x) ->
+							if x.lecture?
+								return true if x.course.lectureSections.find((y) -> y.number is x.lecture).timeslots.intersection(timeslots).length > 0
+							if x.lab?
+								return true if x.course.labSections.find((y) -> y.number is x.lab).timeslots.intersection(timeslots).length > 0
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
