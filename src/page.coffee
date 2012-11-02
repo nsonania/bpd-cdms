@@ -65,8 +65,8 @@ $(document).ready ->
 								"btn-success disabled"
 							else if selectedSection isnt ""
 								switch (section for section in course.lectureSections when section.number is course.selectedLectureSection)[0]
-									when section.isFull then "btn-danger"
-									when section.last5Left then "btn-warning"
+									when section.status.isFull then "btn-danger"
+									when section.status.last5Left then "btn-warning"
 									else "btn-success"
 							else
 								""
@@ -77,8 +77,8 @@ $(document).ready ->
 								#{
 									ret =
 										for section in course.lectureSections
-											liClass = if section.isFull then "error" else if section.last5Left then "warning" else ""
-											"<li class='#{liClass}'><a><strong>#{section.number}</strong>: #{section.instructor}</a></li>"
+											liClass = if section.status.isFull then "error" else if section.status.last5Left then "warning" else ""
+											"<li class='#{liClass}' data-course='#{course.compcode}' data-sectiontype='lecture' data-section='#{section.number}'><a><strong>#{section.number}</strong>: #{section.instructor}</a></li>"
 									ret.join("\n")
 								}
 							</ul>
@@ -91,8 +91,8 @@ $(document).ready ->
 								"btn-success disabled"
 							else if selectedSection isnt ""
 								switch (section for section in course.labSections when section.number is course.selectedLabSection)[0]
-									when section.isFull then "btn-danger"
-									when section.last5Left then "btn-warning"
+									when section.status.isFull then "btn-danger"
+									when section.status.last5Left then "btn-warning"
 									else "btn-success"
 							else
 								""
@@ -103,8 +103,8 @@ $(document).ready ->
 								#{
 									ret =
 										for section in course.labSections
-											liClass = if section.isFull then "error" else if section.last5Left then "warning" else ""
-											"<li class='#{liClass}'><a><strong>#{section.number}</strong>: #{section.instructor}</a></li>"
+											liClass = if section.status.isFull then "error" else if section.status.last5Left then "warning" else ""
+											"<li class='#{liClass}' data-course='#{course.compcode}' data-sectiontype='lab' data-section='#{section.number}'><a><strong>#{section.number}</strong>: #{section.instructor}</a></li>"
 									ret.join("\n")
 								}
 							</ul>
@@ -127,3 +127,21 @@ $(document).ready ->
 						</tr>
 						"""
 					$(elem).appendTo("#courses-sections table tbody")
+					$("#courses-sections table tbody td div.btn-group li").click ->
+						elem = $(@)
+						return if elem.hasClass "error"
+						msg =
+							course_compcode: parseInt elem.attr "data-course"
+							section_number: parseInt elem.attr "data-section"
+							isLectureSection: if elem.attr("data-sectiontype") is "lecture" then true
+							isLabSection: if elem.attr("data-sectiontype") is "lab" then true
+						socket.emit "chooseSection", msg, (data) ->
+							return alert "Please restart your session by refreshing this page." unless data.success
+							if data.status or data.status is "yellow"
+								elem.parents("div.btn-group").children("button").removeClass("btn-danger").addClass if data.status then "btn-success" else "btn-warning"
+								elem.parents("tr").removeClass("error")
+							else
+								elem.parents("div.btn-group").children("button").removeClass("btn-success").addClass("btn-danger")
+								elem.parents("tr").addClass("error")
+							sectionTypeText = if elem.attr("data-sectiontype") is "lecture" then "Lecture" else if elem.attr("data-sectiontype") is "lab" then "Lab"
+							elem.parents("div.btn-group").children("button").text "#{sectionTypeText}: #{elem.attr "data-section"}"
