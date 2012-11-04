@@ -55,6 +55,7 @@ $(document).ready ->
 			$("#current-student").text("#{global.student.name} (#{global.student.studentId})")
 
 			socket.emit "initializeSectionsScreen", (data) ->
+				console.log data
 				return alert "Please restart your session by refreshing this page." unless data.success
 				$("<tbody></tbody>").appendTo("#courses-sections table")
 				for course in data.selectedcourses
@@ -64,10 +65,10 @@ $(document).ready ->
 							if course.reserved
 								"btn-success disabled"
 							else if selectedSection isnt ""
-								switch (section for section in course.lectureSections when section.number is course.selectedLectureSection)[0]
-									when section.status.isFull then "btn-danger"
-									when section.status.last5Left then "btn-warning"
-									else "btn-success"
+								section = (section for section in course.lectureSections when section.number is course.selectedLectureSection)[0]
+								if section.status.isFull then "btn-danger"
+								else if section.status.last5Left then "btn-warning"
+								else "btn-success"
 							else
 								""
 						"""
@@ -90,10 +91,10 @@ $(document).ready ->
 							if course.reserved
 								"btn-success disabled"
 							else if selectedSection isnt ""
-								switch (section for section in course.labSections when section.number is course.selectedLabSection)[0]
-									when section.status.isFull then "btn-danger"
-									when section.status.last5Left then "btn-warning"
-									else "btn-success"
+								section = (section for section in course.labSections when section.number is course.selectedLabSection)[0]
+								if section.status.isFull then "btn-danger"
+								else if section.status.last5Left then "btn-warning"
+								else "btn-success"
 							else
 								""
 						"""
@@ -144,4 +145,4 @@ $(document).ready ->
 								elem.parents("div.btn-group").children("button").removeClass("btn-success").addClass("btn-danger")
 								elem.parents("tr").addClass("error")
 							sectionTypeText = if elem.attr("data-sectiontype") is "lecture" then "Lecture" else if elem.attr("data-sectiontype") is "lab" then "Lab"
-							elem.parents("div.btn-group").children("button").text "#{sectionTypeText}: #{elem.attr "data-section"}"
+							elem.parents("div.btn-group").children("button").html "#{sectionTypeText}: #{elem.attr "data-section"} <span class='caret'></span>"

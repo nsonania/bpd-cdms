@@ -45,6 +45,7 @@ io.sockets.on "connection", (socket) ->
 						success: true
 						selectedcourses:
 							for course in selectedcourses
+								selcourse = student.get("selectedcourses")._find (x) -> x.course_id.equals course._id
 								compcode: course.compcode
 								number: course.number
 								name: course.name
@@ -61,31 +62,36 @@ io.sockets.on "connection", (socket) ->
 									number: section.number
 									instructor: section.instructor
 									status: status
-								selectedLectureSection: course.selectedLectureSection
-								selectedLabSection: course.selectedLabSection
-								supervisor: course.supervisor
-								reserved: course.reserved
+								selectedLectureSection: selcourse.selectedLectureSection
+								selectedLabSection: selcourse.selectedLabSection
+								supervisor: selcourse.supervisor
 
 	socket.on "chooseSection", (sectionInfo, callback) ->
 		socket.get "studentId", (err, studentId) ->
 			return callback success: false unless studentId?
-			db.Student.findOne(studentId: studentId).lean().exec (err, student) ->
-				db.Course.find(_id: $in: student.selectedcourses._map((x) -> db.toObjectId x.course_id)).lean().exec (err, courses) ->
+			db.Student.findOne studentId: studentId, (err, student) ->
+				db.Course.find(_id: $in: student.get("selectedcourses")._map((x) -> db.toObjectId x.course_id)).lean().exec (err, courses) ->
 					thisCourse = courses._find (x) -> x.compcode is sectionInfo.course_compcode
 					thisCourse.sections = if sectionInfo.isLectureSection then thisCourse.lectureSections else if sectionInfo.isLabSection then thisCourse.labSections
 					stringifiedTimeslots = JSON.stringify thisCourse.sections._find((x) -> x.number is sectionInfo.section_number).timeslots
-					slotsFull = student.selectedcourses
+					slotsFull = student.get("selectedcourses")
 						._select((x) -> x.selectedLabSection? or x.selectedLectureSection?)
-						._map((x) -> lecture: x.selectedLectureSection, lab: x.selectedLabSection, course: courses._find (y) -> y._id is x.course_id)
+						._map((x) -> lecture: x.selectedLectureSection, lab: x.selectedLabSection, course: courses._find (y) -> y._id.equals x.course_id)
 						._any (x) ->
 							if x.lecture?
+								return false if x.course._id.equals(thisCourse._id) and sectionInfo.isLectureSection
 								return true if x.course.lectureSections._find((y) -> y.number is x.lecture).timeslots._map((y) -> JSON.stringify y).intersection(stringifiedTimeslots).length > 0
 							if x.lab?
+								return false if x.course._id.equals(thisCourse._id) and sectionInfo isLabSection
 								return true if x.course.labSections._find((y) -> y.number is x.lab).timeslots._map((y) -> JSON.stringify y).intersection(stringifiedTimeslots).length > 0
 					core.sectionStatus course_id: thisCourse._id, section_number: sectionInfo.section_number, isLectureSection: sectionInfo.isLectureSection, isLabSection:sectionInfo.isLabSection, (data) ->
-						callback
-							success: true
-							status: if slotsFull then false else if data.lessThan5 then "yellow" else true
-
+						selectedSection = if sectionInfo.isLectureSection then "selectedLectureSection" else if sectionInfo.isLabSection then "selectedLabSection"
+						student.get("selectedcourses")._find((x) -> x.course_id.equals thisCourse._id)[selectedSection] = sectionInfo.section_number
+						student.markModified "selectedcourses"
+						student.save ->
+							console.log arguments
+							callback
+								success: true
+								status: if slotsFull then false else if data.lessThan5 then "yellow" else true
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"

@@ -6,6 +6,7 @@ methods = [
 	"map"
 	"any", "all"
 	"union", "intersection", "difference"
+	"uniq"
 ]
 
 for method in methods then do (method) ->
