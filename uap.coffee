@@ -7,6 +7,7 @@ methods = [
 	"any", "all"
 	"union", "intersection", "difference"
 	"uniq"
+	"flatten"
 ]
 
 for method in methods then do (method) ->

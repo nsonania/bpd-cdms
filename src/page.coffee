@@ -54,6 +54,8 @@ $(document).ready ->
 			$(".nav.pull-right").removeClass("hide")
 			$("#current-student").text("#{global.student.name} (#{global.student.studentId})")
 
+			set #...
+
 			socket.emit "initializeSectionsScreen", (data) ->
 				console.log data
 				return alert "Please restart your session by refreshing this page." unless data.success
@@ -62,9 +64,7 @@ $(document).ready ->
 					hasLectures = ->
 						selectedSection = if course.selectedLectureSection? then ": #{course.selectedLectureSection}" else ""
 						sectionColorClass =
-							if course.reserved
-								"btn-success disabled"
-							else if selectedSection isnt ""
+							if selectedSection isnt ""
 								section = (section for section in course.lectureSections when section.number is course.selectedLectureSection)[0]
 								if section.status.isFull then "btn-danger"
 								else if section.status.last5Left then "btn-warning"
@@ -88,9 +88,7 @@ $(document).ready ->
 					hasLab = ->
 						selectedSection = if course.selectedLabSection? then ": #{course.selectedLabSection}" else ""
 						sectionColorClass =
-							if course.reserved
-								"btn-success disabled"
-							else if selectedSection isnt ""
+							if selectedSection isnt ""
 								section = (section for section in course.labSections when section.number is course.selectedLabSection)[0]
 								if section.status.isFull then "btn-danger"
 								else if section.status.last5Left then "btn-warning"
@@ -138,11 +136,14 @@ $(document).ready ->
 							isLabSection: if elem.attr("data-sectiontype") is "lab" then true
 						socket.emit "chooseSection", msg, (data) ->
 							return alert "Please restart your session by refreshing this page." unless data.success
+							sectionTypeText = if elem.attr("data-sectiontype") is "lecture" then "Lecture" else if elem.attr("data-sectiontype") is "lab" then "Lab"
+							elem.parents("div.btn-group").children("button").html "#{sectionTypeText}: #{elem.attr "data-section"} <span class='caret'></span>"
+							
+
+
 							if data.status or data.status is "yellow"
 								elem.parents("div.btn-group").children("button").removeClass("btn-danger").addClass if data.status then "btn-success" else "btn-warning"
 								elem.parents("tr").removeClass("error")
 							else
 								elem.parents("div.btn-group").children("button").removeClass("btn-success").addClass("btn-danger")
 								elem.parents("tr").addClass("error")
-							sectionTypeText = if elem.attr("data-sectiontype") is "lecture" then "Lecture" else if elem.attr("data-sectiontype") is "lab" then "Lab"
-							elem.parents("div.btn-group").children("button").html "#{sectionTypeText}: #{elem.attr "data-section"} <span class='caret'></span>"
