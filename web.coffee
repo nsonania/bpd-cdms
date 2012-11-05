@@ -27,14 +27,15 @@ io.set "log level", 0
 io.sockets.on "connection", (socket) ->
 
 	socket.on "login", (data, callback) ->
-		db.Student.findOne studentId: data.studentId.toUpperCase(), password: data.password, (err, student) ->
+		db.Student.findOne(studentId: data.studentId.toUpperCase(), password: data.password).lean().exec (err, student) ->
 			return callback success: false unless student?
-			socket.set "studentId", student.get("studentId"), (err) ->
+			return callback success: true, registered: true if student.registered
+			socket.set "studentId", student.studentId, (err) ->
 				callback
 					success: true
 					student:
-						studentId: student.get "studentId"
-						name: student.get "name"
+						studentId: student.studentId
+						name: student.name
 
 	socket.on "initializeSectionsScreen", (callback) ->
 		socket.get "studentId", (err, studentId) ->
@@ -73,23 +74,39 @@ io.sockets.on "connection", (socket) ->
 		socket.get "studentId", (err, studentId) ->
 			return callback success: false unless studentId?
 			db.Student.findOne studentId: studentId, (err, student) ->
-				selectedSection = if sectionInfo.isLectureSection then "selectedLectureSection" else if sectionInfo.isLabSection then "selectedLabSection"
-				student.get("selectedcourses")._find((x) -> x.course_id.equals thisCourse._id)[selectedSection] = sectionInfo.section_number
-				student.markModified "selectedcourses"
+				db.Course.find(_id: $in: student.get("selectedcourses")._map((x) -> db.toObjectId x.course_id)).lean().exec (err, courses) ->
+					thisCourse = courses._find (x) -> x.compcode is sectionInfo.course_compcode
+					thisCourse.sections = if sectionInfo.isLectureSection then thisCourse.lectureSections else if sectionInfo.isLabSection then thisCourse.labSections
+					stringifiedTimeslots = JSON.stringify thisCourse.sections._find((x) -> x.number is sectionInfo.section_number).timeslots
+					slotsFull = student.get("selectedcourses")
+						._select((x) -> x.selectedLabSection? or x.selectedLectureSection?)
+						._map((x) -> lecture: x.selectedLectureSection, lab: x.selectedLabSection, course: courses._find (y) -> y._id.equals x.course_id)
+						._any (x) ->
+							if x.lecture?
+								return false if x.course._id.equals(thisCourse._id) and sectionInfo.isLectureSection
+								return true if x.course.lectureSections._find((y) -> y.number is x.lecture).timeslots._map((y) -> JSON.stringify y)._intersection(stringifiedTimeslots).length > 0
+							if x.lab?
+								return false if x.course._id.equals(thisCourse._id) and sectionInfo isLabSection
+								return true if x.course.labSections._find((y) -> y.number is x.lab).timeslots._map((y) -> JSON.stringify y)._intersection(stringifiedTimeslots).length > 0
+					core.sectionStatus course_id: thisCourse._id, section_number: sectionInfo.section_number, isLectureSection: sectionInfo.isLectureSection, isLabSection:sectionInfo.isLabSection, (data) ->
+						selectedSection = if sectionInfo.isLectureSection then "selectedLectureSection" else if sectionInfo.isLabSection then "selectedLabSection"
+						student.get("selectedcourses")._find((x) -> x.course_id.equals thisCourse._id)[selectedSection] = sectionInfo.section_number
+						student.markModified "selectedcourses"
+						student.save ->
+							core.generateSchedule student._id, (scheduleconflicts) ->
+								callback
+									success: true
+									status: if slotsFull or data.isFull then false else if data.lessThan5 then "yellow" else true
+									schedule: scheduleconflicts.schedule
+									conflicts: scheduleconflicts.conflicts
+
+	socket.on "confirmRegistration", (callback) ->
+		socket.get "studentId", (err, studentId) ->
+			return callback success: false unless studentId?
+			db.Student.findOne studentId: studentId, (err, student) ->
+				student.set "registered", true
+				student.markModified "registered"
 				student.save ->
-					sectionInfos = student.selectedcourse
-						._map (x) ->
-							ret = []
-							ret.push course_id: x.course_id, section_number: selectedLectureSection, isLectureSection: true if x.selectedLectureSection?
-							ret.push course_id: x.course_id, section_number: selectedLabSection, isLabSection: true if x.selectedLabSection?
-							ret
-						._flatten()
-					core.sectionStatuses sectionInfos, (statuses) ->
-						core.generateSchedule student._id, (scheduleconflicts) ->
-							callback
-								success: true
-								sectionStatuses: statuses
-								schedule: scheduleconflicts.schedule
-								conflicts: scheduleconflicts.conflicts
+					callback success: true
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"

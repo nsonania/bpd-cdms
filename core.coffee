@@ -46,18 +46,18 @@ exports.generateSchedule = (student_id, callback) ->
 					for timeslot in courses._find((x) -> x._id.equals course.course_id).lectureSections._find((x) -> x.number is course.selectedLectureSection).timeslots
 						slots[timeslot.day] ?= {}
 						slots[timeslot.day][timeslot.hour] ?= []
-						slots[timeslot.day][timeslot.hour].push course_compcode: courses._find((x) -> x._id.equals course.course_id).compcode, section_number: course.selectedLectureSection, type: "lecture"
+						slots[timeslot.day][timeslot.hour].push course_number: courses._find((x) -> x._id.equals course.course_id).number, section_number: course.selectedLectureSection, type: "lecture"
 				if course.selectedLabSection?
 					for timeslot in courses._find((x) -> x._id.equals course.course_id).labSections._find((x) -> x.number is course.selectedLabSection).timeslots
 						slots[timeslot.day] ?= {}
 						slots[timeslot.day][timeslot.hour] ?= []
-						slots[timeslot.day][timeslot.hour].push course_compcode: courses._find((x) -> x._id.equals course.course_id).compcode, section_number: course.selectedLabSection, type: "lab"
+						slots[timeslot.day][timeslot.hour].push course_number: courses._find((x) -> x._id.equals course.course_id).number, section_number: course.selectedLabSection, type: "lab"
 			conflicts = []
-			for day of slots
-				for hour of day
+			for k1, day of slots
+				for k2, hour of day
 					if hour.length > 1
 						conflicts.push hour...
-			conflicts = conflicts._uniq false, (x) -> "#{x.course_compcode}/#{x.type}/#{x.section_number}"
+			conflicts = conflicts._uniq false, (x) -> "#{x.course_number}/#{x.type}/#{x.section_number}"
 			callback
 				schedule: slots
 				conflicts: conflicts
