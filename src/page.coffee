@@ -83,7 +83,7 @@ $(document).ready ->
 			$("#courses-sections tbody tr .btn-group .btn.status-free").not(".status-conflict").addClass "btn-success"
 			$("#courses-sections tbody tr .btn-group .btn.status-limited").not(".status-conflict").addClass "btn-warning"
 			$("#courses-sections tbody tr .btn-group .btn.status-conflict, .btn.status-full").addClass "btn-danger"
-			if $("#courses-sections tbody tr .btn-group .btn.btn-danger").length > 0
+			if $("#courses-sections tbody tr .btn-group .btn:not(.btn-success, .btn-warning)").length > 0
 				$("#register_button").addClass "disabled"
 			else
 				$("#register_button").removeClass "disabled"
@@ -188,7 +188,11 @@ $(document).ready ->
 			setConflicts data.conflicts
 
 	$("#register_button").click ->
+		return if $(@).hasClass "disabled"
 		socket.emit "confirmRegistration", (data) ->
 			if data.success
 				alert "Registration Complete!"
 				setupLoginContainer()
+
+	$("#logout_button").click ->
+		setupLoginContainer()
