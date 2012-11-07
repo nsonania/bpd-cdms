@@ -1,6 +1,7 @@
 express = require "express"
 http = require "http"
 socket_io = require "socket.io"
+socket_io_client = require "socket.io-client"
 md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
@@ -21,6 +22,8 @@ expressServer.configure ->
 	expressServer.use expressServer.router
 
 server = http.createServer expressServer
+
+pubsub = socket_io_client.connect "localhost", port: 6000
 
 io = socket_io.listen server
 io.set "log level", 0
@@ -108,5 +111,10 @@ io.sockets.on "connection", (socket) ->
 				student.markModified "registered"
 				student.save ->
 					callback success: true
+				db.Course.find(_id: $in: student.selectedcourses._map((x) -> x.course_id), "_id compcode").lean().exec (courses) ->
+				for course in student.selectedcourses
+					if course.selectedLectureSection?
+						core.sectionStatus course_id: course.course_id, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
+							pubsub.emit courses._find((x) -> x._id.equals course.course_id).compcode, data
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
