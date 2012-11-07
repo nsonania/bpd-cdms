@@ -19,6 +19,6 @@ io.sockets.on "connection", (socket) ->
 		socket.leave course_id
 
 	socket.on "publish", (room, data) ->
-		io.sockets.to(room).emit data
+		io.sockets.to(room).emit room, data
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
