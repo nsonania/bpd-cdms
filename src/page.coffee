@@ -22,8 +22,14 @@ $(document).ready ->
 	socket.on "connect", ->
 		setupLoginContainer()
 
+	pubsub = io.connect "localhost:6000"
+
 	setupLoginContainer = ->
 		resetContainers()
+		if global.student?
+			pubsub.removeAllListeners()
+			for course in global.student.selectedcourses
+				pubsub.emit "unsubscribe", course.compcode
 		global = {}
 		$("#login-container").removeClass("hide")
 		$(".nav.pull-right").addClass("hide")
@@ -89,8 +95,8 @@ $(document).ready ->
 				$("#register_button").removeClass "disabled"
 
 		socket.emit "initializeSectionsScreen", (data) ->
-			console.log data
 			return alert "Please restart your session by refreshing this page." unless data.success
+			global.student[key] = value for key, value of data when key isnt "success"
 			$("<tbody></tbody>").appendTo("#courses-sections table")
 			for course in data.selectedcourses
 				hasLectures = ->
@@ -105,7 +111,7 @@ $(document).ready ->
 							""
 					"""
 					<div class="btn-group" data-sectiontype="lecture">
-						<button class="btn dropdown-toggle #{sectionColorClass}" data-toggle="dropdown">Lecture#{selectedSection} <span class="caret"></span></button>
+						<button class="btn dropdown-toggle #{sectionColorClass}" data-sectiontype="lecture" data-selectedsection="#{course.selectedLectureSection ? ""}" data-toggle="dropdown">Lecture#{selectedSection} <span class="caret"></span></button>
 						<ul class="dropdown-menu">
 							#{
 								ret =
@@ -129,7 +135,7 @@ $(document).ready ->
 							""
 					"""
 					<div class="btn-group" data-sectiontype="lab">
-						<button class="btn dropdown-toggle #{sectionColorClass}" data-toggle="dropdown">Lab#{selectedSection} <span class="caret"></span></button>
+						<button class="btn dropdown-toggle #{sectionColorClass}" data-sectiontype="lab" data-selectedsection="#{course.selectedLabSection ? ""}" data-toggle="dropdown">Lab#{selectedSection} <span class="caret"></span></button>
 						<ul class="dropdown-menu">
 							#{
 								ret =
@@ -170,6 +176,7 @@ $(document).ready ->
 						sectionTypeText = if elem.attr("data-sectiontype") is "lecture" then "Lecture" else if elem.attr("data-sectiontype") is "lab" then "Lab"
 						elem.parents("div.btn-group").children("button").html "#{sectionTypeText}: #{elem.attr "data-section"} <span class='caret'></span>"
 						elem.parents("div.btn-group").children("button").removeClass("status-conflict status-full status-limited status-free btn-danger btn-warning btn-success")
+						elem.parents("div.btn-group").children("button").attr "data-selectedsection", msg.section_number
 						if data.status or data.status is "yellow"
 							elem.parents("div.btn-group").children("button").addClass if data.status is true then "status-free btn-success" else "status-limited btn-warning"
 							elem.parents("tr").removeClass("error")
@@ -184,6 +191,14 @@ $(document).ready ->
 					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").addClass "hover"
 				$("#courses-sections table tbody tr").mouseleave ->
 					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").removeClass "hover"
+				pubsub.emit "subscribe", course.compcode
+				pubsub.on course.compcode, (data) ->
+					$("li[data-course='#{course.compcode}'][data-sectiontype='#{data.sectionType}'][data-section='#{data.sectionNumber}']")
+						.removeClass("error warning")
+						.addClass if data.status.isFull then "error" else if data.status.lessThan5 then "warning" else ""
+					$(".btn[data-sectiontype'#{data.sectionType}'][data-selectedsection='#{data.sectionNumber}']").not("status-conflict")
+						.removeClass("status-full status-limited status-free btn-danger btn-warning btn-success")
+						.addClass if data.status.isFull then "status-full btn-danger" else if data.status.lessThan5 then "status-limited btn-warning" else "status-free btn-success"
 			setSchedule data.schedule
 			setConflicts data.conflicts
 

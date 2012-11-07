@@ -115,6 +115,9 @@ io.sockets.on "connection", (socket) ->
 				for course in student.selectedcourses
 					if course.selectedLectureSection?
 						core.sectionStatus course_id: course.course_id, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
-							pubsub.emit courses._find((x) -> x._id.equals course.course_id).compcode, data
+							pubsub.emit courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
+					if course.selectedLabSection?
+						core.sectionStatus course_id: course.course_id, section_number: course.selectedLabSection, isLabSection: true, (data) ->
+							pubsub.emit courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
