@@ -16,212 +16,29 @@
 		<script src="page.js" type="text/javascript" charset="utf-8"></script>
 	</head>
 	<body>
-		<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar navbar-inverse navbar-static-top">
 			<div class="navbar-inner">
 				<div class="container">
-					<div class="brand">BPDC - Registration System</div>
-					<ul class="nav pull-right hide">
-						<li><a id="current-student"></a></li>
-						<li class="divider-vertical"></li>
-						<li id="logout_button"><a>Logout</a></li>
+					<a class="brand" href="#">BPDC - Registration System (DBUI)</a>
+					<ul class="nav">
+						<li><a data-content="courses" href="#">Courses</a></li>
+						<li><a data-content="students" href="#">Students</a></li>
 					</ul>
 				</div>
 			</div>
 		</div>
-		<div id="prelogin-container" class="container">
-			<div class="row">
-				<div class="well span4 offset4">
-					<div class="lead center">Please Wait</div>
-					<div class="progress progress-striped active">
-						<div class="bar" style="width: 100%"></div>
-					</div>
-				</div>
+		<div class="container">
+			<div id="courses_main">
+				<table id="allCourses" class="table table-hover">
+					<thead>
+						<tr>
+							<td>Compcode</td>
+							<td>Course No.</td>
+							<td>Course Name</td>
+						</tr>
+					</thead>
+				</table>
 			</div>
-		</div>
-		<div id="login-container" class="container hide">
-			<div id="semester-hero" class="hero-unit">
-				<h1>2nd Semester, 2012 - 2013</h1>
-				<p>This process will guide you to register for your courses for this semester step-by step. Remember that all your changes are saved when you logout and you can continue from where you left off when you login again.</p>
-			</div>
-			<div class="row">
-				<div id="loginbox" class="span6 offset3">
-					<div class="well">
-						<div class="form-horizontal">
-							<legend>Login</legend>
-							<div class="control-group">
-								<label class="control-label" for="input-studentid">Student Id</label>
-								<div class="controls">
-									<input class="span3" type="text" id="input-studentid" placeholder="Student Id" rel="tooltip" title="Example: 2010AAPS486U" data-trigger="focus" data-placement="right">
-								</div>
-							</div>
-							<div class="control-group">
-								<label class="control-label" for="input-password">Password</label>
-								<div class="controls">
-									<input class="span3" type="password" id="input-password" placeholder="Password">
-								</div>
-							</div>
-							<div class="control-group">
-								<div class="controls">
-									<button id="submit-login" class="btn btn-primary">Login</button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div id="main-container" class="container hide">
-			<div class="breadcrumb">
-				<li><a>Courses</a><span class="divider">&nbsp;&gt;</span></li>
-				<li><span>Timetable</span><span class="divider">&nbsp;&gt;</span></li>
-				<li><span class="muted">Finalize</span></li>
-			</div>
-			<div class="hero-unit">
-				<h1>Build Your Timetable</h1>
-				<p>Choose your sections to fill in your Timetable Schedule. Your sections are not reserved until you complete the registration process by clicking on the <em>Register</em> button. <em>Green</em> denotes that more than 5 seats are available, <em>Yellow</em> denotes that only 5 seats are left and <em>Red</em> denotes that either the section has reached its capacity or that it is clashing with another selected section.</p>
-			</div>
-			<div class="row">
-				<div id="courses-sections">
-					<p class="lead center">Courses</p>
-					<table class="table table-hover">
-						<thead>
-							<tr>
-								<th style="width: 15%">Comp. Code</th>
-								<th style="width: 15%">Course No.</th>
-								<th>Course Name</th>
-								<th style="width: 220px">Section / Faculty</th>
-							</tr>
-						</thead>
-					</table>
-				</div>
-			</div>
-			<hr>
-			<div class="row">
-				<div id="timetable-grid" class="span10 offset1">
-					<p class="lead center">Timetable</p>
-					<table class="table table-bordered small center-nonfirst">
-						<thead>
-							<tr>
-								<th style="width: 16%"></th>
-								<th style="width: 12%">Sunday</th>
-								<th style="width: 12%">Monday</th>
-								<th style="width: 12%">Tuesday</th>
-								<th style="width: 12%">Wednesday</th>
-								<th style="width: 12%">Thursday</th>
-								<th style="width: 12%">Friday</th>
-								<th style="width: 12%">Saturday</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>7:30 AM - 8:20 AM</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-							<tr>
-								<td>8:25 AM - 9:15 AM</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-							<tr>
-								<td>9:20 AM - 10:10 AM</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-							<tr>
-								<td>10:15 AM - 11:05 AM</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-							<tr>
-								<td>11:10 AM - 12:00 PM</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-							<tr>
-								<td>12:05 PM - 12:55 PM</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-							<tr>
-								<td>1:00 PM - 1:50 PM</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-							<tr>
-								<td>1:55 PM - 2:45 PM</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-							<tr>
-								<td>2:50 PM - 3:40 PM</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-							<tr>
-								<td colspan="8"></td>
-							</tr>
-							<tr>
-								<td>Evening</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<hr>
-			<button id="register_button" class="btn btn-large btn-primary">Register</button>
 		</div>
 	</body>
 </html>
