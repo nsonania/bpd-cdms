@@ -1,3 +1,5 @@
+startTime = Date.now()
+
 md5 = require "MD5"
 db = require "./db"
 fs = require "fs"
@@ -98,3 +100,5 @@ db.Course.find {}, (err, courses) ->
 					if student?
 						student.set "selectedcourses", selectedcourses
 						student.save()
+					console.log "Task Completed in #{Date.now() - startTime} milliseconds."
+					process.exit 0
