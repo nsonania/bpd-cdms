@@ -8,8 +8,8 @@ db.Course.find {}, (err, courses) ->
 		course.remove()
 		course.save()
 	fs.readFile "csv/courses.csv", "utf8", (err, data) ->
-		course = null
 		throw err if err?
+		course = null
 		lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split ',')
 		for line in lines
 			if line[0] not in ["", "_"]
@@ -63,3 +63,38 @@ db.Course.find {}, (err, courses) ->
 				course.set "hasLab", true
 				course.set "labSections", labSections
 			course.save()
+
+		db.Course.find({}, "_id compcode").lean().exec (err, courses) ->
+			db.Student.find {}, (err, students) ->
+				for student in students
+					student.remove()
+					student.save()
+				fs.readFile "csv/students.csv", "utf8", (err, data) ->
+					throw err if err
+					student = null
+					lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split ',')
+					for line in lines
+						if line[0] not in ["", "_"]
+							if student?
+								student.set "selectedcourses", selectedcourses
+								student.save()
+							student = new db.Student
+								studentId: line[0]
+								name: line[1]
+								password: md5 line[2]
+								registered: true if line[3] is "true"
+							selectedcourses = []
+						else if line[0] is "_"
+							inSelectedcourses = false
+							switch line[1]
+								when "Selected Courses"
+									inSelectedcourses = true
+						else if line[0] is ""
+							if inSelectedcourses
+									selectedcourses.push
+										course_id: courses._find((x) -> x.compcode is parseInt line[1])._id
+										selectedLectureSection: parseInt line[2] unless line[2] is ""
+										selectedLabSection: parseInt line[3] unless line[3] is ""
+					if student?
+						student.set "selectedcourses", selectedcourses
+						student.save()
