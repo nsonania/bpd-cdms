@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>BPDC - Registration System (DBUI)</title>
+		<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+		<link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<link rel="stylesheet" href="page.css" type="text/css" charset="utf-8">
+		<script src="jquery-1.7.2.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="md5.js"></script>
+		<script src="underscore-min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+		<script src="socket.io/socket.io.js"></script>
+		<script src="page.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+	<body>
+		<div class="navbar navbar-inverse navbar-static-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<div class="brand">BPDC - Registration System (DBUI)</div>
+				</div>
+			</div>
+		</div>
+		<br>
+		<div class="container">
+			<div class="row">
+				<div class="span8 offset2">
+					<div class="well form-horizontal">
+						<div class="lead">Courses</div>
+						<div class="control-group">
+							<div class="control-label">File:</div>
+							<div class="controls">
+								<input id="courses_fup" type="file">
+							</div>
+						</div>
+						<div class="control-group">
+							<div class="controls">
+								<button id="courses_btn" class="btn btn-primary">Upload</button>
+							</div>
+						</div>
+					</div>
+					<div class="well form-horizontal">
+						<div class="lead">Students</div>
+						<div class="control-group">
+							<div class="control-label">File:</div>
+							<div class="controls">
+								<input id="students_fup" type="file">
+							</div>
+						</div>
+						<div class="control-group">
+							<div class="controls">
+								<button id="students_btn" class="btn btn-primary">Upload</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
