@@ -22,7 +22,7 @@ $(document).ready ->
 	socket.on "connect", ->
 		setupLoginContainer()
 
-	pubsub = io.connect "localhost:6000"
+	pubsub = io.connect "http://bpd-cdms-pubsub.herokuapp.com"
 
 	setupLoginContainer = ->
 		resetContainers()
