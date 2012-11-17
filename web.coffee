@@ -1,7 +1,7 @@
 http = require "http"
 socket_io = require "socket.io"
 
-server = http.createServer expressServer
+server = http.createServer()
 
 io = socket_io.listen server
 io.set "log level", 0
