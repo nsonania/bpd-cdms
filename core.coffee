@@ -12,9 +12,9 @@ exports.buildCoursesCollection = (data, callback) ->
 			course.remove()
 			course.save()
 		course = null
-		lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split ',')
+		lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)
 		for line in lines
-			if line[0] not in ["", "_"]
+			if line[0] not in [null, undefined, "_"]
 				if course?
 					if lectureSections.length > 0
 						course.set "hasLectures", true
@@ -36,8 +36,8 @@ exports.buildCoursesCollection = (data, callback) ->
 						inLectureSections = true
 					when "Lab Sections"
 						inLabSections = true
-			else if line[0] is ""
-				if line[1] not in ["", "_"]
+			else unless line[0]?
+				if line[1] not in [null, undefined, "_"]
 					section =
 						number: parseInt line[1]
 						instructor: line[2]
@@ -52,7 +52,7 @@ exports.buildCoursesCollection = (data, callback) ->
 					switch line[2]
 						when "Slots"
 							inSlots = true
-				else if line[1] is ""
+				else unless line[1]?
 					if inSlots
 						section.slots.push
 							day: parseInt line[2]
@@ -75,9 +75,10 @@ exports.buildStudentsCollection = (data, callback) ->
 				student.remove()
 				student.save()
 			student = null
-			lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split ',')
+			lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)
+			console.log lines
 			for line in lines
-				if line[0] not in ["", "_"]
+				if line[0] not in [null, undefined, "_"]
 					if student?
 						student.set "selectedcourses", selectedcourses
 						student.save()
@@ -92,13 +93,13 @@ exports.buildStudentsCollection = (data, callback) ->
 					switch line[1]
 						when "Selected Courses"
 							inSelectedcourses = true
-				else if line[0] is ""
+				else unless line[0]?
 					if inSelectedcourses
 						return callback false unless courses._find((x) -> x.compcode is parseInt line[1])?
 						selectedcourses.push
 							course_id: courses._find((x) -> x.compcode is parseInt line[1])._id
-							selectedLectureSection: parseInt line[2] unless line[2] is ""
-							selectedLabSection: parseInt line[3] unless line[3] is ""
+							selectedLectureSection: parseInt line[2] if line[2]?
+							selectedLabSection: parseInt line[3] if line[3]?
 			if student?
 				student.set "selectedcourses", selectedcourses
 				student.save()

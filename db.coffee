@@ -6,7 +6,6 @@ mongoose = {Schema} = require "mongoose"
 
 mongoose.connect "mongodb://#{process.env.DB_USER}:#{process.env.DB_PASSWORD}@dbh73.mongolab.com:27737/bpd-cdms"			#MongoLab (Cloud)
 # mongoose.connect "mongodb://localhost:27017/bpd-cdms"																		#Local
-console.log "mongodb://#{process.env.DB_USER}:#{process.env.DB_PASSWORD}@dbh73.mongolab.com:27737/bpd-cdms"
 
 exports.Course = mongoose.model "Course", new Schema {}, strict: false
 exports.Student = mongoose.model "Student", new Schema {}, strict: false
