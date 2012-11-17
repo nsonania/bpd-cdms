@@ -17,12 +17,13 @@ $(document).ready ->
 	resetContainers = ->
 		$("#prelogin-container, #login-container, #main-container").addClass("hide")
 		$("#courses-sections tbody").remove()
+		$("#timetable-grid tbody tr td:not(:first-of-type)").text ""
 
 	socket = io.connect()
 	socket.on "connect", ->
 		setupLoginContainer()
 
-	pubsub = io.connect "http://bpd-cdms-pubsub.herokuapp.com"
+	pubsub = io.connect "http://bpd-cdms-pubsub.herokuapp.com:80"
 
 	setupLoginContainer = ->
 		resetContainers()
@@ -65,7 +66,7 @@ $(document).ready ->
 
 	setupMainContainer = ->
 		resetContainers()
-		$("#main-container").removeClass("hide")
+		$("#prelogin-container").removeClass "hide"
 		$(".nav.pull-right").removeClass("hide")
 		$("#current-student").text("#{global.student.name} (#{global.student.studentId})")
 
@@ -95,6 +96,8 @@ $(document).ready ->
 				$("#register_button").removeClass "disabled"
 
 		socket.emit "initializeSectionsScreen", (data) ->
+			$("#prelogin-container").addClass "hide"
+			$("#main-container").removeClass "hide"
 			return alert "Please restart your session by refreshing this page." unless data.success
 			global.student[key] = value for key, value of data when key isnt "success"
 			$("<tbody></tbody>").appendTo("#courses-sections table")
@@ -147,7 +150,7 @@ $(document).ready ->
 						</ul>
 					</div>
 					"""
-				elem =
+				tr =
 					"""
 					<tr data-compcode="#{course.compcode}" data-coursenumber="#{course.number}">
 						<td>#{course.compcode}</td>
@@ -163,8 +166,8 @@ $(document).ready ->
 						</td>
 					</tr>
 					"""
-				$(elem).appendTo("#courses-sections table tbody")
-				$("#courses-sections table tbody td div.btn-group li").click ->
+				tr = $(tr).appendTo("#courses-sections table tbody")
+				tr.find("td div.btn-group li").click ->
 					elem = $(@)
 					msg =
 						course_compcode: parseInt elem.attr "data-course"
@@ -186,10 +189,11 @@ $(document).ready ->
 						setSchedule data.schedule
 						setConflicts data.conflicts
 						$("#timetable-grid tbody tr td").removeClass "hover"
-				$("#courses-sections table tbody tr").mouseenter ->
+				tr.mouseenter ->
 					elem = $(@)
 					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").addClass "hover"
-				$("#courses-sections table tbody tr").mouseleave ->
+				tr.mouseleave ->
+					elem = $(@)
 					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").removeClass "hover"
 				pubsub.emit "subscribe", course.compcode
 				pubsub.on course.compcode, (data) ->

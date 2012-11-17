@@ -111,7 +111,7 @@ io.sockets.on "connection", (socket) ->
 				student.markModified "registered"
 				student.save ->
 					callback success: true
-				db.Course.find({_id: $in: student.selectedcourses._map((x) -> x.course_id)}, "_id compcode").lean().exec (courses) ->
+				db.Course.find({_id: $in: student.get("selectedcourses")._map((x) -> x.course_id)}, "_id compcode").lean().exec (courses) ->
 				for course in student.selectedcourses
 					if course.selectedLectureSection?
 						core.sectionStatus course_id: course.course_id, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
