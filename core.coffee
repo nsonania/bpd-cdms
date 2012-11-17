@@ -41,8 +41,8 @@ exports.buildCoursesCollection = (data, callback) ->
 					section =
 						number: parseInt line[1]
 						instructor: line[2]
-						capacity: line[3]
-						slots: []
+						capacity: parseInt line[3] ? 0
+						timeslots: []
 					if inLectureSections
 						lectureSections.push section
 					else if inLabSections
@@ -54,7 +54,7 @@ exports.buildCoursesCollection = (data, callback) ->
 							inSlots = true
 				else unless line[1]?
 					if inSlots
-						section.slots.push
+						section.timeslots.push
 							day: parseInt line[2]
 							hour: parseInt line[3]
 		if course?
