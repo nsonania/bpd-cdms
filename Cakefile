@@ -30,7 +30,7 @@ task "run", "run 'iced web.coffee'", ->
 	spawnProcess "iced", ["web.coffee"]
 
 task "debug", "run 'iced --nodejs --debug-brk web.coffee", ->
-	spawnProcess "iced", ["--nodejs", "--debug-brk", "web.coffee"]
+	spawnProcess "foreman", ["start", "-f", "debug"]
 
 task "start", "run 'foreman start'", ->
 	spawnProcess "foreman", ["start"]
