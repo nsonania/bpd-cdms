@@ -15,17 +15,6 @@ spawnProcess = (prc, args, verbose = true, callback) ->
 			process.stderr.write std.err
 		callback code is 0
 
-build = (callback) ->
-	spawnProcess "iced", ["-c", "-o", "lib", "src"], false, (result) ->
-		return callback? false unless result
-		spawnProcess "stylus", ["src", "--out", "lib", "--use", "nib"], false, (result) ->
-			callback? result
-
-task "build", "build 'src/' to 'lib/'", ->
-	build (result) ->
-		console.log if result then "Task completed" else "Task failed"
-		process.exit if result then 0 else 1
-
 task "run", "run 'iced web.coffee'", ->
 	spawnProcess "iced", ["web.coffee"]
 
