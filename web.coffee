@@ -16,7 +16,8 @@ io.sockets.on "connection", (socket) ->
 		console.log unsubscribe: course_id
 
 	socket.on "publish", (room, data) ->
-		io.sockets.to(room).emit room, data
+		io.sockets.to(room).emit "#{room}", data
+		io.sockets.emit "#{room}", data
 		console.log message: JSON.stringify {room: room, data: data}
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
