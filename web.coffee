@@ -111,13 +111,13 @@ io.sockets.on "connection", (socket) ->
 				student.markModified "registered"
 				student.save ->
 					callback success: true
-				db.Course.find({_id: $in: student.get("selectedcourses")._map((x) -> x.course_id)}, "_id compcode").lean().exec (courses) ->
-				for course in student.selectedcourses
-					if course.selectedLectureSection?
-						core.sectionStatus course_id: course.course_id, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
-							pubsub.emit courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
-					if course.selectedLabSection?
-						core.sectionStatus course_id: course.course_id, section_number: course.selectedLabSection, isLabSection: true, (data) ->
-							pubsub.emit courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
+				db.Course.find({_id: $in: student.get("selectedcourses")._map((x) -> x.course_id)}, "_id compcode").lean().exec (err, courses) ->
+					for course in student.get("selectedcourses")
+						if course.selectedLectureSection?
+							core.sectionStatus course_id: course.course_id, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
+								pubsub.emit courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
+						if course.selectedLabSection?
+							core.sectionStatus course_id: course.course_id, section_number: course.selectedLabSection, isLabSection: true, (data) ->
+								pubsub.emit courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
