@@ -23,7 +23,7 @@ expressServer.configure ->
 
 server = http.createServer expressServer
 
-pubsub = socket_io_client.connect "localhost", port: 6000
+pubsub = socket_io_client.connect "http://bpd-cdms-pubsub.herokuapp.com"
 
 io = socket_io.listen server
 io.set "log level", 0
