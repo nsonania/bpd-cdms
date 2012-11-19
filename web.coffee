@@ -1,11 +1,18 @@
 express = require "express"
 http = require "http"
 socket_io = require "socket.io"
+socket_io_mongo = require "socket.io-mongo"
 socket_io_client = require "socket.io-client"
 md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
 core = require "./core"
+cluster = require "cluster"
+
+if cluster.isMaster
+	cluster.fork() for x in [1..4]
+	cluster.on "exit", (worker, code, signal) -> console.log "worker #{worker.process.pid} died"
+	return
 
 cp = spawn "cake", ["build"]
 await cp.on "exit", defer code
@@ -26,7 +33,9 @@ server = http.createServer expressServer
 pubsub = socket_io_client.connect "http://bpd-cdms-pubsub.herokuapp.com:80"
 
 io = socket_io.listen server
-io.set "log level", 0
+io.configure ->
+	io.set "log level", 0
+	io.set "store", new socket_io_mongo url: "mongodb://#{process.env.DB_USER}:#{process.env.DB_PASSWORD}@ds043057.mongolab.com:43057/bpd-cdms-io"
 io.sockets.on "connection", (socket) ->
 
 	socket.on "login", (data, callback) ->
