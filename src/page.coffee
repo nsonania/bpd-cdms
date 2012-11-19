@@ -197,7 +197,7 @@ $(document).ready ->
 					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").removeClass "hover"
 				pubsub.emit "subscribe", course.compcode
 				console.log "#{course.compcode}"
-				pubsub.on "#{course.compcode}", (data) ->
+				pubsub.on "course_#{course.compcode}", (data) ->
 					console.log arguments
 					$("li[data-course='#{course.compcode}'][data-sectiontype='#{data.sectionType}'][data-section='#{data.sectionNumber}']")
 						.removeClass("error warning")
