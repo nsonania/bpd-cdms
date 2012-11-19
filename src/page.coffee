@@ -202,7 +202,7 @@ $(document).ready ->
 					$("li[data-course='#{course.compcode}'][data-sectiontype='#{data.sectionType}'][data-section='#{data.sectionNumber}']")
 						.removeClass("error warning")
 						.addClass if data.status.isFull then "error" else if data.status.lessThan5 then "warning" else ""
-					$(".btn[data-sectiontype'#{data.sectionType}'][data-selectedsection='#{data.sectionNumber}']").not("status-conflict")
+					$("tr[data-compcode='#{course.compcode}'] .btn[data-sectiontype'#{data.sectionType}'][data-selectedsection='#{data.sectionNumber}']").not("status-conflict")
 						.removeClass("status-full status-limited status-free btn-danger btn-warning btn-success")
 						.addClass if data.status.isFull then "status-full btn-danger" else if data.status.lessThan5 then "status-limited btn-warning" else "status-free btn-success"
 			setSchedule data.schedule
