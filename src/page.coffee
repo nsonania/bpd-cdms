@@ -196,9 +196,7 @@ $(document).ready ->
 					elem = $(@)
 					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").removeClass "hover"
 				pubsub.emit "subscribe", course.compcode
-				console.log "#{course.compcode}"
 				pubsub.on "course_#{course.compcode}", (data) ->
-					console.log arguments
 					$("li[data-course='#{course.compcode}'][data-sectiontype='#{data.sectionType}'][data-section='#{data.sectionNumber}']")
 						.removeClass("error warning")
 						.addClass if data.status.isFull then "error" else if data.status.lessThan5 then "warning" else ""
