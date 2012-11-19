@@ -23,7 +23,7 @@ expressServer.configure ->
 
 server = http.createServer expressServer
 
-pubsub = socket_io_client.connect "http://bpd-cdms-pubsub.herokuapp.com"
+pubsub = socket_io_client.connect "http://bpd-cdms-pubsub.herokuapp.com:80"
 
 io = socket_io.listen server
 io.set "log level", 0
@@ -112,7 +112,7 @@ io.sockets.on "connection", (socket) ->
 				student.save ->
 					callback success: true
 				db.Course.find({_id: $in: student.get("selectedcourses")._map((x) -> x.course_id)}, "_id compcode").lean().exec (err, courses) ->
-					for course in student.get("selectedcourses")
+					for course in student.get("selectedcourses") then do (course) ->
 						if course.selectedLectureSection?
 							core.sectionStatus course_id: course.course_id, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
 								pubsub.emit "publish", courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
