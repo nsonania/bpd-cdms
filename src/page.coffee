@@ -209,7 +209,11 @@ $(document).ready ->
 						.addClass if data.status.isFull then "error" else if data.status.lessThan5 then "warning" else ""
 					$("tr[data-compcode='#{course.compcode}'] .btn[data-sectiontype'#{data.sectionType}'][data-selectedsection='#{data.sectionNumber}']").not("status-conflict")
 						.removeClass("status-full status-limited status-free btn-danger btn-warning btn-success")
-						.addClass if data.status.isFull then "status-full btn-danger" else if data.status.lessThan5 then "status-limited btn-warning" else "status-free btn-success"
+						.addClass if data.status.isFull then "status-full btn-danger" else if data.status.lessThan5 then "status-limited btn-warning" else "status-free btn-success"	
+					if $("#courses-sections tbody tr .btn-group .btn:not(.btn-success, .btn-warning)").length > 0
+						$("#register_button").addClass "disabled"
+					else
+						$("#register_button").removeClass "disabled"
 			setSchedule data.schedule
 			setConflicts data.conflicts
 
