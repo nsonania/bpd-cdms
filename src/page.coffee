@@ -34,10 +34,7 @@ $(document).ready ->
 
 	setupLoginContainer = ->
 		resetContainers()
-		if global.student?
-			pubsub.removeAllListeners()
-			for course in global.student.selectedcourses
-				pubsub.emit "unsubscribe", course.compcode
+		pubsub.removeAllListeners() if global.student?
 		global = {}
 		$("#login-container").removeClass("hide")
 		$(".nav.pull-right").addClass("hide")
@@ -206,7 +203,6 @@ $(document).ready ->
 				tr.mouseleave ->
 					elem = $(@)
 					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").removeClass "hover"
-				pubsub.emit "subscribe", course.compcode
 				pubsub.on "course_#{course.compcode}", (data) ->
 					$("li[data-course='#{course.compcode}'][data-sectiontype='#{data.sectionType}'][data-section='#{data.sectionNumber}']")
 						.removeClass("error warning")
