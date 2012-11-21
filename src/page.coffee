@@ -1,5 +1,16 @@
 global = {}
 
+$.extend
+	postJSON: (url, data, callback) ->
+		jQuery.ajax
+			type: "POST"
+			url: url
+			data: JSON.stringify(data)
+			success: callback
+			dataType: "json"
+			contentType: "application/json"
+			processData: false
+
 $(document).ready ->
 	$("#loginbox input").addClass if $(document).width() >= 1200 then "span3" else "span2"
 	$("#courses-sections").addClass if $(document).width() >= 1200 then "span8 offset2" else "span12"
@@ -19,10 +30,6 @@ $(document).ready ->
 		$("#courses-sections tbody").remove()
 		$("#timetable-grid tbody tr td:not(:first-of-type)").text ""
 
-	socket = io.connect()
-	socket.on "connect", ->
-		setupLoginContainer()
-
 	pubsub = io.connect "http://bpd-cdms-pubsub.herokuapp.com:80"
 
 	setupLoginContainer = ->
@@ -41,7 +48,7 @@ $(document).ready ->
 	$("#input-studentid").tooltip()
 	$("#submit-login").click ->
 		$("#alert-login").remove()
-		socket.emit "login", studentId: $("#input-studentid").val(), password: md5($("#input-password").val()), (data) ->
+		$.postJSON "/api/login", studentId: $("#input-studentid").val(), password: md5($("#input-password").val()), (data) ->
 			unless data.success
 				elem =
 					"""
@@ -62,6 +69,10 @@ $(document).ready ->
 				$(elem).insertAfter("#loginbox legend")
 			else
 				global.student = data.student
+				global.hash = data.hash
+				pubsub.on "destroySession_#{data.hash}", ->
+					alert "Your session has expired."
+					setupLoginContainer()
 				setupMainContainer()
 
 	setupMainContainer = ->
@@ -95,7 +106,7 @@ $(document).ready ->
 			else
 				$("#register_button").removeClass "disabled"
 
-		socket.emit "initializeSectionsScreen", (data) ->
+		$.postJSON "/api/initializeSectionsScreen", hash: global.hash, (data) ->
 			$("#prelogin-container").addClass "hide"
 			$("#main-container").removeClass "hide"
 			return alert "Please restart your session by refreshing this page." unless data.success
@@ -169,17 +180,17 @@ $(document).ready ->
 				tr = $(tr).appendTo("#courses-sections table tbody")
 				tr.find("td div.btn-group li").click ->
 					elem = $(@)
-					msg =
+					sectionInfo =
 						course_compcode: parseInt elem.attr "data-course"
 						section_number: parseInt elem.attr "data-section"
 						isLectureSection: if elem.attr("data-sectiontype") is "lecture" then true
 						isLabSection: if elem.attr("data-sectiontype") is "lab" then true
-					socket.emit "chooseSection", msg, (data) ->
+					$.postJSON "/api/chooseSection", sectionInfo: sectionInfo, hash: global.hash, (data) ->
 						return alert "Please restart your session by refreshing this page." unless data.success
 						sectionTypeText = if elem.attr("data-sectiontype") is "lecture" then "Lecture" else if elem.attr("data-sectiontype") is "lab" then "Lab"
 						elem.parents("div.btn-group").children("button").html "#{sectionTypeText}: #{elem.attr "data-section"} <span class='caret'></span>"
 						elem.parents("div.btn-group").children("button").removeClass("status-conflict status-full status-limited status-free btn-danger btn-warning btn-success")
-						elem.parents("div.btn-group").children("button").attr "data-selectedsection", msg.section_number
+						elem.parents("div.btn-group").children("button").attr "data-selectedsection", sectionInfo.section_number
 						if data.status or data.status is "yellow"
 							elem.parents("div.btn-group").children("button").addClass if data.status is true then "status-free btn-success" else "status-limited btn-warning"
 							elem.parents("tr").removeClass("error")
@@ -208,10 +219,12 @@ $(document).ready ->
 
 	$("#register_button").click ->
 		return if $(@).hasClass "disabled"
-		socket.emit "confirmRegistration", (data) ->
+		$.postJSON "/api/confirmRegistration", hash: global.hash, (data) ->
 			if data.success
 				alert "Registration Complete!"
 				setupLoginContainer()
 
 	$("#logout_button").click ->
 		setupLoginContainer()
+
+	setupLoginContainer()

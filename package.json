@@ -20,7 +20,6 @@
 		"nib": "~0.8",
 		"MD5": "~0",
 		"underscore": "~1.4",
-		"mongoose": "~3.2",
-		"socket.io-mongo": "~0"
+		"mongoose": "~3.2"
 	}
 }
