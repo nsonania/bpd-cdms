@@ -20,29 +20,6 @@ exports.sectionStatus = (sectionInfo, callback) ->
 				else
 					isFull: true
 
-exports.sectionStatuses = (sectionInfos, callback) ->
-	if sectionInfos.length > 1
-		exports.sectionStatuses sectionInfos[1..], (statuses) ->
-			exports.sectionStatus sectionInfos[0], (status) ->
-				db.Course.findOne(_id: sectionInfos[0].course_id, "compcode").lean().exec (err, course) ->
-					callback statuses._union
-						sectionInfo:
-							course_compcode: course.compcode
-							section_number: sectionInfos[0].section_number
-							isLectureSection: sectionInfos[0].isLectureSection
-							isLabSection: sectionInfos[0].isLabSection
-						status: status
-	else
-		exports.sectionStatus sectionInfos[0], (status) ->
-			db.Course.findOne(_id: sectionInfos[0].course_id, "compcode").lean().exec (err, course) ->
-				callback []._union
-					sectionInfo:
-						course_compcode: course.compcode
-						section_number: sectionInfos[0].section_number
-						isLectureSection: sectionInfos[0].isLectureSection
-						isLabSection: sectionInfos[0].isLabSection
-					status: status
-
 exports.generateSchedule = (student_id, callback) ->
 	db.Student.findById(student_id).lean().exec (err, student) ->
 		db.Course.find(_id: $in: student.selectedcourses._map((x) -> db.toObjectId x.course_id)).lean().exec (err, courses) ->

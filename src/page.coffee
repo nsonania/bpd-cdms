@@ -31,6 +31,8 @@ $(document).ready ->
 		$("#timetable-grid tbody tr td:not(:first-of-type)").text ""
 
 	pubsub = io.connect "http://bpd-cdms-pubsub.herokuapp.com:80"
+	pubsub.on "connect", ->
+		setupLoginContainer()
 
 	setupLoginContainer = ->
 		resetContainers()
@@ -222,9 +224,11 @@ $(document).ready ->
 		$.postJSON "/api/confirmRegistration", hash: global.hash, (data) ->
 			if data.success
 				alert "Registration Complete!"
-				setupLoginContainer()
+			else if data.invalidRegistration
+				alert "Registration was not successful. Please login again."
+			else
+				alert "An unknown error has occured. Please login again."
+			setupLoginContainer()
 
 	$("#logout_button").click ->
 		setupLoginContainer()
-
-	setupLoginContainer()

@@ -111,6 +111,13 @@ expressServer.post "/api/chooseSection", (req, res, next) ->
 expressServer.post "/api/confirmRegistration", (req, res, next) ->
 	sessions.getStudent req.body.hash, (student) ->
 		return res.send success: false unless student?
+		for selectedcourse in student.get "selectedcourses"
+			if selectedcourse.selectedLectureSection?
+				await core.sectionStatus course_id: selectedcourse.course_id, section_number: selectedcourse.selectedLectureSection, isLectureSection: true, defer result
+				return res.send success: false, invalidRegistration: true if result.isFull?
+			if selectedcourse.selectedLabSection?
+				await core.sectionStatus course_id: selectedcourse.course_id, section_number: selectedcourse.selectedLabSection, isLabSection: true, defer result
+				return res.send success: false, invalidRegistration: true if result.isFull?
 		student.set "registered", true
 		student.markModified "registered"
 		student.save ->
