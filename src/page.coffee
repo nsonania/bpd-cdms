@@ -13,20 +13,20 @@ $.extend
 
 $(document).ready ->
 	$("#loginbox input").addClass if $(document).width() >= 1200 then "span3" else "span2"
-	$("#courses-sections").addClass if $(document).width() >= 1200 then "span8 offset2" else "span12"
+	$("#courses-sections, .courses-selections").addClass if $(document).width() >= 1200 then "span8 offset2" else "span12"
 	$("#timetable-grid").addClass if $(document).width() >= 1200 then "span10 offset1" else "span12"
 	$(window).resize ->
 		if $(document).width() >= 1200
 			$("#loginbox input").removeClass("span2").addClass("span3")
-			$("#courses-sections").removeClass("span12").addClass("span8 offset2")
+			$("#courses-sections, .courses-selections").removeClass("span12").addClass("span8 offset2")
 			$("#timetable-grid").removeClass("span12").addClass("span10 offset1")
 		else
 			$("#loginbox input").removeClass("span3").addClass("span2")
-			$("#courses-sections").removeClass("span8 offset2").addClass("span12")
+			$("#courses-sections, .courses-selections").removeClass("span8 offset2").addClass("span12")
 			$("#timetable-grid").removeClass("span10 offset1").addClass("span12")
 
 	resetContainers = ->
-		$("#prelogin-container, #login-container, #main-container").addClass("hide")
+		$("#prelogin-container, #login-container, #sections-container").addClass("hide")
 		$("#courses-sections tbody").remove()
 		$("#timetable-grid tbody tr td:not(:first-of-type)").text ""
 
@@ -72,9 +72,9 @@ $(document).ready ->
 				pubsub.on "destroySession_#{data.hash}", ->
 					alert "Your session has expired."
 					setupLoginContainer()
-				setupMainContainer()
+				setupSectionsContainer()
 
-	setupMainContainer = ->
+	setupSectionsContainer = ->
 		resetContainers()
 		$("#prelogin-container").removeClass "hide"
 		$(".nav.pull-right").removeClass("hide")
@@ -107,7 +107,7 @@ $(document).ready ->
 
 		$.postJSON "/api/initializeSectionsScreen", hash: global.hash, (data) ->
 			$("#prelogin-container").addClass "hide"
-			$("#main-container").removeClass "hide"
+			$("#sections-container").removeClass "hide"
 			return alert "Please restart your session by refreshing this page." unless data.success
 			global.student[key] = value for key, value of data when key isnt "success"
 			$("<tbody></tbody>").appendTo("#courses-sections table")
