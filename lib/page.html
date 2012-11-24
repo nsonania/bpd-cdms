@@ -104,7 +104,7 @@
 					</table>
 				</div>
 				<div class="courses-selections"><hr></div>
-				<div id="courses-backlogged" class="courses-selections">
+				<div id="courses-backlogged" class="courses-selections disabled">
 					<p class="lead center">Prescribed Courses</p>
 					<table class="table table-hover">
 						<thead>
@@ -126,7 +126,7 @@
 					</table>
 				</div>
 				<div class="courses-selections"><hr></div>
-				<div id="courses-backlogged" class="courses-selections">
+				<div id="courses-backlogged" class="courses-selections disabled">
 					<p class="lead center">Higher Level / Repeat Courses</p>
 					<table class="table table-hover">
 						<thead>
@@ -146,13 +146,9 @@
 							</tr>
 						</tbody>
 					</table>
-					<div class="form-horizontal">
-						<div class="control-group">
-							<label class="control-label" for="courselookup_field">Add a course</label>
-							<div class="controls">
-								<input type="text" class="span4" id="courselookup_field" placeholder="Enter Compcode, Course No. or Course Name">
-							</div>
-						</div>
+					<div class="input-prepend">
+						<span class="add-on">Add a course</span>
+						<input class="span4" id="prependedInput" type="text" placeholder="Enter Compcode, Course No. or Course Name">
 					</div>
 				</div>
 			</div>
