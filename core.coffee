@@ -12,7 +12,7 @@ exports.buildCoursesCollection = (data, callback) ->
 			course.remove()
 			course.save()
 		course = null
-		lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)
+		lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
 		for line in lines
 			if line[0] not in [null, undefined, "_"]
 				if course?
