@@ -6,6 +6,7 @@
 		<title>BPDC - Registration System (DBUI)</title>
 		<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
 		<link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<link href="page.css" rel="stylesheet">
 		<script src="jquery-1.7.2.min.js" type="text/javascript" charset="utf-8"></script>
 		<script src="md5.js"></script>
 		<script src="underscore-min.js" type="text/javascript" charset="utf-8"></script>
@@ -13,48 +14,110 @@
 		<script src="socket.io/socket.io.js"></script>
 		<script src="page.js" type="text/javascript" charset="utf-8"></script>
 	</head>
-	<body>
-		<div class="navbar navbar-inverse navbar-static-top">
+	<body data-spy="scroll" data-target="#courseheader">
+		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
-					<div class="brand">BPDC - Registration System (DBUI)</div>
+					<a class="brand active" href="#">BPDC - Registration System</a>
+					<ul class="nav">
+						<li><a href="#">Courses</a></li>
+						<li><a href="#">Students</a></li>
+					</ul>
 				</div>
 			</div>
 		</div>
-		<br>
-		<div class="container">
+		<br><br><br>
+		<div id="main-container" class="container hide">
+			<div class="hero-unit">
+				<h1>Admin Portal</h1>
+				<p>Use this portal to modify courses' and students' details.</p>
+			</div>
 			<div class="row">
-				<div class="span8 offset2">
-					<div class="well form-horizontal">
-						<div class="lead">Courses</div>
-						<div class="control-group">
-							<div class="control-label">File:</div>
-							<div class="controls">
-								<input id="courses_fup" type="file">
+				<div id="loginbox" class="span6 offset3">
+					<div class="well">
+						<div class="form-horizontal">
+							<legend>Login</legend>
+							<div class="control-group">
+								<label class="control-label" for="input-password">Access Code</label>
+								<div class="controls">
+									<input class="span3" type="password" id="input-password" placeholder="Access Code">
+								</div>
 							</div>
-						</div>
-						<div class="control-group">
-							<div class="controls">
-								<button id="courses_btn" class="btn btn-primary">Upload</button>
+							<div class="control-group">
+								<label class="control-label" for="input-password">Authentication File</label>
+								<div class="controls">
+									<input class="span3" type="file" id="input-password" placeholder="Access Code">
+								</div>
 							</div>
-						</div>
-					</div>
-					<div class="well form-horizontal">
-						<div class="lead">Students</div>
-						<div class="control-group">
-							<div class="control-label">File:</div>
-							<div class="controls">
-								<input id="students_fup" type="file">
-							</div>
-						</div>
-						<div class="control-group">
-							<div class="controls">
-								<button id="students_btn" class="btn btn-primary">Upload</button>
+							<div class="control-group">
+								<div class="controls">
+									<button id="submit-login" class="btn btn-primary">Login</button>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+		</div>
+		<div id="courses-container" class="container">
+			<div class="hero-unit">
+				<h1>Courses</h1>
+				<p>Add new courses and modify existing ones. Delete previous sections and add new ones. If no sections are present, the course would be unavailable.</p>
+			</div>
+			<div id="courseheader" data-spy="affix" class="container" data-offset-top="290">
+				<div class="navbar">
+					<div class="navbar-inner">
+						<div class="brand">Courses</div>
+						<div class="navbar-form pull-right">
+							<button class="btn"><i class="icon-plus"></i> New Course</button>
+						</div>
+						<ul class="nav pull-right"><li class="divider-vertical"></li></ul>
+						<div class="navbar-form pull-right">
+							<div class="input-prepend">
+								<span class="add-on"><i class="icon-search"></i></span>
+								<input type="text" placeholder="Search">
+							</div>
+						</div>
+					</div>
+				</div>
+				<table class="table">
+					<tr>
+						<th width="10%">Compcode</th>
+						<th width="10%">Course No.</th>
+						<th>Course Name</th>
+						<th width="10%">Credits</th>
+						<th width="10%">Available</th>
+						<th width="10%">Modify</th>
+					</tr>
+					<tr>
+						<td colspan="6"></td>
+					</tr>
+				</table>
+			</div>
+			<table id="courselist" class="table">
+				<tr>
+					<td width="10%">231</td>
+					<td width="10%">BITS C231</td>
+					<td>Artificial Intelligence</td>
+					<td width="10%">3</td>
+					<td width="10%"></td>
+					<td width="10%"></td>
+				</tr>
+			</table>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br>
 		</div>
 	</body>
 </html>
