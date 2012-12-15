@@ -14,7 +14,7 @@
 		<script src="socket.io/socket.io.js"></script>
 		<script src="page.js" type="text/javascript" charset="utf-8"></script>
 	</head>
-	<body data-spy="scroll" data-target="#courseheader">
+	<body>
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
@@ -26,317 +26,301 @@
 				</div>
 			</div>
 		</div>
-		<br><br><br>
-		<div id="main-container" class="container hide">
-			<div class="hero-unit">
-				<h1>Admin Portal</h1>
-				<p>Use this portal to modify courses' and students' details.</p>
-			</div>
-			<div class="row">
-				<div id="loginbox" class="span6 offset3">
-					<div class="well">
-						<div class="form-horizontal">
-							<legend>Login</legend>
-							<div class="control-group">
-								<label class="control-label" for="input-password">Access Code</label>
-								<div class="controls">
-									<input class="span3" type="password" id="input-password" placeholder="Access Code">
+		<div id="incompatible-size">
+			<br><br><br><br><br>
+			<p class="lead tcenter">1200px minimum width required.</p>
+		</div>
+		<div id="compatible-size">
+			<br><br><br>
+			<div id="main-container" class="container hide">
+				<div class="hero-unit">
+					<h1>Admin Portal</h1>
+					<p>Use this portal to modify courses' and students' details.</p>
+				</div>
+				<div class="row">
+					<div id="loginbox" class="span6 offset3">
+						<div class="well">
+							<div class="form-horizontal">
+								<legend>Login</legend>
+								<div class="control-group">
+									<label class="control-label" for="input-password">Access Code</label>
+									<div class="controls">
+										<input class="span3" type="password" id="input-password" placeholder="Access Code">
+									</div>
 								</div>
-							</div>
-							<div class="control-group">
-								<label class="control-label" for="input-password">Authentication File</label>
-								<div class="controls">
-									<input class="span3" type="file" id="input-password" placeholder="Access Code">
+								<div class="control-group">
+									<label class="control-label" for="input-password">Authentication File</label>
+									<div class="controls">
+										<input class="span3" type="file" id="input-password" placeholder="Access Code">
+									</div>
 								</div>
-							</div>
-							<div class="control-group">
-								<div class="controls">
-									<button id="submit-login" class="btn btn-primary">Login</button>
+								<div class="control-group">
+									<div class="controls">
+										<button id="submit-login" class="btn btn-primary">Login</button>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-		<div id="courses-container" class="container">
-			<div class="hero-unit">
-				<h1>Courses</h1>
-				<p>Add new courses and modify existing ones. Delete all sections from the previous semester and add new ones. If no sections are present, the course would be unavailable.</p>
-			</div>
-			<div id="courseheader" data-spy="affix" class="container" data-offset-top="290">
-				<div id="courseheader-inner">
-					<div id="courseheader-back"></div>
-					<div class="navbar">
-						<div class="navbar-inner">
-							<div class="brand">Courses</div>
-							<div class="navbar-form pull-right">
-								<button class="btn"><i class="icon-plus"></i> New Course</button>
-							</div>
-							<ul class="nav pull-right"><li class="divider-vertical"></li></ul>
-							<div class="navbar-form pull-right">
-								<div class="input-prepend">
-									<span class="add-on"><i class="icon-search"></i></span>
-									<input type="text" placeholder="Search">
+			<div id="courses-container" class="container">
+				<div class="hero-unit">
+					<h1>Courses</h1>
+					<p>Add new courses and modify existing ones. Delete all sections from the previous semester and add new ones. If no sections are present, the course would be unavailable.</p>
+				</div>
+				<div id="courseheader" data-spy="affix" class="container" data-offset-top="290">
+					<div id="courseheader-inner">
+						<div id="courseheader-back"></div>
+						<div class="navbar">
+							<div class="navbar-inner">
+								<div class="brand">Courses</div>
+								<div class="navbar-form pull-right">
+									<button class="btn"><i class="icon-plus"></i> New Course</button>
+								</div>
+								<ul class="nav pull-right"><li class="divider-vertical"></li></ul>
+								<div class="navbar-form pull-right">
+									<div class="input-prepend">
+										<span class="add-on"><i class="icon-search"></i></span>
+										<input type="text" placeholder="Search">
+									</div>
 								</div>
 							</div>
 						</div>
+						<div class="row">
+							<table class="table span6">
+								<tr>
+									<th width="20%">Compcode</th>
+									<th width="20%">Course No.</th>
+									<th>Course Name</th>
+								</tr>
+								<tr>
+									<td colspan="6" style="padding: 0;"></td>
+								</tr>
+							</table>
+						</div>
 					</div>
-					<table class="table">
-						<tr>
-							<th width="10%">Compcode</th>
-							<th width="10%">Course No.</th>
-							<th>Course Name</th>
-							<th width="10%">Credits</th>
-							<th width="10%">Available</th>
-							<th width="10%">Modify</th>
+				</div>
+				<div id="coursedetails" class="row" data-spy="affix" class="container" data-offset-top="290">
+					<div class="span6 offset6">
+						<div class="form-horizontal">
+							<div class="navbar">
+								<div class="navbar-inner">
+									<div class="brand">Course Information</div>
+								</div>
+							</div>
+							<div class="box-bordered">
+								<br>
+								<div class="control-group">
+									<label class="control-label" for="input-1compcode">Compcode</label>
+									<div class="controls">
+										<input type="text" id="input-1compcode" placeholder="Compcode">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="input-1number">Course Number</label>
+									<div class="controls">
+										<input type="text" id="input-1number" placeholder="Course Number">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="input-1name">Course Name</label>
+									<div class="controls">
+										<input type="text" id="input-1name" placeholder="Course Name">
+									</div>
+								</div>
+							</div>
+						</div>
+						<br>
+						<div class="row">
+							<div class="span3">
+								<div class="navbar">
+									<div class="navbar-inner">
+										<div class="brand">Lecture Sections</div>
+										<div class="navbar-form pull-right">
+											<button class="btn"><i class="icon-plus"></i></button>
+										</div>
+									</div>
+								</div>
+								<div class="box-bordered ht300"></div>
+							</div>
+							<div class="span3">
+								<div class="navbar">
+									<div class="navbar-inner">
+										<div class="brand">Lab Sections</div>
+										<div class="navbar-form pull-right">
+											<button class="btn"><i class="icon-plus"></i></button>
+										</div>
+									</div>
+								</div>
+								<div class="box-bordered ht300"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="courselist" class="row">
+					<table class="table table-hover span6 table-striped">
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
 						</tr>
-						<tr>
-							<td colspan="6" style="padding: 0;"></td>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item info">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
+						</tr>
+						<tr class="c_item">
+							<td width="20%">231</td>
+							<td width="20%">BITS C231</td>
+							<td>Artificial Intelligence</td>
 						</tr>
 					</table>
-				</div>
-			</div>
-			<table id="courselist" class="table table-hover">
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item info">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item info">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item info">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item info">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item info">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item info">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item info">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item info">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-				<tr class="c_item">
-					<td width="10%">231</td>
-					<td width="10%">BITS C231</td>
-					<td>Artificial Intelligence</td>
-					<td width="10%">3</td>
-					<td width="10%"></td>
-					<td width="10%"><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
-				</tr>
-			</table>
-		</div>
-		<div id="footer-container" class="container">
-			<div class="row">
-				<div class="back"></div>
-				<div class="span12">
-					<div class="row">
-						<div class="form-horizontal span6">
-							<legend>Course Information</legend>
-							<div class="control-group">
-								<label class="control-label" for="input-1compcode">Compcode</label>
-								<div class="controls">
-									<input type="text" id="input-1compcode" placeholder="Compcode">
-								</div>
-							</div>
-							<div class="control-group">
-								<label class="control-label" for="input-1number">Course Number</label>
-								<div class="controls">
-									<input type="text" id="input-1number" placeholder="Course Number">
-								</div>
-							</div>
-							<div class="control-group">
-								<label class="control-label" for="input-1name">Course Name</label>
-								<div class="controls">
-									<input type="text" id="input-1name" placeholder="Course Name">
-								</div>
-							</div>
-						</div>
-						<div class="span6">
-							<legend>Add / Modify Sections</legend>
-							<div class="row"><button class="btn span2 offset2">Lecture Sections</button></div><br>
-							<div class="row"><button class="btn span2 offset2">Lab Sections</button></div>
-						</div>
-					</div>
-					<div class="row">
-						<div class="span6">
-							<div class="savecancel">
-								<button class="btn btn-danger">Delete Course</button>
-							</div>
-						</div>
-						<div class="tright span6">
-							<div class="savecancel">
-								<button class="btn btn-primary">Save Changes</button>
-								<button class="btn">Cancel</button>
-							</div>
-						</div>
-					</div>
 				</div>
 			</div>
 		</div>

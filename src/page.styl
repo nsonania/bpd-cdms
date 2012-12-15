@@ -2,15 +2,54 @@
 	position relative
 	left -20px
 
+#incompatible-size
+	position fixed
+	top 0
+	left 0
+	bottom 0
+	right 0
+	background-color white
+	z-index 2
+
+	@media (min-width: 1200px)
+		display none
+
+#compatible-size
+	@media (max-width: 1199px)
+		display none
+
 #courselist
+	width 0
 	margin-top 130px
-	.c_item
-		td
-			vertical-align middle
-		td:nth-of-type(1), td:nth-of-type(2),td:nth-of-type(4), td:nth-of-type(5), td:nth-of-type(6)
-			text-align center
+	position relative
+
+	.table
+		.c_item
+			td
+				vertical-align middle
+			td:nth-of-type(1), td:nth-of-type(2),td:nth-of-type(4), td:nth-of-type(5), td:nth-of-type(6)
+				text-align center
+
+#coursedetails
+	margin-top 90px
+	
+	&.affix-top
+		position absolute
+
+	&.affix
+		top 30px
+	
+	.navbar
+		margin-bottom 0
+
+		.navbar-inner
+			border-bottom-left-radius 0
+			border-bottom-right-radius 0
+			border-bottom none
 
 #courseheader
+	z-index 1
+
 	&.affix-top
 		position absolute
 
@@ -25,7 +64,7 @@
 			left 0
 			top -19px
 			bottom 0
-			right 0
+			right 50%
 			background-color white
 
 		.navbar, .table
@@ -70,3 +109,9 @@
 
 .savecancel
 	margin 10px
+
+.box-bordered
+	border solid 1px #DDD
+
+	&.ht300
+		height 300px
