@@ -3,4 +3,70 @@
 	left -20px
 
 #courselist
-	margin-top -37px
+	margin-top 130px
+	.c_item
+		td
+			vertical-align middle
+		td:nth-of-type(1), td:nth-of-type(2),td:nth-of-type(4), td:nth-of-type(5), td:nth-of-type(6)
+			text-align center
+
+#courseheader
+	&.affix-top
+		position absolute
+
+	&.affix
+		top 60px
+
+	#courseheader-inner
+		position relative
+
+		#courseheader-back
+			position absolute
+			left 0
+			top -19px
+			bottom 0
+			right 0
+			background-color white
+
+		.navbar, .table
+			position relative
+
+		.table
+			margin-bottom 0
+			th:nth-of-type(1), th:nth-of-type(2), th:nth-of-type(4), th:nth-of-type(5), th:nth-of-type(6)
+				text-align center
+
+#footer-container
+	position fixed
+	bottom 0
+	left 0
+	right 0
+
+	legend
+		font-size 18px
+
+	.row
+		position relative
+
+		div
+			position relative
+
+		.back
+			position absolute
+			top 0
+			left 0
+			bottom 0
+			right 0
+			background-color white
+
+		.span12
+			border-top solid 1px #DDD
+
+.tcenter
+	text-align center
+
+.tright
+	text-align right
+
+.savecancel
+	margin 10px
