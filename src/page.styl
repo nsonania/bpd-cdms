@@ -24,11 +24,19 @@
 	position relative
 
 	.table
-		.c_item
+		tr
+			cursor pointer
+
 			td
 				vertical-align middle
-			td:nth-of-type(1), td:nth-of-type(2),td:nth-of-type(4), td:nth-of-type(5), td:nth-of-type(6)
-				text-align center
+
+				&:nth-of-type(1)
+					text-align center
+					width 16%
+
+				&:nth-of-type(2)
+					text-align right
+					width 20%
 
 #coursedetails
 	margin-top 90px
@@ -71,35 +79,14 @@
 			position relative
 
 		.table
+			border-bottom none
 			margin-bottom 0
-			th:nth-of-type(1), th:nth-of-type(2), th:nth-of-type(4), th:nth-of-type(5), th:nth-of-type(6)
+
+			th:nth-of-type(1)
 				text-align center
 
-#footer-container
-	position fixed
-	bottom 0
-	left 0
-	right 0
-
-	legend
-		font-size 18px
-
-	.row
-		position relative
-
-		div
-			position relative
-
-		.back
-			position absolute
-			top 0
-			left 0
-			bottom 0
-			right 0
-			background-color white
-
-		.span12
-			border-top solid 1px #DDD
+			th:nth-of-type(2)
+				text-align right
 
 .tcenter
 	text-align center
@@ -112,6 +99,44 @@
 
 .box-bordered
 	border solid 1px #DDD
+	overflow-x none
+	overflow-y scroll
 
 	&.ht300
-		height 300px
+		height 221px
+
+	.table
+		border-bottom none
+		margin-bottom 0
+		margin-top -1px
+
+		td:first-of-type
+			width 10%
+			text-align right
+
+		td:last-of-type
+			padding-top 5px
+			padding-bottom 5px
+			width 10%
+			text-align right
+
+.table
+	border-bottom solid 1px #DDD
+
+.sectionsdetails
+	width 300px
+
+#makeschedule
+	td
+		width 25px
+		text-align center
+		cursor pointer
+
+		&:hover
+			background-color #f5f5f5
+
+		&.selected
+			background-color #d9edf7
+
+			&:hover
+				background-color #c4e3f3

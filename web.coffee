@@ -4,6 +4,7 @@ socket_io = require "socket.io"
 md5 = require "MD5"
 {spawn} = require "child_process"
 core = require "./core"
+db = require "./db"
 
 cp = spawn "cake", ["build"]
 await cp.on "exit", defer code
@@ -24,6 +25,10 @@ server = http.createServer expressServer
 io = socket_io.listen server
 io.set "log level", 0
 io.sockets.on "connection", (socket) ->
+
+	socket.on "getCourses", (callback) ->
+		db.Course.find({}).lean().exec (err, courses) ->
+			callback courses
 
 	socket.on "uploadCourses", (file, callback) ->
 		console.log "New Upload Courses"

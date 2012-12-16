@@ -31,6 +31,126 @@
 			<p class="lead tcenter">1200px minimum width required.</p>
 		</div>
 		<div id="compatible-size">
+			<div id="sectiondetails" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="sectiondetailsLabel" aria-hidden="true">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h3 id="sectiondetailsLabel">Section</h3>
+				</div>
+				<div class="modal-body">
+					<div class="sectiondetails form-horizontal">
+						<br>
+						<div class="control-group">
+							<label class="control-label" for="input-2number">Section Number</label>
+							<div class="controls">
+								<input type="text" id="input-2number" placeholder="Section Number">
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="input-2incharge">Faculty In-Charge</label>
+							<div class="controls">
+								<input type="text" id="input-2incharge" placeholder="Faculty In-Charge">
+							</div>
+						</div>
+					</div>
+					<legend>Schedule</legend>
+					<table id="makeschedule" class="table table-bordered">
+						<tr>
+							<td>S1</td>
+							<td>M1</td>
+							<td>T1</td>
+							<td>W1</td>
+							<td>Th1</td>
+							<td>F1</td>
+							<td>Sa1</td>
+						</tr>
+						<tr>
+							<td>S2</td>
+							<td>M2</td>
+							<td>T2</td>
+							<td>W2</td>
+							<td>Th2</td>
+							<td>F2</td>
+							<td>Sa2</td>
+						</tr>
+						<tr>
+							<td>S3</td>
+							<td>M3</td>
+							<td>T3</td>
+							<td>W3</td>
+							<td>Th3</td>
+							<td>F3</td>
+							<td>Sa3</td>
+						</tr>
+						<tr>
+							<td>S4</td>
+							<td>M4</td>
+							<td>T4</td>
+							<td>W4</td>
+							<td>Th4</td>
+							<td>F4</td>
+							<td>Sa4</td>
+						</tr>
+						<tr>
+							<td>S5</td>
+							<td>M5</td>
+							<td>T5</td>
+							<td>W5</td>
+							<td>Th5</td>
+							<td>F5</td>
+							<td>Sa5</td>
+						</tr>
+						<tr>
+							<td>S6</td>
+							<td>M6</td>
+							<td>T6</td>
+							<td>W6</td>
+							<td>Th6</td>
+							<td>F6</td>
+							<td>Sa6</td>
+						</tr>
+						<tr>
+							<td>S7</td>
+							<td>M7</td>
+							<td>T7</td>
+							<td>W7</td>
+							<td>Th7</td>
+							<td>F7</td>
+							<td>Sa7</td>
+						</tr>
+						<tr>
+							<td>S8</td>
+							<td>M8</td>
+							<td>T8</td>
+							<td>W8</td>
+							<td>Th8</td>
+							<td>F8</td>
+							<td>Sa8</td>
+						</tr>
+						<tr>
+							<td>S9</td>
+							<td>M9</td>
+							<td>T9</td>
+							<td>W9</td>
+							<td>Th9</td>
+							<td>F9</td>
+							<td>Sa9</td>
+						</tr>
+						<tr>
+							<td>SE</td>
+							<td>ME</td>
+							<td>TE</td>
+							<td>WE</td>
+							<td>ThE</td>
+							<td>FE</td>
+							<td>SaE</td>
+						</tr>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+					<button class="btn btn-primary">Save changes</button>
+				</div>
+			</div>
 			<br><br><br>
 			<div id="main-container" class="container hide">
 				<div class="hero-unit">
@@ -82,7 +202,7 @@
 								<div class="navbar-form pull-right">
 									<div class="input-prepend">
 										<span class="add-on"><i class="icon-search"></i></span>
-										<input type="text" placeholder="Search">
+										<input id="courses-search" type="text" placeholder="Search">
 									</div>
 								</div>
 							</div>
@@ -90,7 +210,7 @@
 						<div class="row">
 							<table class="table span6">
 								<tr>
-									<th width="20%">Compcode</th>
+									<th width="16%">Compcode</th>
 									<th width="20%">Course No.</th>
 									<th>Course Name</th>
 								</tr>
@@ -133,7 +253,7 @@
 						</div>
 						<br>
 						<div class="row">
-							<div class="span3">
+							<div id="lecturesectionsbox" class="span3">
 								<div class="navbar">
 									<div class="navbar-inner">
 										<div class="brand">Lecture Sections</div>
@@ -142,9 +262,82 @@
 										</div>
 									</div>
 								</div>
-								<div class="box-bordered ht300"></div>
+								<div class="box-bordered ht300">
+									<table class="table table-striped table-hover">
+										<tr>
+											<td>1</td>
+											<td>Dr. Sujala D. Shetty</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>2</td>
+											<td>Dr. Anand Kumar</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>1</td>
+											<td>Dr. Sujala D. Shetty</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>2</td>
+											<td>Dr. Anand Kumar</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>1</td>
+											<td>Dr. Sujala D. Shetty</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>2</td>
+											<td>Dr. Anand Kumar</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>1</td>
+											<td>Dr. Sujala D. Shetty</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>2</td>
+											<td>Dr. Anand Kumar</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>1</td>
+											<td>Dr. Sujala D. Shetty</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>2</td>
+											<td>Dr. Anand Kumar</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>1</td>
+											<td>Dr. Sujala D. Shetty</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>2</td>
+											<td>Dr. Anand Kumar</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>1</td>
+											<td>Dr. Sujala D. Shetty</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+										<tr>
+											<td>2</td>
+											<td>Dr. Anand Kumar</td>
+											<td><button class="btn btn-small"><i class="icon-pencil"></i></button></td>
+										</tr>
+									</table>
+								</div>
 							</div>
-							<div class="span3">
+							<div id="labsectionsbox" class="span3">
 								<div class="navbar">
 									<div class="navbar-inner">
 										<div class="brand">Lab Sections</div>
@@ -160,166 +353,6 @@
 				</div>
 				<div id="courselist" class="row">
 					<table class="table table-hover span6 table-striped">
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item info">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
-						<tr class="c_item">
-							<td width="20%">231</td>
-							<td width="20%">BITS C231</td>
-							<td>Artificial Intelligence</td>
-						</tr>
 					</table>
 				</div>
 			</div>
