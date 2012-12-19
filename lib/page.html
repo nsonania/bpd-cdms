@@ -12,6 +12,7 @@
 		<script src="underscore-min.js" type="text/javascript" charset="utf-8"></script>
 		<script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 		<script src="socket.io/socket.io.js"></script>
+		<script src="knockout-2.2.0.js" type="text/javascript"></script>
 		<script src="page.js" type="text/javascript" charset="utf-8"></script>
 	</head>
 	<body>
@@ -39,111 +40,29 @@
 				<div class="modal-body">
 					<div class="sectiondetails form-inline">
 						<div class="input-prepend">
-							<div class="add-on"><strong>Section #</strong></div>
-							<input type="text" id="input-2number" class="span1">
+							<div class="add-on">#</div>
+							<input type="text" class="span1" data-bind="value: number">
 						</div>
-						<div class="input-prepend pull-right">
-							<div class="add-on"><strong>Instructor</strong></div>
-							<input type="text" id="input-2incharge" class="span2">
+						<div class="input-prepend">
+							<div class="add-on">Instructor</div>
+							<input type="text" class="span2" data-bind="value: instructor">
+						</div>
+						<div class="input-prepend">
+							<div class="add-on">Capacity</div>
+							<input type="text" class="span1" data-bind="value: capacity">
 						</div>
 					</div>
 					<br>
 					<table id="makeschedule" class="table table-bordered">
-						<tr>
-							<td>S1</td>
-							<td>M1</td>
-							<td>T1</td>
-							<td>W1</td>
-							<td>Th1</td>
-							<td>F1</td>
-							<td>Sa1</td>
-						</tr>
-						<tr>
-							<td>S2</td>
-							<td>M2</td>
-							<td>T2</td>
-							<td>W2</td>
-							<td>Th2</td>
-							<td>F2</td>
-							<td>Sa2</td>
-						</tr>
-						<tr>
-							<td>S3</td>
-							<td>M3</td>
-							<td>T3</td>
-							<td>W3</td>
-							<td>Th3</td>
-							<td>F3</td>
-							<td>Sa3</td>
-						</tr>
-						<tr>
-							<td>S4</td>
-							<td>M4</td>
-							<td>T4</td>
-							<td>W4</td>
-							<td>Th4</td>
-							<td>F4</td>
-							<td>Sa4</td>
-						</tr>
-						<tr>
-							<td>S5</td>
-							<td>M5</td>
-							<td>T5</td>
-							<td>W5</td>
-							<td>Th5</td>
-							<td>F5</td>
-							<td>Sa5</td>
-						</tr>
-						<tr>
-							<td>S6</td>
-							<td>M6</td>
-							<td>T6</td>
-							<td>W6</td>
-							<td>Th6</td>
-							<td>F6</td>
-							<td>Sa6</td>
-						</tr>
-						<tr>
-							<td>S7</td>
-							<td>M7</td>
-							<td>T7</td>
-							<td>W7</td>
-							<td>Th7</td>
-							<td>F7</td>
-							<td>Sa7</td>
-						</tr>
-						<tr>
-							<td>S8</td>
-							<td>M8</td>
-							<td>T8</td>
-							<td>W8</td>
-							<td>Th8</td>
-							<td>F8</td>
-							<td>Sa8</td>
-						</tr>
-						<tr>
-							<td>S9</td>
-							<td>M9</td>
-							<td>T9</td>
-							<td>W9</td>
-							<td>Th9</td>
-							<td>F9</td>
-							<td>Sa9</td>
-						</tr>
-						<tr>
-							<td>SE</td>
-							<td>ME</td>
-							<td>TE</td>
-							<td>WE</td>
-							<td>ThE</td>
-							<td>FE</td>
-							<td>SaE</td>
-						</tr>
+						<tbody data-bind="foreach: timetable">
+							<tr data-bind="foreach: $data">
+								<td data-bind="text: slot, css: {selected: busy}, click: window.selectSlot"></td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 				<div class="modal-footer">
-					<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-					<button class="btn btn-primary">Save changes</button>
+					<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
 				</div>
 			</div>
 			<br><br><br>
@@ -184,6 +103,7 @@
 					<h1>Courses</h1>
 					<p>Add new courses and modify existing ones. Delete all sections from the previous semester and add new ones. If no sections are present, the course would be unavailable.</p>
 				</div>
+				<div style="height: 1px"></div>
 				<div id="courseheader" data-spy="affix" class="container" data-offset-top="290">
 					<div id="courseheader-inner">
 						<div id="courseheader-back"></div>
@@ -216,7 +136,7 @@
 						</div>
 					</div>
 				</div>
-				<div id="coursedetails" class="row" data-spy="affix" class="container" data-offset-top="290">
+				<div id="coursedetails" class="row container" data-spy="affix" data-offset-top="290">
 					<div class="span6 offset6">
 						<div class="form-horizontal">
 							<div class="navbar">
@@ -229,19 +149,19 @@
 								<div class="control-group">
 									<label class="control-label" for="input-1compcode">Compcode</label>
 									<div class="controls">
-										<input type="text" id="input-1compcode" placeholder="Compcode">
+										<input type="text" id="input-1compcode" placeholder="Compcode" data-bind="value: currentCourse().compcode">
 									</div>
 								</div>
 								<div class="control-group">
 									<label class="control-label" for="input-1number">Course Number</label>
 									<div class="controls">
-										<input type="text" id="input-1number" placeholder="Course Number">
+										<input type="text" id="input-1number" placeholder="Course Number" data-bind="value: currentCourse().number">
 									</div>
 								</div>
 								<div class="control-group">
 									<label class="control-label" for="input-1name">Course Name</label>
 									<div class="controls">
-										<input type="text" id="input-1name" placeholder="Course Name">
+										<input type="text" id="input-1name" placeholder="Course Name" data-bind="value: currentCourse().name">
 									</div>
 								</div>
 							</div>
@@ -259,6 +179,13 @@
 								</div>
 								<div class="box-bordered ht300">
 									<table class="table table-striped table-hover">
+										<tbody data-bind="foreach: currentCourse().lectureSections()">
+											<tr>
+												<td data-bind="text: number"></td>
+												<td data-bind="text: instructor"></td>
+												<td><button class="btn btn-small" data-bind="click: editSection"><i class="icon-pencil"></i></button></td>
+											</tr>
+										</tbody>
 									</table>
 								</div>
 							</div>
@@ -273,6 +200,13 @@
 								</div>
 								<div class="box-bordered ht300">
 									<table class="table table-striped table-hover">
+										<tbody data-bind="foreach: currentCourse().labSections()">
+											<tr>
+												<td data-bind="text: number"></td>
+												<td data-bind="text: instructor"></td>
+												<td><button class="btn btn-small" data-bind="click: editSection"><i class="icon-pencil"></i></button></td>
+											</tr>
+										</tbody>
 									</table>
 								</div>
 							</div>
@@ -281,6 +215,13 @@
 				</div>
 				<div id="courselist" class="row">
 					<table class="table table-hover span6 table-striped">
+						<tbody data-bind="foreach: courses">
+							<tr data-bind="css: {info: $parent.currentCourse() == $data}, visible: visible, click: selectCourse">
+								<td data-bind="text: compcode"></td>
+								<td data-bind="text: number"></td>
+								<td data-bind="text: name"></td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>
