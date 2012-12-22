@@ -35,6 +35,14 @@ io.sockets.on "connection", (socket) ->
 		console.log "Committing Courses"
 		core.commitCourses courses, callback
 
+	socket.on "importCourses", (courses, callback) ->
+		console.log "Importing Courses"
+		core.importCourses courses, callback
+
+	socket.on "deleteAllCourses", (callback) ->
+		console.log "Delete All Courses"
+		core.deleteAllCourses callback
+
 	socket.on "uploadCourses", (file, callback) ->
 		console.log "New Upload Courses"
 		core.buildCoursesCollection file, callback

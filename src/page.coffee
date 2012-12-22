@@ -53,7 +53,7 @@ class CourseViewModel
 		window.viewmodel.currentCourse @
 	deleteCourse: =>
 		window.viewmodel.courses.remove @
-		window.viewmodel.courses()[0].selectCourse()
+		window.viewmodel.filteredCourses()[0].selectCourse()
 	distributeCapacity: =>
 		newCapacity = $(arguments[1].currentTarget).prev().val()
 		$(arguments[1].currentTarget).prev().val ""
@@ -79,7 +79,7 @@ class CourseViewModel
 		@labSections.push section = new SectionViewModel()
 		section.editSection()
 	toData: =>
-		compcode: Number @compcode()
+		compcode: @compcode()
 		number: @number()
 		name: @name()
 		hasLectureSections: true if @lectureSections().length > 0
@@ -126,6 +126,26 @@ class CoursesViewModel
 		@sort "number"
 	sortName: =>
 		@sort "name"
+	selectFile: =>
+		$fup = $("<input type='file' accept='text/csv'>")
+		$fup.one "change", =>
+			return if $fup[0].files.length is 0
+			fs = new FileReader()
+			fs.onload = (e) =>
+				$("#pleaseWaitBox").css display: "block"
+				socket.emit "importCourses", e.target.result, (success) =>
+					$("#pleaseWaitBox").css display: "none"
+					if success
+						@fetchCourses()
+					else
+						alert "Parsing Error. Please recheck .csv file for errors."
+			fs.readAsText $fup[0].files[0]
+		$fup.trigger "click"
+	deleteAll: =>
+		$("#pleaseWaitBox").css display: "block"
+		socket.emit "deleteAllCourses", (success) =>
+			$("#pleaseWaitBox").css display: "none"
+			@fetchCourses()
 	toData: =>
 		course.toData() for course in @courses()
 
