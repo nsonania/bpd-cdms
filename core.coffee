@@ -5,6 +5,60 @@ db = require "./db"
 fs = require "fs"
 uap = require "./uap"
 
+exports.commitCourses = (new_courses, callback) ->
+	db.Course.find {}, (err, courses) ->
+		return console.log err if err?
+		for course in courses
+			course.remove()
+			course.save()
+		course = null
+		for obj in new_courses
+			course = new db.Course obj
+			course.save()
+		callback true
+
+exports.importCourses = (data, callback) ->
+	db.Course.find {}, (err, courses) ->
+		return console.log err if err?
+		for course in courses
+			course.remove()
+			course.save()
+		course = null
+		lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
+		for line in lines[6..]
+			if line[0] not in [null, undefined]
+				if course?
+					if lectureSections.length > 0
+						course.set "hasLectures", true
+						course.set "lectureSections", lectureSections
+					if labSections.length > 0
+						course.set "hasLab", true
+						course.set "labSections", labSections
+					course.save()
+				course = new db.Course
+					compcode: parseInt line[0]
+					number: line[1]
+					name: line[2]
+				lectureSections = []
+				labSections = []
+				currentSections = if line[3].indexOf "0" is 0 then labSections else lectureSections
+			else
+				if line[4] is "1" then currentSections = labSections
+			currentSections.push
+				number: currentSections.length + 1
+				instructor: line[5]
+				timeslots: do ->
+					ts =
+						for day in "#{line[7]} #{line[8]}".split(" ")._filter (x) -> x? and x.length > 0
+							for di, dii in ["Su", "M", "T", "W", "Th", "F", "S"]
+								if day[0...di.length] is di
+									hours = day[di.length..]
+									break
+							for hour in hours
+								day: dii
+								hour: Number hour
+					_(ts).flatten()
+
 exports.buildCoursesCollection = (data, callback) ->
 	db.Course.find {}, (err, courses) ->
 		return console.log err if err?

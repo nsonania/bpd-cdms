@@ -14,13 +14,23 @@
 	@media (min-width: 1200px)
 		display none
 
+#pleaseWaitBox
+	position fixed
+	top 0
+	left 0
+	bottom 0
+	right 0
+	background-color rgba(255, 255, 255, 0.9)
+	z-index 2
+	display none
+
 #compatible-size
 	@media (max-width: 1199px)
 		display none
 
 #courselist
 	width 50%
-	margin-top 100px
+	margin-top 99px
 	position relative
 
 	.table
@@ -32,7 +42,7 @@
 
 				&:nth-of-type(1)
 					text-align center
-					width 16%
+					width 20%
 
 				&:nth-of-type(2)
 					text-align right
@@ -57,6 +67,7 @@
 
 #courseheader
 	z-index 1
+	height 0px
 
 	&.affix-top
 		position absolute
@@ -66,14 +77,18 @@
 
 	#courseheader-inner
 		position relative
+		height 0px
 
 		#courseheader-back
 			position absolute
 			left 0
-			top -19px
-			bottom 0
+			top -20px
+			height 119px
 			right 50%
 			background-color white
+
+		.row
+			width 50%
 
 		.navbar, .table
 			position relative
@@ -81,6 +96,9 @@
 		.table
 			border-bottom none
 			margin-bottom 0
+
+			th
+				cursor pointer
 
 			th:nth-of-type(1)
 				text-align center
@@ -103,7 +121,7 @@
 	overflow-y scroll
 
 	&.ht300
-		height 221px
+		height 147px
 
 	.table
 		border-bottom none
@@ -120,7 +138,7 @@
 			width 10%
 			text-align right
 
-.table
+table.table
 	border-bottom solid 1px #DDD
 
 .sectionsdetails
@@ -141,3 +159,26 @@
 
 			&:hover
 				background-color #c4e3f3
+
+.modal-footer
+	text-align left
+
+.table-visibleStriped
+	tr:nth-child(odd)
+		td, th
+			background-color #f9f9f9
+
+		&:hover
+			td, th
+				background-color #f5f5f5
+
+	tr.info
+		background-color #d9edf7
+
+		&:hover
+			background-color #c4e3f3
+
+.navbar
+	.navbar-form
+		.input-prepend, .input-append
+			margin 5px 0

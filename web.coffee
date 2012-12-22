@@ -27,8 +27,13 @@ io.set "log level", 0
 io.sockets.on "connection", (socket) ->
 
 	socket.on "getCourses", (callback) ->
+		console.log "Fetching Courses"
 		db.Course.find({}).lean().exec (err, courses) ->
 			callback courses
+
+	socket.on "commitCourses", (courses, callback) ->
+		console.log "Committing Courses"
+		core.commitCourses courses, callback
 
 	socket.on "uploadCourses", (file, callback) ->
 		console.log "New Upload Courses"
