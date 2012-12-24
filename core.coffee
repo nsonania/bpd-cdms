@@ -6,16 +6,12 @@ fs = require "fs"
 uap = require "./uap"
 
 exports.commitCourses = (new_courses, callback) ->
-	db.Course.find {}, (err, courses) ->
-		return console.log err if err?
-		await for course in courses
-			course.remove defer err, robj
-			course.save defer err, robj
-		course = null
-		await for obj in new_courses
-			course = new db.Course obj
-			course.save defer err, robj
-		callback true
+	await for obj in new_courses
+		db.Course.findOneAndRemove _id: obj._id, defer err, robj
+	await for obj in new_courses
+		course = new db.Course obj
+		course.save defer err, robj
+	callback true
 
 exports.importCourses = (data, callback) ->
 	db.Course.find {}, (err, oldCourses) ->
@@ -32,10 +28,12 @@ exports.importCourses = (data, callback) ->
 						course.set "hasLab", true
 						course.set "labSections", labSections
 					course.save defer err, robj
+				_oic = undefined
 				for oc in oldCourses when (oc.get("compcode").toString() is line[0].toString())
-					oc.remove defer err, robj
-					oc.save defer err, robj
+					_oic = oc.get("_id")
+					await db.Course.findOneAndRemove _id: _oic, defer err, robj
 				course = new db.Course
+					_id: _oic
 					compcode: line[0]
 					number: line[1]
 					name: line[2]

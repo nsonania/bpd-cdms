@@ -28,8 +28,7 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "getCourses", (callback) ->
 		console.log "Fetching Courses"
-		db.Course.find({}).lean().exec (err, courses) ->
-			callback courses
+		db.Course.find({}).lean().exec (err, courses) -> callback courses
 
 	socket.on "commitCourses", (courses, callback) ->
 		console.log "Committing Courses"
@@ -43,12 +42,8 @@ io.sockets.on "connection", (socket) ->
 		console.log "Delete All Courses"
 		core.deleteAllCourses callback
 
-	socket.on "uploadCourses", (file, callback) ->
-		console.log "New Upload Courses"
-		core.buildCoursesCollection file, callback
-
-	socket.on "uploadStudents", (file, callback) ->
-		console.log "New Upload Students"
-		core.buildStudentsCollection file, callback
+	socket.on "getStudents", (callback) ->
+		console.log "Fetching Students"
+		db.Student.find({}).lean().exec (err, students) -> callback students
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"

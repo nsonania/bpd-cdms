@@ -21,8 +21,8 @@
 				<div class="container">
 					<a class="brand active" href="#">BPDC - Registration System</a>
 					<ul class="nav">
-						<li><a href="#">Courses</a></li>
-						<li><a href="#">Students</a></li>
+						<li data-bind="click: gotoCourses, css: {active: activeView() == 'coursesView'}"><a href="#">Courses</a></li>
+						<li data-bind="click: gotoStudents, css: {active: activeView() == 'studentsView'}"><a href="#">Students</a></li>
 					</ul>
 				</div>
 			</div>
@@ -31,9 +31,9 @@
 			<br><br><br><br><br>
 			<p class="lead tcenter">1200px minimum width required.</p>
 		</div>
-		<div id="pleaseWaitBox">
+		<div id="pleaseWaitBox" data-bind="visible: pleaseWaitVisible">
 			<br><br><br><br><br>
-			<p class="lead tcenter">Please wait...</p>
+			<p class="lead tcenter" data-bind="text: pleaseWaitStatus"></p>
 		</div>
 		<div id="compatible-size">
 			<br><br><br>
@@ -69,7 +69,7 @@
 					</div>
 				</div>
 			</div>
-			<div id="courses-container" class="container">
+			<div id="courses-container" data-bind="with: coursesViewModel, visible: activeView() == 'coursesView'" class="container">
 				<div id="sectiondetails" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="sectiondetailsLabel" aria-hidden="true" data-bind="with: currentSection">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -159,29 +159,37 @@
 							<div class="box-bordered">
 								<br>
 								<div class="control-group">
-									<label class="control-label" for="input-1compcode">Compcode</label>
+									<label class="control-label">Compcode</label>
 									<div class="controls">
 										<input type="text" placeholder="Compcode" data-bind="value: compcode">
 									</div>
 								</div>
 								<div class="control-group">
-									<label class="control-label" for="input-1number">Course Number</label>
+									<label class="control-label">Course Number</label>
 									<div class="controls">
 										<input type="text" placeholder="Course Number" data-bind="value: number">
 									</div>
 								</div>
 								<div class="control-group">
-									<label class="control-label" for="input-1name">Course Name</label>
+									<label class="control-label">Course Name</label>
 									<div class="controls">
 										<input type="text" placeholder="Course Name" data-bind="value: name">
 									</div>
 								</div>
 								<div class="control-group">
-									<label class="control-label" for="input-1name">Set Capacity</label>
+									<label class="control-label">Set Capacity</label>
 									<div class="controls">
 										<div class="input-append">
 											<input type="text" placeholder="Set Capacity">
 											<button class="btn" data-bind="click: distributeCapacity"><i class="icon-edit"></i></button>
+										</div>
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label">Elective Open to</label>
+									<div class="controls">
+										<div id="departmentsToggles" class="btn-group" data-bind="foreach: openTo">
+											<button class="btn btn-small" data-bind="text: department, css: {'btn-info': open}, click: toggle"></button>
 										</div>
 									</div>
 								</div>
@@ -234,8 +242,8 @@
 						</div>
 						<br>
 						<div class="pull-right commitBar">
-							<button class="btn" data-bind="click: $root.fetchCourses">Revert Changes</button>
-							<button class="btn btn-primary" data-bind="click: $root.commitCourses">Commit Changes</button>
+							<button class="btn" data-bind="click: $parent.fetchCourses">Revert Changes</button>
+							<button class="btn btn-primary" data-bind="click: $parent.commitCourses">Commit Changes</button>
 						</div>
 					</div>
 				</div>
@@ -245,6 +253,154 @@
 							<tr data-bind="css: {info: $parent.currentCourse() == $data}, click: selectCourse">
 								<td data-bind="text: typeof compcode() !== 'undefined' && compcode() !== null && compcode() !== '' ? compcode() : '---'"></td>
 								<td data-bind="text: typeof number() !== 'undefined' && number() !== null && number() !== '' ? number() : '---'"></td>
+								<td data-bind="text: typeof name() !== 'undefined' && name() !== null && name() !== '' ? name() : '-----'"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div id="students-container" data-bind="with: studentsViewModel, visible: activeView() == 'studentsView'" class="container">
+				<div class="hero-unit">
+					<h1>Students</h1>
+					<p>Import Students from a <em>.csv</em> file. Assign courses/sections due to difficult timetables. Check students' registration and validation statuses.</p>
+				</div>
+				<div style="height: 1px"></div>
+				<div id="studentheader" data-spy="affix" class="container" data-offset-top="290">
+					<div id="studentheader-inner">
+						<div id="studentheader-back"></div>
+						<div class="navbar">
+							<div class="navbar-inner">
+								<div class="brand">Students</div>
+								<ul class="nav pull-right">
+									<li class="navbar-form">
+										<div class="input-prepend">
+											<span class="add-on"><i class="icon-search"></i></span>
+											<input type="text" data-bind="event: {keyup: filter}" placeholder="Search">
+										</div>
+									</li>
+									<li class="divider-vertical"></li>
+									<li class="btn-group">
+										<button class="btn" data-bind="click: selectFile" title="Import from .csv" rel="tooltip"><i class="icon-file"></i></button>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<table class="table span6">
+								<tr>
+									<th width="30%" data-bind="click: sortStudentId">Student Id<i class="icon-arrow-up" data-bind="visible: sort() == 'studentId'"></i></th>
+									<th data-bind="click: sortName">Name<i class="icon-arrow-up" data-bind="visible: sort() == 'name'"></i></th>
+								</tr>
+								<tr>
+									<td colspan="6" style="padding: 0;"></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div id="studentdetails" class="row container" data-spy="affix" data-offset-top="290" data-bind="with: currentStudent">
+					<div class="span6 offset6">
+						<div class="form-horizontal">
+							<div class="navbar">
+								<div class="navbar-inner">
+									<div class="brand">Student Information</div>
+									<div class="btn-group pull-right">
+										<button class="btn" data-bind="click: deleteStudent" title="Remove Student" rel="tooltip"><i class="icon-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div class="box-bordered">
+								<br>
+								<div class="control-group">
+									<label class="control-label">Student Id</label>
+									<div class="controls">
+										<input type="text" placeholder="Student Id" data-bind="value: studentId">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label">Student Name</label>
+									<div class="controls">
+										<input type="text" placeholder="Student Name" data-bind="value: name">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label">Password</label>
+									<div class="controls">
+										<span data-bind="text: newPassword, visible: typeof newPassword() !== 'undefined' && newPassword() !== null && newPassword() !== ''"></span>
+										<button class="btn" data-bind="click: resetPassword">Reset</button>
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label">Department(s)</label>
+									<div class="controls">
+										<div id="departmentsToggles" class="btn-group" data-bind="foreach: departments">
+											<button class="btn btn-small" data-bind="text: department, css: {'btn-info': open}, click: toggle"></button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<br>
+						<div class="row">
+							<div id="coursesbox" class="span6">
+								<div class="navbar">
+									<div class="navbar-inner">
+										<div class="brand">Courses</div>
+										<div class="navbar-form pull-right">
+											<div class="input-prepend btn-group">
+												<button class="btn dropdown-toggle btn-narrow" data-toggle="dropdown" title="Filter Courses" rel="tooltip"><i class="icon-search"></i><span class="caret"></span></button>
+												<input type="text" data-bind="value: query, valueUpdate: 'afterkeydown'" placeholder="Search">
+												<ul class="dropdown-menu">
+													<li data-bind="css: {active: filterCategory() == 0}, click: filterCat0"><a href="#">All Courses</a></li>
+													<li data-bind="css: {active: filterCategory() == 1}, click: filterCat1"><a href="#">BCs and PSCs</a></li>
+													<li data-bind="css: {active: filterCategory() == 2}, click: filterCat2"><a href="#">Selected Courses</a></li>
+												</ul>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="box-bordered ht300">
+									<table class="table table-striped table-hover">
+										<tbody data-bind="foreach: filteredCourses">
+											<tr>
+												<td data-bind="text: course.number"></td>
+												<td>
+													<div class="btn-group">
+														<button class="btn btn-small" data-bind="css: {'btn-info': bc}, click: $parent.toggleBc">BC</button>
+														<button class="btn btn-small" data-bind="css: {'btn-info': psc}, click: $parent.togglePsc">PSC</button>
+													</div>
+													<button class="btn btn-small" data-bind="css: {'btn-info': selected}, click: $parent.toggleSelected">Selected</button>
+													<div class="btn-group" data-bind="visible: selected && course.lectureSections().length > 0">
+														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lecture Section' + (typeof selectedLectureSection !== 'undefined' && selectedLectureSection !== null ? ': ' + selectedLectureSection : '')"></button>
+														<ul class="dropdown-menu" data-bind="foreach: course.lectureSections">
+															<li data-bind="css: {active: $parent.selectedLectureSection == number()}, click: $parents[1].selectLectureSection.bind($data, $parents)"><a href="#" data-bind="text: number() + ': ' + instructor()"></a></li>
+														</ul>
+													</div>
+													<div class="btn-group" data-bind="visible: selected && course.labSections().length > 0">
+														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lab Section' + (typeof selectedLabSection !== 'undefined' && selectedLabSection !== null ? ': ' + selectedLabSection : '')"></button>
+														<ul class="dropdown-menu" data-bind="foreach: course.labSections">
+															<li data-bind="css: {active: $parent.selectedLabSection == number()}, click: $parents[1].selectLabSection.bind($data, $parents)"><a href="#" data-bind="text: number() + ': ' + instructor()"></a></li>
+														</ul>
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<br>
+						<div class="pull-right commitBar">
+							<button class="btn" data-bind="click: $parent.fetchStudents">Revert Changes</button>
+							<button class="btn btn-primary" data-bind="click: $parent.commitStudents">Commit Changes</button>
+						</div>
+					</div>
+				</div>
+				<div id="studentlist" class="row">
+					<table class="table table-hover span6 table-visibleStriped">
+						<tbody data-bind="foreach: filteredStudents">
+							<tr data-bind="css: {info: $parent.currentStudent() == $data}, click: selectStudent">
+								<td data-bind="text: typeof studentId() !== 'undefined' && studentId() !== null && studentId() !== '' ? studentId() : '---'"></td>
 								<td data-bind="text: typeof name() !== 'undefined' && name() !== null && name() !== '' ? name() : '-----'"></td>
 							</tr>
 						</tbody>
