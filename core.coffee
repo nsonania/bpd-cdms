@@ -77,3 +77,17 @@ exports.deleteAllCourses = (callback) ->
 			course.remove defer err, robj
 			course.save defer err, robj
 		callback true
+
+prepStudent = (student) ->
+	student.selectedcourses._each (x) -> x.course_id = db.toObjectId x.course_id
+	(student.bc = student.bc._map (x) -> db.toObjectId x) if student.bc?
+	(student.psc = student.psc._map (x) -> db.toObjectId x) if student.psc?
+	student
+
+exports.commitStudents = (new_students, callback) ->
+	await for obj in new_students
+		db.Student.findOneAndRemove _id: obj._id, defer err, robj
+	await for obj in new_students
+		student = new db.Student prepStudent obj
+		student.save defer err, robj
+	callback true

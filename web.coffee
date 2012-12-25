@@ -46,4 +46,8 @@ io.sockets.on "connection", (socket) ->
 		console.log "Fetching Students"
 		db.Student.find({}).lean().exec (err, students) -> callback students
 
+	socket.on "commitStudents", (students, callback) ->
+		console.log "Committing Students"
+		core.commitStudents students, callback
+
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"

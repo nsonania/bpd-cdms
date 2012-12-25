@@ -165,12 +165,17 @@ class SelectedCourseViewModel
 		@selectedLectureSection = ko.observable selectedLectureSection
 		@selectedLabSection = ko.observable selectedLabSection
 		@course = ko.computed => _(window.viewmodel.coursesViewModel().courses()).find (x) -> x._id is @course_id
+	toData: =>
+		course_id: @course_id()
+		selectedLectureSection: @selectedLectureSection()
+		selectedLabSection: @selectedLabSection()
 
 class StudentViewModel
 	constructor: ({studentId, name, password, departments, registered, validated, bc, psc, selectedcourses, _id}) ->
 		@_id = ko.observable _id ? undefined
 		@studentId = ko.observable studentId ? undefined
 		@name = ko.observable name ? undefined
+		@password = ko.observable password ? undefined
 		@newPassword = ko.observable undefined
 		@departments = ko.observableArray (new OpenToViewModel department: dept, open: _(departments ? []).map((x) -> x.toUpperCase()).indexOf(dept) >= 0 for dept in ["EEE", "ECE", "EIE", "CS", "ME", "BIOT", "CHE"])
 		@registered = ko.observable registered ? undefined
@@ -186,11 +191,11 @@ class StudentViewModel
 				psc: @psc().indexOf(course._id()) >= 0
 				selected: _(@selectedcourses()).any (x) => x.course_id() is course._id()
 				selectedLectureSection: _(@selectedcourses()).find((x) => x.course_id() is course._id()).selectedLectureSection() if course.lectureSections().length > 0 and _(@selectedcourses()).any (x) => x.course_id() is course._id()
-				selectedLabSection: _(@selectedcourses()).find((x) => x.course_id() is course._id()).selectedLabSection() if course.labSections().length > 0 and _(@selectedcourses()).any (x) => x.course_id() is course._id
+				selectedLabSection: _(@selectedcourses()).find((x) => x.course_id() is course._id()).selectedLabSection() if course.labSections().length > 0 and _(@selectedcourses()).any (x) => x.course_id() is course._id()
 		@filterCategory = ko.observable 1
 		@query = ko.observable ""
 		@filteredCourses = ko.computed =>
-			query = @query()
+			query = @query().toLowerCase()
 			cat = 
 				switch @filterCategory()
 					when 0 then @courses()
@@ -242,6 +247,17 @@ class StudentViewModel
 		$section = arguments[1]
 		$course = arguments[0][0]
 		_(@selectedcourses()).find((x) -> x.course_id() is $course.course._id()).selectedLabSection $section.number()
+	toData: =>
+		_id: @_id()
+		studentId: @studentId()
+		name: @name()
+		password: @password()
+		departments: department() for {department, open} in @departments() when open()
+		registered: @registered()
+		validated: @validated()
+		bc: @bc() if @bc().length > 0
+		psc: @psc() if @psc().length > 0
+		selectedcourses: course.toData() for course in @selectedcourses()
 
 class StudentsViewModel
 	constructor: ({students}) ->
@@ -278,9 +294,18 @@ class StudentsViewModel
 	sortName: =>
 		@sort "name"
 	fetchStudents: =>
+		window.viewmodel.pleaseWaitStatus "Fetching Students..."
+		socket.emit "getStudents", (students) =>
+			window.viewmodel.pleaseWaitStatus undefined
+			@students (new StudentViewModel student for student in students)
+			@currentStudent @filteredStudents()[0]
 	commitStudents: =>
+		window.viewmodel.pleaseWaitStatus "Saving changes..."
+		students = @toData()
+		socket.emit "commitStudents", students, (result) =>
+			window.viewmodel.pleaseWaitStatus undefined
 	toData: =>
-		course.toData() for course in @courses()
+		student.toData() for student in @students()
 
 class BodyViewModel
 	constructor: ->
