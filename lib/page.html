@@ -185,14 +185,6 @@
 										</div>
 									</div>
 								</div>
-								<div class="control-group">
-									<label class="control-label">Elective Open to</label>
-									<div class="controls">
-										<div id="departmentsToggles" class="btn-group" data-bind="foreach: openTo">
-											<button class="btn btn-small" data-bind="text: department, css: {'btn-info': open}, click: toggle"></button>
-										</div>
-									</div>
-								</div>
 							</div>
 						</div>
 						<br>
@@ -280,6 +272,7 @@
 									</li>
 									<li class="divider-vertical"></li>
 									<li class="btn-group">
+										<button class="btn" data-bind="click: newStudent" title="Add Student" rel="tooltip"><i class="icon-plus"></i></button>
 										<button class="btn" data-bind="click: selectFile" title="Import from .csv" rel="tooltip"><i class="icon-file"></i></button>
 										<button class="btn" data-bind="click: deleteAll" title="Delete All Students" rel="tooltip"><i class="icon-trash"></i></button>
 									</li>
@@ -332,11 +325,10 @@
 									</div>
 								</div>
 								<div class="control-group">
-									<label class="control-label">Department(s)</label>
-									<div class="controls">
-										<div id="departmentsToggles" class="btn-group" data-bind="foreach: departments">
-											<button class="btn btn-small" data-bind="text: department, css: {'btn-info': open}, click: toggle"></button>
-										</div>
+									<label class="control-label">Status</label>
+									<div class="controls form-inline">
+										<button class="btn" data-bind="css: {'btn-success': registered}, click: toggleRegistered, disable: validated">Registered</button>
+										<button class="btn" data-bind="css: {'btn-success': validated}, click: toggleValidated, enable: registered">Validated</button>
 									</div>
 								</div>
 							</div>
@@ -353,7 +345,7 @@
 												<input type="text" data-bind="value: query, valueUpdate: 'afterkeydown'" placeholder="Search">
 												<ul class="dropdown-menu">
 													<li data-bind="css: {active: filterCategory() == 0}, click: filterCat0"><a href="#">All Courses</a></li>
-													<li data-bind="css: {active: filterCategory() == 1}, click: filterCat1"><a href="#">BCs and PSCs</a></li>
+													<li data-bind="css: {active: filterCategory() == 1}, click: filterCat1"><a href="#">BCs, PSCs &amp; ELs</a></li>
 													<li data-bind="css: {active: filterCategory() == 2}, click: filterCat2"><a href="#">Selected Courses</a></li>
 												</ul>
 											</div>
@@ -369,6 +361,7 @@
 													<div class="btn-group">
 														<button class="btn btn-small" data-bind="css: {'btn-info': bc}, click: $parent.toggleBc">BC</button>
 														<button class="btn btn-small" data-bind="css: {'btn-info': psc}, click: $parent.togglePsc">PSC</button>
+														<button class="btn btn-small" data-bind="css: {'btn-info': el}, click: $parent.toggleEl">EL</button>
 													</div>
 													<button class="btn btn-small" data-bind="css: {'btn-info': selected}, click: $parent.toggleSelected">Selected</button>
 													<div class="btn-group" data-bind="visible: selected && course.lectureSections().length > 0">

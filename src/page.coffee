@@ -40,13 +40,6 @@ class SectionViewModel
 		capacity: Number @capacity()
 		timeslots: _(timeslots).flatten()
 
-class OpenToViewModel
-	constructor: ({department, open}) ->
-		@department = ko.observable department
-		@open = ko.observable open
-	toggle: =>
-		@open not @open()
-
 class CourseViewModel
 	constructor: ({compcode, number, name, lectureSections, labSections, otherDates, openTo, _id}) ->
 		@_id = ko.observable _id ? undefined
@@ -57,7 +50,6 @@ class CourseViewModel
 		@labSections = ko.observableArray (new SectionViewModel section for section in labSections ? [])
 		@visible = ko.observable true
 		@otherDates = ko.observable otherDates ? []
-		@openTo = ko.observableArray (new OpenToViewModel department: dept, open: (openTo ? []).indexOf(dept) >= 0 for dept in ["EEE", "ECE", "EIE", "CS", "ME", "BIOT", "CHE"])
 	selectCourse: =>
 		window.viewmodel.coursesViewModel().currentCourse @
 	deleteCourse: =>
@@ -97,7 +89,6 @@ class CourseViewModel
 		hasLabSections: true if @labSections().length > 0
 		labSections: section.toData() for section in @labSections() if @labSections().length > 0
 		otherDates: @otherDates()
-		openTo: department() for {department, open} in @openTo() when open()
 class CoursesViewModel
 	constructor: ({courses}) ->
 		@courses = ko.observableArray (new CourseViewModel course for course in courses)
@@ -171,17 +162,17 @@ class SelectedCourseViewModel
 		selectedLabSection: @selectedLabSection()
 
 class StudentViewModel
-	constructor: ({studentId, name, password, departments, registered, validated, bc, psc, selectedcourses, _id}) ->
+	constructor: ({studentId, name, password, registered, validated, bc, psc, el, selectedcourses, _id}) ->
 		@_id = ko.observable _id ? undefined
 		@studentId = ko.observable studentId ? undefined
 		@name = ko.observable name ? undefined
 		@password = ko.observable password ? undefined
 		@newPassword = ko.observable undefined
-		@departments = ko.observableArray (new OpenToViewModel department: dept, open: _(departments ? []).map((x) -> x.toUpperCase()).indexOf(dept) >= 0 for dept in ["EEE", "ECE", "EIE", "CS", "ME", "BIOT", "CHE"])
 		@registered = ko.observable registered ? undefined
 		@validated = ko.observable validated ? undefined
 		@bc = ko.observableArray bc ? []
 		@psc = ko.observableArray psc ? []
+		@el = ko.observableArray el ? []
 		@selectedcourses = ko.observableArray (new SelectedCourseViewModel sc for sc in selectedcourses ? [])
 		@visible = ko.observable true
 		@courses = ko.computed =>
@@ -189,6 +180,7 @@ class StudentViewModel
 				course: course
 				bc: @bc().indexOf(course._id()) >= 0
 				psc: @psc().indexOf(course._id()) >= 0
+				el: @el().indexOf(course._id()) >= 0
 				selected: _(@selectedcourses()).any (x) => x.course_id() is course._id()
 				selectedLectureSection: _(@selectedcourses()).find((x) => x.course_id() is course._id()).selectedLectureSection() if course.lectureSections().length > 0 and _(@selectedcourses()).any (x) => x.course_id() is course._id()
 				selectedLabSection: _(@selectedcourses()).find((x) => x.course_id() is course._id()).selectedLabSection() if course.labSections().length > 0 and _(@selectedcourses()).any (x) => x.course_id() is course._id()
@@ -199,7 +191,7 @@ class StudentViewModel
 			cat = 
 				switch @filterCategory()
 					when 0 then @courses()
-					when 1 then _(@courses()).filter (x) => x.bc or x.psc
+					when 1 then _(@courses()).filter (x) => x.bc or x.psc or x.el
 					when 2 then _(@courses()).filter (x) => x.selected
 			_(cat).filter (x) =>
 				course = x.course
@@ -227,12 +219,24 @@ class StudentViewModel
 			@bc.remove $data.course._id()
 		else
 			@bc.push $data.course._id()
+		@psc.remove $data.course._id()
+		@el.remove $data.course._id()
 	togglePsc: =>
 		$data = arguments[0]
 		if @psc().indexOf($data.course._id()) >= 0
 			@psc.remove $data.course._id()
 		else
 			@psc.push $data.course._id()
+		@bc.remove $data.course._id()
+		@el.remove $data.course._id()
+	toggleEl: =>
+		$data = arguments[0]
+		if @el().indexOf($data.course._id()) >= 0
+			@el.remove $data.course._id()
+		else
+			@el.push $data.course._id()
+		@bc.remove $data.course._id()
+		@psc.remove $data.course._id()
 	toggleSelected: =>
 		$data = arguments[0]
 		if _(@selectedcourses()).any((x) -> x.course_id() is $data.course._id())
@@ -247,16 +251,20 @@ class StudentViewModel
 		$section = arguments[1]
 		$course = arguments[0][0]
 		_(@selectedcourses()).find((x) -> x.course_id() is $course.course._id()).selectedLabSection $section.number()
+	toggleRegistered: =>
+		@registered not @registered()
+	toggleValidated: =>
+		@validated not @validated()
 	toData: =>
 		_id: @_id()
 		studentId: @studentId()
 		name: @name()
 		password: @password()
-		departments: department() for {department, open} in @departments() when open()
 		registered: @registered()
 		validated: @validated()
 		bc: @bc() if @bc().length > 0
 		psc: @psc() if @psc().length > 0
+		el: @el() if @el().length > 0
 		selectedcourses: course.toData() for course in @selectedcourses()
 
 class StudentsViewModel
@@ -273,6 +281,10 @@ class StudentsViewModel
 				student.visible true
 			if student.name().toLowerCase().indexOf(query) >= 0
 				student.visible true
+	newStudent: =>
+		@students.push student = new StudentViewModel {}
+		student.selectStudent()
+		window.scrollTo 0, document.height
 	selectFile: =>
 		$fup = $("<input type='file' accept='text/csv'>")
 		$fup.one "change", =>

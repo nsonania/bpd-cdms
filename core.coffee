@@ -7,12 +7,12 @@ uap = require "./uap"
 
 exports.commitCourses = (new_courses, callback) ->
 	db.Course.find {}, (err, oldCourses) ->
-		await for course in oldCourses
-			course.remove()
-			course.save defer err, robj
-		await for obj in new_courses
+		for course in oldCourses
+			await course.remove defer err, robj
+			await course.save defer err, robj
+		for obj in new_courses
 			course = new db.Course obj
-			course.save defer err, robj
+			await course.save defer err, robj
 		callback true
 
 exports.importCourses = (data, callback) ->
@@ -20,7 +20,7 @@ exports.importCourses = (data, callback) ->
 		return console.log err if err?
 		course = null
 		lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
-		await for line in lines[6..]
+		for line in lines[6..]
 			if line[0] not in [null, undefined]
 				if course?
 					if lectureSections.length > 0
@@ -29,7 +29,7 @@ exports.importCourses = (data, callback) ->
 					if labSections.length > 0
 						course.set "hasLab", true
 						course.set "labSections", labSections
-					course.save defer err, robj
+					await course.save defer err, robj
 				_oic = undefined
 				for oc in oldCourses when (oc.get("compcode").toString() is line[0].toString())
 					_oic = oc.get("_id")
@@ -75,9 +75,9 @@ exports.importCourses = (data, callback) ->
 exports.deleteAllCourses = (callback) ->
 	db.Course.find {}, (err, courses) ->
 		return console.log err if err?
-		await for course in courses
-			course.remove defer err, robj
-			course.save defer err, robj
+		for course in courses
+			await course.remove defer err, robj
+			await course.save defer err, robj
 		callback true
 
 prepStudent = (student) ->
@@ -88,12 +88,12 @@ prepStudent = (student) ->
 
 exports.commitStudents = (new_students, callback) ->
 	db.Student.find {}, (err, oldStudents) ->
-		await for student in oldStudents
-			student.remove()
-			student.save defer err, robj
-		await for obj in new_students
+		for student in oldStudents
+			await student.remove defer err, robj
+			await student.save defer err, robj
+		for obj in new_students
 			student = new db.Student prepStudent obj
-			student.save defer err, robj
+			await student.save defer err, robj
 		callback true
 
 exports.importStudents = (data, callback) ->
@@ -102,7 +102,7 @@ exports.importStudents = (data, callback) ->
 		db.Student.find {}, (err, oldStudents) ->
 			return console.log err if err?
 			lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(/,(?=(?:[^"\\]*(?:\\.|"(?:[^"\\]*\\.)*[^"\\]*"))*[^"]*$)/g)._map((y) -> y.replace /(^\")|(\"$)/g, "")._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
-			await for line in lines[5..]
+			for line in lines[5..]
 				_oic = undefined
 				for oc in oldStudents when (oc.get("studentId").toString() is line[0].toString())
 					_oic = oc.get("_id")
@@ -111,18 +111,17 @@ exports.importStudents = (data, callback) ->
 					_id: _oic
 					studentId: line[0]
 					name: line[1]
-					departments: (line[2] ? "").toUpperCase().split(/\ *[;,]\ */)
 					password: md5 line[3] if line[3]?
 					bc: line[4].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[4]?
 					psc: line[5].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[5]?
-				student.save defer err, robj
+				await student.save defer err, robj
 			console.log "Import Students Done."
 			callback true
 
 exports.deleteAllStudents = (callback) ->
 	db.Student.find {}, (err, students) ->
 		return console.log err if err?
-		await for student in students
-			student.remove defer err, robj
-			student.save defer err, robj
+		for student in students
+			await student.remove defer err, robj
+			await student.save defer err, robj
 		callback true
