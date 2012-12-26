@@ -50,4 +50,12 @@ io.sockets.on "connection", (socket) ->
 		console.log "Committing Students"
 		core.commitStudents students, callback
 
+	socket.on "importStudents", (students, callback) ->
+		console.log "Importing Students"
+		core.importStudents students, callback
+
+	socket.on "deleteAllStudents", (callback) ->
+		console.log "Delete All Students"
+		core.deleteAllStudents callback
+
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"

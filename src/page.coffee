@@ -274,17 +274,16 @@ class StudentsViewModel
 			if student.name().toLowerCase().indexOf(query) >= 0
 				student.visible true
 	selectFile: =>
-		return # remove...
 		$fup = $("<input type='file' accept='text/csv'>")
 		$fup.one "change", =>
 			return if $fup[0].files.length is 0
 			fs = new FileReader()
 			fs.onload = (e) =>
-				window.viewmodel.pleaseWaitStatus "Importing Courses..."
-				socket.emit "importCourses", e.target.result, (success) =>
+				window.viewmodel.pleaseWaitStatus "Importing Students..."
+				socket.emit "importStudents", e.target.result, (success) =>
 					window.viewmodel.pleaseWaitStatus undefined
 					if success
-						@fetchCourses()
+						@fetchStudents()
 					else
 						alert "Parsing Error. Please recheck .csv file for errors."
 			fs.readAsText $fup[0].files[0]
@@ -304,6 +303,11 @@ class StudentsViewModel
 		students = @toData()
 		socket.emit "commitStudents", students, (result) =>
 			window.viewmodel.pleaseWaitStatus undefined
+	deleteAll: =>
+		window.viewmodel.pleaseWaitStatus "Deleting all Students..."
+		socket.emit "deleteAllStudents", (success) =>
+			window.viewmodel.pleaseWaitStatus undefined
+			@fetchStudents()
 	toData: =>
 		student.toData() for student in @students()
 

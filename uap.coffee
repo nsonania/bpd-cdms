@@ -4,7 +4,7 @@ methods = [
 	"select", "filter"
 	"find", "detect"
 	"map"
-	"any", "all"
+	"any", "all", "contains"
 	"union", "intersection", "difference"
 	"uniq"
 	"flatten"

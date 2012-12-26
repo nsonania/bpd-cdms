@@ -6,12 +6,14 @@ fs = require "fs"
 uap = require "./uap"
 
 exports.commitCourses = (new_courses, callback) ->
-	await for obj in new_courses
-		db.Course.findOneAndRemove _id: obj._id, defer err, robj
-	await for obj in new_courses
-		course = new db.Course obj
-		course.save defer err, robj
-	callback true
+	db.Course.find {}, (err, oldCourses) ->
+		await for course in oldCourses
+			course.remove()
+			course.save defer err, robj
+		await for obj in new_courses
+			course = new db.Course obj
+			course.save defer err, robj
+		callback true
 
 exports.importCourses = (data, callback) ->
 	db.Course.find {}, (err, oldCourses) ->
@@ -85,9 +87,42 @@ prepStudent = (student) ->
 	student
 
 exports.commitStudents = (new_students, callback) ->
-	await for obj in new_students
-		db.Student.findOneAndRemove _id: obj._id, defer err, robj
-	await for obj in new_students
-		student = new db.Student prepStudent obj
-		student.save defer err, robj
-	callback true
+	db.Student.find {}, (err, oldStudents) ->
+		await for student in oldStudents
+			student.remove()
+			student.save defer err, robj
+		await for obj in new_students
+			student = new db.Student prepStudent obj
+			student.save defer err, robj
+		callback true
+
+exports.importStudents = (data, callback) ->
+	db.Course.find().lean().exec (err, courses) ->
+		return console.log err if err?
+		db.Student.find {}, (err, oldStudents) ->
+			return console.log err if err?
+			lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(/,(?=(?:[^"\\]*(?:\\.|"(?:[^"\\]*\\.)*[^"\\]*"))*[^"]*$)/g)._map((y) -> y.replace /(^\")|(\"$)/g, "")._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
+			await for line in lines[5..]
+				_oic = undefined
+				for oc in oldStudents when (oc.get("studentId").toString() is line[0].toString())
+					_oic = oc.get("_id")
+					await db.Student.findOneAndRemove _id: _oic, defer err, robj
+				student = new db.Student
+					_id: _oic
+					studentId: line[0]
+					name: line[1]
+					departments: (line[2] ? "").toUpperCase().split(/\ *[;,]\ */)
+					password: md5 line[3] if line[3]?
+					bc: line[4].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[4]?
+					psc: line[5].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[5]?
+				student.save defer err, robj
+			console.log "Import Students Done."
+			callback true
+
+exports.deleteAllStudents = (callback) ->
+	db.Student.find {}, (err, students) ->
+		return console.log err if err?
+		await for student in students
+			student.remove defer err, robj
+			student.save defer err, robj
+		callback true
