@@ -1,4 +1,5 @@
 socket = undefined
+viewmodel = undefined
 
 class ScheduleSlot
 	constructor: ({day, hour, busy}) ->
@@ -22,13 +23,13 @@ class SectionViewModel
 						busy: _(timeslots).any (x) -> x.day is d + 1 and x.hour is h + 1
 		@capacity = ko.observable capacity
 	editSection: =>
-		window.viewmodel.coursesViewModel().currentSection @
+		viewmodel.coursesViewModel().currentSection @
 		$("#sectiondetails").modal "show"
 	deleteSection: =>
-		if window.viewmodel.coursesViewModel().currentCourse().lectureSections().indexOf window.viewmodel.coursesViewModel().currentSection() >= 0
-			window.viewmodel.coursesViewModel().currentCourse().lectureSections.remove window.viewmodel.coursesViewModel().currentSection()
-		else if window.viewmodel.coursesViewModel().currentCourse().labSections().indexOf window.viewmodel.coursesViewModel().currentSection() >= 0
-			window.viewmodel.coursesViewModel().currentCourse().labSections.remove window.viewmodel.coursesViewModel().currentSection()
+		if viewmodel.coursesViewModel().currentCourse().lectureSections().indexOf viewmodel.coursesViewModel().currentSection() >= 0
+			viewmodel.coursesViewModel().currentCourse().lectureSections.remove viewmodel.coursesViewModel().currentSection()
+		else if viewmodel.coursesViewModel().currentCourse().labSections().indexOf viewmodel.coursesViewModel().currentSection() >= 0
+			viewmodel.coursesViewModel().currentCourse().labSections.remove viewmodel.coursesViewModel().currentSection()
 	toData: =>
 		timeslots =
 			for hour, h in @timetable()
@@ -51,10 +52,10 @@ class CourseViewModel
 		@visible = ko.observable true
 		@otherDates = ko.observable otherDates ? []
 	selectCourse: =>
-		window.viewmodel.coursesViewModel().currentCourse @
+		viewmodel.coursesViewModel().currentCourse @
 	deleteCourse: =>
-		window.viewmodel.coursesViewModel().courses.remove @
-		window.viewmodel.coursesViewModel().filteredCourses()[0].selectCourse()
+		viewmodel.coursesViewModel().courses.remove @
+		viewmodel.coursesViewModel().filteredCourses()[0].selectCourse()
 	distributeCapacity: =>
 		newCapacity = $(arguments[1].currentTarget).prev().val()
 		$(arguments[1].currentTarget).prev().val ""
@@ -109,18 +110,18 @@ class CoursesViewModel
 	newCourse: =>
 		@courses.push course = new CourseViewModel {}
 		course.selectCourse()
-		window.scrollTo 0, document.height
+		scrollTo 0, document.height
 	fetchCourses: =>
-		window.viewmodel.pleaseWaitStatus "Fetching Courses..."
+		viewmodel.pleaseWaitStatus "Fetching Courses..."
 		socket.emit "getCourses", (courses) =>
-			window.viewmodel.pleaseWaitStatus undefined
+			viewmodel.pleaseWaitStatus undefined
 			@courses (new CourseViewModel course for course in courses)
 			@currentCourse @filteredCourses()[0]
 	commitCourses: =>
-		window.viewmodel.pleaseWaitStatus "Saving changes..."
+		viewmodel.pleaseWaitStatus "Saving changes..."
 		courses = @toData()
 		socket.emit "commitCourses", courses, (result) =>
-			window.viewmodel.pleaseWaitStatus undefined
+			viewmodel.pleaseWaitStatus undefined
 	sortCompcode: =>
 		@sort "compcode"
 	sortNumber: =>
@@ -133,9 +134,9 @@ class CoursesViewModel
 			return if $fup[0].files.length is 0
 			fs = new FileReader()
 			fs.onload = (e) =>
-				window.viewmodel.pleaseWaitStatus "Importing Courses..."
+				viewmodel.pleaseWaitStatus "Importing Courses..."
 				socket.emit "importCourses", e.target.result, (success) =>
-					window.viewmodel.pleaseWaitStatus undefined
+					viewmodel.pleaseWaitStatus undefined
 					if success
 						@fetchCourses()
 					else
@@ -143,9 +144,9 @@ class CoursesViewModel
 			fs.readAsText $fup[0].files[0]
 		$fup.trigger "click"
 	deleteAll: =>
-		window.viewmodel.pleaseWaitStatus "Deleting all Courses..."
+		viewmodel.pleaseWaitStatus "Deleting all Courses..."
 		socket.emit "deleteAllCourses", (success) =>
-			window.viewmodel.pleaseWaitStatus undefined
+			viewmodel.pleaseWaitStatus undefined
 			@fetchCourses()
 	toData: =>
 		course.toData() for course in @courses()
@@ -155,7 +156,7 @@ class SelectedCourseViewModel
 		@course_id = ko.observable course_id
 		@selectedLectureSection = ko.observable selectedLectureSection
 		@selectedLabSection = ko.observable selectedLabSection
-		@course = ko.computed => _(window.viewmodel.coursesViewModel().courses()).find (x) -> x._id is @course_id
+		@course = ko.computed => _(viewmodel.coursesViewModel().courses()).find (x) -> x._id is @course_id
 	toData: =>
 		course_id: @course_id()
 		selectedLectureSection: @selectedLectureSection()
@@ -176,7 +177,7 @@ class StudentViewModel
 		@selectedcourses = ko.observableArray (new SelectedCourseViewModel sc for sc in selectedcourses ? [])
 		@visible = ko.observable true
 		@courses = ko.computed =>
-			for course in window.viewmodel.coursesViewModel().courses()
+			for course in viewmodel.coursesViewModel().courses()
 				course: course
 				bc: @bc().indexOf(course._id()) >= 0
 				psc: @psc().indexOf(course._id()) >= 0
@@ -202,10 +203,10 @@ class StudentViewModel
 				else if course.name().toLowerCase().indexOf(query) >= 0
 					true
 	selectStudent: =>
-		window.viewmodel.studentsViewModel().currentStudent @
+		viewmodel.studentsViewModel().currentStudent @
 	deleteStudent: =>
-		window.viewmodel.studentsViewModel().students.remove @
-		window.viewmodel.studentsViewModel().filteredStudents()[0].selectStudent()
+		viewmodel.studentsViewModel().students.remove @
+		viewmodel.studentsViewModel().filteredStudents()[0].selectStudent()
 	resetPassword: =>
 	filterCat0: =>
 		@filterCategory 0
@@ -255,6 +256,9 @@ class StudentViewModel
 		@registered not @registered()
 	toggleValidated: =>
 		@validated not @validated()
+	resetPassword: =>
+		@newPassword = md5(Date.toString())[0..8]
+		@password = md5 @newPassword()
 	toData: =>
 		_id: @_id()
 		studentId: @studentId()
@@ -284,16 +288,16 @@ class StudentsViewModel
 	newStudent: =>
 		@students.push student = new StudentViewModel {}
 		student.selectStudent()
-		window.scrollTo 0, document.height
+		scrollTo 0, document.height
 	selectFile: =>
 		$fup = $("<input type='file' accept='text/csv'>")
 		$fup.one "change", =>
 			return if $fup[0].files.length is 0
 			fs = new FileReader()
 			fs.onload = (e) =>
-				window.viewmodel.pleaseWaitStatus "Importing Students..."
+				viewmodel.pleaseWaitStatus "Importing Students..."
 				socket.emit "importStudents", e.target.result, (success) =>
-					window.viewmodel.pleaseWaitStatus undefined
+					viewmodel.pleaseWaitStatus undefined
 					if success
 						@fetchStudents()
 					else
@@ -305,23 +309,44 @@ class StudentsViewModel
 	sortName: =>
 		@sort "name"
 	fetchStudents: =>
-		window.viewmodel.pleaseWaitStatus "Fetching Students..."
+		viewmodel.pleaseWaitStatus "Fetching Students..."
 		socket.emit "getStudents", (students) =>
-			window.viewmodel.pleaseWaitStatus undefined
+			viewmodel.pleaseWaitStatus undefined
 			@students (new StudentViewModel student for student in students)
 			@currentStudent @filteredStudents()[0]
 	commitStudents: =>
-		window.viewmodel.pleaseWaitStatus "Saving changes..."
+		viewmodel.pleaseWaitStatus "Saving changes..."
 		students = @toData()
 		socket.emit "commitStudents", students, (result) =>
-			window.viewmodel.pleaseWaitStatus undefined
+			viewmodel.pleaseWaitStatus undefined
 	deleteAll: =>
-		window.viewmodel.pleaseWaitStatus "Deleting all Students..."
+		viewmodel.pleaseWaitStatus "Deleting all Students..."
 		socket.emit "deleteAllStudents", (success) =>
-			window.viewmodel.pleaseWaitStatus undefined
+			viewmodel.pleaseWaitStatus undefined
 			@fetchStudents()
 	toData: =>
 		student.toData() for student in @students()
+
+class SemesterViewModel
+	constructor: ->
+		@title = ko.observable null
+		@startTime = ko.observable null
+	commitSemester: =>
+		viewmodel.pleaseWaitStatus "Saving changes..."
+		semester = @toData()
+		socket.emit "commitSemester", semester, (result) =>
+			viewmodel.pleaseWaitStatus undefined
+	fetchSemester: =>
+		viewmodel.pleaseWaitStatus "Fetching Semester Details..."
+		socket.emit "getSemester", (semester) =>
+			viewmodel.pleaseWaitStatus undefined
+			@title semester.title
+			@startTime moment(semester.startTime).format "DD/MM/YYYY HH:mm"
+			console.log semester
+	toData: =>
+		console.log moment(@startTime(), "DD/MM/YYYY HH:mm").toDate()
+		title: @title()
+		startTime: moment(@startTime(), "DD/MM/YYYY HH:mm").toDate()
 
 class BodyViewModel
 	constructor: ->
@@ -330,31 +355,53 @@ class BodyViewModel
 		@pleaseWaitStatus = ko.observable undefined
 		@pleaseWaitVisible = ko.computed => @pleaseWaitStatus()?
 		@activeView = ko.observable undefined
+		@authenticated = ko.observable false
+		@semester = new SemesterViewModel()
 	gotoCourses: =>
-		window.viewmodel.pleaseWaitStatus "Fetching Courses..."
+		viewmodel.pleaseWaitStatus "Fetching Courses..."
 		socket.emit "getCourses", (courses) ->
-			window.viewmodel.pleaseWaitStatus undefined
-			window.viewmodel.coursesViewModel new CoursesViewModel courses: courses
-			window.viewmodel.activeView "coursesView"
+			viewmodel.pleaseWaitStatus undefined
+			viewmodel.coursesViewModel new CoursesViewModel courses: courses
+			viewmodel.activeView "coursesView"
 			$("#courseheader, #coursedetails").affix offset: top: 290
 			$('button[rel=tooltip]').tooltip()
 	gotoStudents: =>
-		window.viewmodel.pleaseWaitStatus "Fetching Courses..."
+		viewmodel.pleaseWaitStatus "Fetching Courses..."
 		socket.emit "getCourses", (courses) ->
-			window.viewmodel.pleaseWaitStatus "Fetching Students..."
-			window.viewmodel.coursesViewModel new CoursesViewModel courses: courses
+			viewmodel.pleaseWaitStatus "Fetching Students..."
+			viewmodel.coursesViewModel new CoursesViewModel courses: courses
 			socket.emit "getStudents", (students) ->
-				window.viewmodel.pleaseWaitStatus undefined
-				window.viewmodel.studentsViewModel new StudentsViewModel students: students
-				window.viewmodel.activeView "studentsView"
+				viewmodel.pleaseWaitStatus undefined
+				viewmodel.studentsViewModel new StudentsViewModel students: students
+				viewmodel.activeView "studentsView"
 				$("#studentheader, #studentdetails").affix offset: top: 290
 				$('button[rel=tooltip]').tooltip()
+	gotoHome: =>
+		@activeView "homeView"
+		$('input[rel=datetime]').datetimepicker()
+		@semester.fetchSemester()
+	login: =>
+		accessCode = $("#input-accesscode").val()
+		fs = new FileReader()
+		fs.onload = (e) =>
+			viewmodel.pleaseWaitStatus "Authenticating..."
+			socket.emit "login", accessCode, e.target.result, (success) =>
+				viewmodel.pleaseWaitStatus undefined
+				if success
+					@authenticated true
+					@gotoHome()
+				else
+					alert "Incorrect Password"
+		fs.readAsText $("#input-authfile")[0].files[0]
+	logout: =>
+		socket.emit "logout", =>
+			@authenticated false
 
 $ ->
-	window.viewmodel = new BodyViewModel()
-	window.viewmodel.pleaseWaitStatus "Connecting..."
+	viewmodel = new BodyViewModel()
+	viewmodel.pleaseWaitStatus "Connecting..."
 	ko.applyBindings viewmodel, $("body")[0]
 
 	socket = io.connect()
 	socket.on "connect", ->
-		window.viewmodel.pleaseWaitStatus undefined
+		viewmodel.pleaseWaitStatus undefined

@@ -125,3 +125,12 @@ exports.deleteAllStudents = (callback) ->
 			await student.remove defer err, robj
 			await student.save defer err, robj
 		callback true
+
+exports.commitSemester = (semester, callback) ->
+	db.Misc.findOneAndRemove desc: "Semester Details", (err, robj) ->
+		obj = new db.Misc
+			desc: "Semester Details"
+			title: semester.title
+			startTime: new Date semester.startTime
+		await obj.save defer er, robj
+		callback true
