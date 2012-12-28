@@ -1,4 +1,53 @@
-global = {}
+socket = undefined
+viewmodel = undefined
+
+class LoginViewModel
+	constructor: ->
+		@studentId = ko.observable undefined
+		@password = ko.observable undefined
+		@alertStatus = ko.observable undefined
+	login: =>
+		@alertStatus undefined
+		socket.emit "login", studentId: @studentId, password: md5(@password), (data) ->
+			unless data.success
+				@alertStatus "authFailure"
+			else if data.registered
+				@alertStatus "alreadyRegistered"
+			else
+				viewmodel.studentName data.student.name
+				viewmodel.studentId data.student.studentId
+				socket.once "destroySession", ->
+					alert "Your session has expired."
+					@authenticated false
+					@activeView "loginView"
+	dismissAlert: =>
+		@alertStatus undefined
+
+class CourseViewModel
+	constructor: ({@compcode, @number, @name, selected}) ->
+		@selected = ko.observable selected
+	toggleSelection: =>
+		#...
+
+class CoursesViewModel
+	constructor: ->
+		@bc = ko.observableArray []
+		@psc = ko.observableArray []
+		@allEl = ko.observableArray []
+		@el = ko.computed => _(@allEl()).filter (x) -> x.selected()
+		@reqEl = ko.observable 0
+	#Add Elective and other logic...
+
+class BodyViewModel
+	constructor: ->
+		@studentName = ko.observable undefined
+		@studentId = ko.observable undefined
+		@studentNI = ko.computed => "#{@studentName} (#{@studentId})"
+		@authenticated = ko.observable false
+		@semesterTitle = ko.observable undefined
+		@activeView = ko.observable undefined
+		@loginViewModel = new LoginViewModel()
+		@coursesViewModel = new CoursesViewModel()
 
 $.extend
 	postJSON: (url, data, callback) ->
@@ -46,33 +95,7 @@ $(document).ready ->
 
 	$("#input-studentid").tooltip()
 	$("#submit-login").click ->
-		$("#alert-login").remove()
-		$.postJSON "/api/login", studentId: $("#input-studentid").val(), password: md5($("#input-password").val()), (data) ->
-			unless data.success
-				elem =
-					"""
-					<div id="alert-login" class="alert alert-error">
-						<button type="button" class="close" data-dismiss="alert">×</button>
-						<strong>Authentication Failure!</strong> Check if your Student Id &amp; Password are correct.
-					</div>
-					"""
-				$(elem).insertAfter("#loginbox legend")
-			else if data.registered
-				elem =
-					"""
-					<div id="alert-login" class="alert alert-info">
-						<button type="button" class="close" data-dismiss="alert">×</button>
-						<strong>Already Registered!</strong> You cannot amend your registration right now.
-					</div>
-					"""
-				$(elem).insertAfter("#loginbox legend")
-			else
-				global.student = data.student
-				global.hash = data.hash
-				pubsub.on "destroySession_#{data.hash}", ->
-					alert "Your session has expired."
-					setupLoginContainer()
-				setupSectionsContainer()
+		#truncated
 
 	setupSectionsContainer = ->
 		resetContainers()

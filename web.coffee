@@ -5,20 +5,10 @@ md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
 core = require "./core"
-cluster = require "cluster"
-pubsub = require "./pubsub"
-sessions = require "./sessions"
 
 cp = spawn "cake", ["build"]
 await cp.on "exit", defer code
 return console.log "Build failed! Run 'cake build' to display build errors." if code isnt 0
-
-if cluster.isMaster
-	cluster.fork() for x in [1..4]
-	cluster.on "exit", (worker, code, signal) -> console.log "worker #{worker.process.pid} died"
-	return
-
-console.log "worker #{process.pid} started"
 
 expressServer = express()
 expressServer.configure ->
@@ -33,24 +23,62 @@ expressServer.configure ->
 	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 	expressServer.use expressServer.router
 
-expressServer.post "/api/login", (req, res, next) ->
-	db.Student.findOne(studentId: req.body.studentId.toUpperCase(), password: req.body.password).lean().exec (err, student) ->
-		return res.send success: false unless student?
-		return res.send success: true, registered: true if student.registered
-		sessions.createSession student._id, (hash) ->
-			res.send
+server = http.createServer expressServer
+
+io = socket_io.listen server
+io.set "log level", 0
+io.sockets.on "connection", (socket) ->
+
+	socket.on "login", ({studentId, password}, callback) ->
+		db.Student.findOne studentId: studentId.toUpperCase(), password: password, (err, student) ->
+			return callback success: false unless student?
+			return callback success: true, registered: true if student.registered
+			socket.student_id = student.get "_id"
+			callback
 				success: true
 				student:
-					studentId: student.studentId
-					name: student.name
-				hash: hash
+					studentId: student.get "studentId"
+					name: student.get "name"
 
-expressServer.post "/api/initializeSectionsScreen", (req, res, next) ->
-	sessions.getStudent req.body.hash, (student) ->
-		return res.send success: false unless student?
+	socket.on "getCourses", (callback) ->
+		await db.Student.findById socket.student_id, defer err, student
+		return callback success: false unless student?
+		bc = student.bc ? []
+		psc = student.psc ? []
+		el = student.el ? []
+		db.Course.find {_id: $in: student.bc._union student.psc._union student.el}, (err, courses) ->
+			el =
+				for x in el._map
+					c = courses._find (y) -> y.get("_id").equals x
+					lecturesCapacity = if (c.get("lectureSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
+					labsCapacity = if (c.get("labSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
+					totalCapacity = Math.max lecturesCapacity, labsCapacity
+					await db.Student.count {$or: [{bc: c.get "_id"}, {psc: c.get "_id"}, {selectedcourses: $elemMatch: course_id: c.get "_id"}]}, defer err, count
+					leftCapacity = totalCapacity - count
+					_id: c.get "_id"
+					number: c.get "number"
+					name: c.get "name"
+					leftCapacity: leftCapacity
+			callback
+				bc:
+					for x in bc when (c = courses._find (y) -> y.get("_id").equals x)?
+						_id: c.get "_id"
+						number: c.get "number"
+						name: c.get "name"
+				psc:
+					for x in psc when (c = courses._find (y) -> y.get("_id").equals x)?
+						_id: c.get "_id"
+						number: c.get "number"
+						name: c.get "name"
+				el: el
+				reqEl: student.get("reqEl") ? 0
+
+	socket.on "initializeSectionsScreen", (callback) ->
+		await db.Student.findById socket.student_id, defer err, student
+		return callback success: false unless student?
 		db.Course.find().where("_id").in(x.course_id for x in student.get("selectedcourses")).lean().exec (err, selectedcourses) ->
 			core.generateSchedule student._id, (scheduleconflicts) ->
-				res.send
+				callback
 					success: true
 					selectedcourses:
 						for course in selectedcourses
@@ -77,10 +105,10 @@ expressServer.post "/api/initializeSectionsScreen", (req, res, next) ->
 					schedule: scheduleconflicts.schedule
 					conflicts: scheduleconflicts.conflicts
 
-expressServer.post "/api/chooseSection", (req, res, next) ->
-	sessions.getStudent req.body.hash, (student) ->
-		return res.send success: false unless student?
-		sectionInfo = req.body.sectionInfo
+	socket.on "chooseSection", ({sectionInfo}, callback) ->
+		await db.Student.findById socket.student_id, defer err, student
+		return callback success: false unless student?
+		student = socket.student
 		db.Course.find(_id: $in: student.get("selectedcourses")._map((x) -> db.toObjectId x.course_id)).lean().exec (err, courses) ->
 			thisCourse = courses._find (x) -> x.compcode is sectionInfo.course_compcode
 			console.log req.body
@@ -102,26 +130,27 @@ expressServer.post "/api/chooseSection", (req, res, next) ->
 				student.markModified "selectedcourses"
 				student.save ->
 					core.generateSchedule student._id, (scheduleconflicts) ->
-						res.send
+						callback
 							success: true
 							status: if slotsFull or data.isFull then false else if data.lessThan5 then "yellow" else true
 							schedule: scheduleconflicts.schedule
 							conflicts: scheduleconflicts.conflicts
 
-expressServer.post "/api/confirmRegistration", (req, res, next) ->
-	sessions.getStudent req.body.hash, (student) ->
-		return res.send success: false unless student?
+	socket.on "confirmRegistration", (callback) ->
+		await db.Student.findById socket.student_id, defer err, student
+		return callback success: false unless student?
+		student = socket.student
 		for selectedcourse in student.get "selectedcourses"
 			if selectedcourse.selectedLectureSection?
 				await core.sectionStatus course_id: selectedcourse.course_id, section_number: selectedcourse.selectedLectureSection, isLectureSection: true, defer result
-				return res.send success: false, invalidRegistration: true if result.isFull?
+				return callback success: false, invalidRegistration: true if result.isFull?
 			if selectedcourse.selectedLabSection?
 				await core.sectionStatus course_id: selectedcourse.course_id, section_number: selectedcourse.selectedLabSection, isLabSection: true, defer result
-				return res.send success: false, invalidRegistration: true if result.isFull?
+				return callback success: false, invalidRegistration: true if result.isFull?
 		student.set "registered", true
 		student.markModified "registered"
 		student.save ->
-			res.send success: true
+			callback success: true
 		db.Course.find({_id: $in: student.get("selectedcourses")._map((x) -> x.course_id)}, "_id compcode").lean().exec (err, courses) ->
 			for course in student.get("selectedcourses") then do (course) ->
 				if course.selectedLectureSection?
@@ -131,5 +160,4 @@ expressServer.post "/api/confirmRegistration", (req, res, next) ->
 					core.sectionStatus course_id: course.course_id, section_number: course.selectedLabSection, isLabSection: true, (data) ->
 						pubsub.emit "publish", courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
 
-server = http.createServer expressServer
 server.listen (port = process.env.PORT ? 5000), -> console.log "worker #{process.pid}: Listening on port #{port}"
