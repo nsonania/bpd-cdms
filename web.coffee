@@ -76,11 +76,11 @@ io.sockets.on "connection", (socket) ->
 		console.log "Committing Semester"
 		core.commitSemester semester, callback
 
-	socket.on "login", (accessCode, authText, callback) ->
+	socket.on "login", (accessCode, callback) ->
 		socket.auth = true
 		console.log "Login"
 		callback do ->
-			if accessCode is process.env.ACCESSCODE and authText is process.env.AUTHTEXT
+			if accessCode is process.env.ACCESSCODE
 				true
 			else
 				false

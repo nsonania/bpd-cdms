@@ -342,9 +342,8 @@ class SemesterViewModel
 			viewmodel.pleaseWaitStatus undefined
 			@title semester.title
 			@startTime moment(semester.startTime).format "DD/MM/YYYY HH:mm"
-			console.log semester
+			$('input[rel=datetime]').datetimepicker("update")
 	toData: =>
-		console.log moment(@startTime(), "DD/MM/YYYY HH:mm").toDate()
 		title: @title()
 		startTime: moment(@startTime(), "DD/MM/YYYY HH:mm").toDate()
 
@@ -378,21 +377,17 @@ class BodyViewModel
 				$('button[rel=tooltip]').tooltip()
 	gotoHome: =>
 		@activeView "homeView"
-		$('input[rel=datetime]').datetimepicker()
 		@semester.fetchSemester()
+		$('input[rel=datetime]').datetimepicker()
 	login: =>
 		accessCode = $("#input-accesscode").val()
-		fs = new FileReader()
-		fs.onload = (e) =>
-			viewmodel.pleaseWaitStatus "Authenticating..."
-			socket.emit "login", accessCode, e.target.result, (success) =>
-				viewmodel.pleaseWaitStatus undefined
-				if success
-					@authenticated true
-					@gotoHome()
-				else
-					alert "Incorrect Password"
-		fs.readAsText $("#input-authfile")[0].files[0]
+		socket.emit "login", accessCode, (success) =>
+			viewmodel.pleaseWaitStatus undefined
+			if success
+				@authenticated true
+				@gotoHome()
+			else
+				alert "Incorrect Password"
 	logout: =>
 		socket.emit "logout", =>
 			@authenticated false
