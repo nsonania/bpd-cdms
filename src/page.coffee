@@ -1,5 +1,5 @@
 socket = undefined
-viewmodel = undefined
+viewmodel = viewmodel = undefined
 
 class LoginViewModel
 	constructor: ->
@@ -7,8 +7,10 @@ class LoginViewModel
 		@password = ko.observable undefined
 		@alertStatus = ko.observable undefined
 	login: =>
+		viewmodel.pleaseWaitVisible true
 		@alertStatus undefined
-		socket.emit "login", studentId: @studentId, password: md5(@password), (data) ->
+		socket.emit "login", studentId: @studentId() ? "", password: md5(@password() ? ""), (data) =>
+			viewmodel.pleaseWaitVisible false
 			unless data.success
 				@alertStatus "authFailure"
 			else if data.registered
@@ -16,10 +18,12 @@ class LoginViewModel
 			else
 				viewmodel.studentName data.student.name
 				viewmodel.studentId data.student.studentId
+				viewmodel.authenticated true
+				viewmodel.gotoCoursesView()
 				socket.once "destroySession", ->
 					alert "Your session has expired."
-					@authenticated false
-					@activeView "loginView"
+					viewmodel.authenticated false
+					viewmodel.activeView "loginView"
 	dismissAlert: =>
 		@alertStatus undefined
 
@@ -27,7 +31,11 @@ class CourseViewModel
 	constructor: ({@compcode, @number, @name, selected}) ->
 		@selected = ko.observable selected
 	toggleSelection: =>
-		#...
+		@selected not @selected()
+	electiveMouseOver: =>
+		window.viewmodel.coursesViewModel.selectedValueDropdown @
+	electiveSelect: =>
+		@selected true
 
 class CoursesViewModel
 	constructor: ->
@@ -36,7 +44,37 @@ class CoursesViewModel
 		@allEl = ko.observableArray []
 		@el = ko.computed => _(@allEl()).filter (x) -> x.selected()
 		@reqEl = ko.observable 0
-	#Add Elective and other logic...
+		@electiveQuery = ko.observable ""
+		@selectedValueDropdown = ko.observable undefined
+		@electiveChoices = ko.computed =>
+			return [] if @electiveQuery() is ""
+			els = _(@allEl()).filter (x) =>
+				return false if x.selected()
+				return true if x.compcode.toLowerCase().indexOf(@electiveQuery().toLowerCase()) >= 0
+				return true if x.number.toLowerCase().indexOf(@electiveQuery().toLowerCase()) >= 0
+				return true if x.name.toLowerCase().indexOf(@electiveQuery().toLowerCase()) >= 0
+				false
+			@selectedValueDropdown els[0]
+			_(els).take 5
+		@blEnabled = ko.computed => _(@psc()).all((x) -> not x.selected()) and @el().length is 0
+		@pscEnabled = ko.computed => _(@bc()).all((x) -> x.selected()) and @el().length <= @reqEl()
+		@elEnabled = ko.computed => _(@bc()).all (x) -> x.selected()
+		@elsEnabled = ko.computed => @el().length < @reqEl() or _(@psc()).all((x) -> x.selected()) or not @elEnabled()
+		@nextStepWarning = ko.computed => not @elsEnabled() or not @elEnabled()
+	electiveQueryKeyDown: =>
+		event = arguments[1]
+		if event.which is 38 and @electiveChoices().indexOf(@selectedValueDropdown()) > 0
+			@selectedValueDropdown @electiveChoices()[@electiveChoices().indexOf(@selectedValueDropdown()) - 1]
+		else if event.which is 40 and @electiveChoices().indexOf(@selectedValueDropdown()) < @electiveChoices().length - 1
+			@selectedValueDropdown @electiveChoices()[@electiveChoices().indexOf(@selectedValueDropdown()) + 1]
+		else if event.which is 13
+			@selectedValueDropdown().electiveSelect()
+			@electiveQuery ""
+		unless event.which in [13, 38, 40] and @electiveChoices().length > 0
+			return true
+	nextStep: =>
+		bootbox.alert "You haven't registered for all the courses prescribed in your program. As a result you might end up doing an extra semester." if @nextStepWarning()
+
 
 class BodyViewModel
 	constructor: ->
@@ -45,9 +83,36 @@ class BodyViewModel
 		@studentNI = ko.computed => "#{@studentName} (#{@studentId})"
 		@authenticated = ko.observable false
 		@semesterTitle = ko.observable undefined
+		@startTime = ko.observable undefined
 		@activeView = ko.observable undefined
 		@loginViewModel = new LoginViewModel()
 		@coursesViewModel = new CoursesViewModel()
+		@pleaseWaitVisible = ko.observable false
+		@activeViewNZ = ko.computed =>
+			if @pleaseWaitVisible() then "pleaseWait"
+			else unless @authenticated() then "loginView"
+			else @activeView()
+	gotoCoursesView: =>
+		@activeView "coursesView"
+		@pleaseWaitVisible true
+		socket.emit "getCourses", ({bc, psc, el, reqEl}) =>
+			@coursesViewModel.bc (new CourseViewModel course for course in bc ? [])
+			@coursesViewModel.psc (new CourseViewModel course for course in psc ? [])
+			@coursesViewModel.allEl (new CourseViewModel course for course in el ? [])
+			@coursesViewModel.reqEl reqEl ? 0
+			@pleaseWaitVisible false
+
+$ ->
+	window.viewmodel = viewmodel = new BodyViewModel()
+	viewmodel.pleaseWaitVisible true
+	ko.applyBindings viewmodel, $("body")[0]
+
+	socket = io.connect()
+	socket.on "connect", ->
+		socket.emit "getSemesterDetails", ({semesterTitle, startTime}) ->
+			viewmodel.semesterTitle semesterTitle
+			viewmodel.startTime new Date startTime
+			viewmodel.pleaseWaitVisible false
 
 $.extend
 	postJSON: (url, data, callback) ->
@@ -61,6 +126,7 @@ $.extend
 			processData: false
 
 $(document).ready ->
+	return
 	$("#loginbox input").addClass if $(document).width() >= 1200 then "span3" else "span2"
 	$("#courses-sections, .courses-selections").addClass if $(document).width() >= 1200 then "span8 offset2" else "span12"
 	$("#timetable-grid").addClass if $(document).width() >= 1200 then "span10 offset1" else "span12"

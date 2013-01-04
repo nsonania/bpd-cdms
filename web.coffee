@@ -13,9 +13,6 @@ return console.log "Build failed! Run 'cake build' to display build errors." if 
 expressServer = express()
 expressServer.configure ->
 
-	expressServer.use (req, res, next) ->
-		console.log "worker #{process.pid}: #{req.method} #{req.url}"
-		next()
 	expressServer.use express.bodyParser()
 	expressServer.use (req, res, next) ->
 		req.url = "/page.html" if req.url is "/"
@@ -43,33 +40,39 @@ io.sockets.on "connection", (socket) ->
 	socket.on "getCourses", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
 		return callback success: false unless student?
-		bc = student.bc ? []
-		psc = student.psc ? []
-		el = student.el ? []
-		db.Course.find {_id: $in: student.bc._union student.psc._union student.el}, (err, courses) ->
+		bc = student.get("bc") ? []
+		psc = student.get("psc") ? []
+		el = student.get("el") ? []
+		db.Course.find {_id: $in: (student.get("bc") ? [])._union (student.get("psc") ? [])._union (student.get("el") ? [])}, (err, courses) ->
 			el =
-				for x in el._map
+				for x in el
 					c = courses._find (y) -> y.get("_id").equals x
-					lecturesCapacity = if (c.get("lectureSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
-					labsCapacity = if (c.get("labSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
+					lecturesCapacity = if c.get("hasLectures")? then (c.get("lectureSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
+					labsCapacity = if c.get("hasLab")? then (c.get("labSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
 					totalCapacity = Math.max lecturesCapacity, labsCapacity
 					await db.Student.count {$or: [{bc: c.get "_id"}, {psc: c.get "_id"}, {selectedcourses: $elemMatch: course_id: c.get "_id"}]}, defer err, count
 					leftCapacity = totalCapacity - count
 					_id: c.get "_id"
+					compcode: c.get "compcode"
 					number: c.get "number"
 					name: c.get "name"
 					leftCapacity: leftCapacity
+					selected: student.get("selectedcourses")._any (y) -> x.equals y.course_id
 			callback
 				bc:
 					for x in bc when (c = courses._find (y) -> y.get("_id").equals x)?
 						_id: c.get "_id"
+						compcode: c.get "compcode"
 						number: c.get "number"
 						name: c.get "name"
+						selected: student.get("selectedcourses")._any (y) -> x.equals y.course_id
 				psc:
 					for x in psc when (c = courses._find (y) -> y.get("_id").equals x)?
 						_id: c.get "_id"
+						compcode: c.get "compcode"
 						number: c.get "number"
 						name: c.get "name"
+						selected: student.get("selectedcourses")._any (y) -> x.equals y.course_id
 				el: el
 				reqEl: student.get("reqEl") ? 0
 
@@ -159,5 +162,11 @@ io.sockets.on "connection", (socket) ->
 				if course.selectedLabSection?
 					core.sectionStatus course_id: course.course_id, section_number: course.selectedLabSection, isLabSection: true, (data) ->
 						pubsub.emit "publish", courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
+
+	socket.on "getSemesterDetails", (callback) ->
+		db.Misc.findOne desc: "Semester Details", (err, semester) ->
+			callback
+				semesterTitle: semester.get "title"
+				startTime: semester.get "startTime"
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "worker #{process.pid}: Listening on port #{port}"

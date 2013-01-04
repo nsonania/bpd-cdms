@@ -12,6 +12,7 @@
 		<script src="md5.js"></script>
 		<script src="underscore-min.js" type="text/javascript" charset="utf-8"></script>
 		<script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+		<script src="bootstrap/js/bootbox.min.js" type="text/javascript"></script>
 		<script src="socket.io/socket.io.js"></script>
 		<script src="knockout-2.2.0.js" type="text/javascript"></script>
 		<script src="page.js" type="text/javascript" charset="utf-8"></script>
@@ -29,8 +30,9 @@
 				</div>
 			</div>
 		</div>
-		<div id="prelogin-container" class="container" data-bind="visible: activeView() == 'pleaseWait'">
+		<div id="prelogin-container" class="container" data-bind="visible: pleaseWaitVisible">
 			<div class="row">
+				<br><br><br>
 				<div class="well span4 offset4">
 					<div class="lead center">Please Wait</div>
 					<div class="progress progress-striped active">
@@ -39,47 +41,45 @@
 				</div>
 			</div>
 		</div>
-		<div id="login-container" class="container" data-bind="with: loginViewModel, visible: activeView() == 'loginView'">
+		<div id="login-container" class="container" data-bind="with: loginViewModel, visible: !authenticated()">
 			<div id="semester-hero" class="hero-unit">
-				<h1 data-bind="text: semesterTitle"></h1>
-				<p>This process will guide you to register for your courses for this semester step-by step. Remember that all your changes are saved when you logout and you can continue from where you left off when you login again.</p>
+				<h1 data-bind="text: $parent.semesterTitle"></h1>
+				<p>This process will guide you to enroll into your courses for this semester step-by step. Remember that all your changes are saved when you logout and you can continue from where you left off when you login again.</p>
 			</div>
 			<div class="row">
-				<div id="loginbox" class="span6 offset3">
-					<div class="well">
-						<div class="form-horizontal">
-							<legend>Login</legend>
-							<div class="alert alert-error" data-bind="if: alertStatus() == 'authFailure'">
-								<button type="button" class="close" data-bind="click: dismissAlert">&times;</button>
-								<strong>Authentication Failure!</strong> Check if your Student Id &amp; Password are correct.
+				<div id="loginbox" class="well span6 offset3">
+					<div class="form-horizontal">
+						<legend>Login</legend>
+						<div class="alert alert-error" data-bind="visible: alertStatus() == 'authFailure'">
+							<button type="button" class="close" data-bind="click: dismissAlert">&times;</button>
+							<strong>Authentication Failure!</strong> Check if your Student Id &amp; Password are correct.
+						</div>
+						<div class="alert alert-info" data-bind="visible: alertStatus() == 'alreadyRegistered'">
+							<button type="button" class="close" data-bind="click: dismissAlert">&times;</button>
+							<strong>Already Registered!</strong> You cannot amend your registration right now.
+						</div>
+						<div class="control-group">
+							<label class="control-label">Student Id</label>
+							<div class="controls">
+								<input data-bind="value: studentId" class="span3" type="text" placeholder="Student Id" rel="tooltip" title="Example: 2010AAPS486U" data-trigger="focus" data-placement="right">
 							</div>
-							<div class="alert alert-info" data-bind="if: alertStatus() == 'alreadyRegistered">
-								<button type="button" class="close" data-bind="click: dismissAlert">&times;</button>
-								<strong>Already Registered!</strong> You cannot amend your registration right now.
+						</div>
+						<div class="control-group">
+							<label class="control-label">Password</label>
+							<div class="controls">
+								<input data-bind="value: password" class="span3" type="password"placeholder="Password">
 							</div>
-							<div class="control-group">
-								<label class="control-label">Student Id</label>
-								<div class="controls">
-									<input data-bind="value: studentId" class="span3" type="text" placeholder="Student Id" rel="tooltip" title="Example: 2010AAPS486U" data-trigger="focus" data-placement="right">
-								</div>
-							</div>
-							<div class="control-group">
-								<label class="control-label">Password</label>
-								<div class="controls">
-									<input data-bind="value: password" class="span3" type="password"placeholder="Password">
-								</div>
-							</div>
-							<div class="control-group">
-								<div class="controls">
-									<button data-bind="click: login" class="btn btn-primary">Login</button>
-								</div>
+						</div>
+						<div class="control-group">
+							<div class="controls">
+								<button data-bind="click: login" class="btn btn-primary">Login</button>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div id="courses-container" class="container" data-bind="with: coursesViewModel, visible: activeView() == 'coursesView'">
+		<div id="courses-container" class="container" data-bind="with: coursesViewModel, visible: activeViewNZ() == 'coursesView'">
 			<div class="breadcrumb">
 				<li><span>Courses</span><span class="divider">&nbsp;&gt;</span></li>
 				<li><span class="muted">Timetable</span><span class="divider">&nbsp;&gt;</span></li>
@@ -87,11 +87,11 @@
 			</div>
 			<div class="hero-unit">
 				<h1>Choose your Courses</h1>
-				<p data-bind="if: bc.length > 0">Your courses are divided into 3 sections, namely: <em>Backlogged Courses</em>, <em>Prescribed Courses</em> for the current semester and <em>Electives / Overload Courses</em> containing required electives and optional courses that you would like to enroll in. You will have to select all your backlogs to select prescribed and elective courses. You will have to select all your backlogs and prescribed courses to be able to enroll into overload courses.</p>
-				<p data-bind="if: bc.length == 0">Your courses are divided into 2 sections, namely: <em>Prescribed Courses</em> for the current semester and <em>Electives / Overload Courses</em> containing required electives and optional courses that you would like to enroll in. You will have to select all your prescribed courses to be able to enroll into overload courses.</p>
+				<p data-bind="if: bc().length > 0">Your courses are divided into 3 sections, namely: <em>Backlogged Courses</em>, <em>Prescribed Courses</em> for the current semester and <em>Electives / Overload Courses</em> containing required electives and optional courses that you would like to enroll in. You will have to select all your backlogs to select prescribed and elective courses. You will have to select all your backlogs and prescribed courses to be able to enroll into overload courses.<span data-bind="visible: reqEl() > 0"> You are required to choose atleast <span data-bind="text: reqEl">2</span> elective<span data-bind="visible: reqEl() > 1">s</span>.</span></p>
+				<p data-bind="if: bc().length == 0">Your courses are divided into 2 sections, namely: <em>Prescribed Courses</em> for the current semester and <em>Electives / Overload Courses</em> containing required electives and optional courses that you would like to enroll in. You will have to select all your prescribed courses to be able to enroll into overload courses.<span data-bind="visible: reqEl() > 0"> You are required to choose atleast <span data-bind="text: reqEl">2</span> elective<span data-bind="visible: reqEl() > 1">s</span>.</span></p></p>
 			</div>
 			<div class="row">
-				<div id="courses-backlogged" class="courses-selections" data-bind="if: bc.length > 0">
+				<div class="courses-selections well span10 offset1" data-bind="visible: bc().length > 0, css: {disabled: !blEnabled()}">
 					<p class="lead center">Backlogged Courses</p>
 					<table class="table table-hover">
 						<thead>
@@ -103,17 +103,18 @@
 							</tr>
 						</thead>
 						<tbody data-bind="foreach: bc">
-							<tr>
+							<tr data-bind="css: {success: selected}">
 								<td data-bind="text: compcode"></td>
 								<td data-bind="text: number"></td>
 								<td data-bind="text: name"></td>
-								<td><button class="btn" data-bind="css: {'btn-success': selected}"><i data-bind="css: {'icon-check': selected, 'icon-remove-circle': !selected()}"></i></button></td>
+								<td><button class="btn" data-bind="click: toggleSelection, css: {'btn-success': selected}"><i data-bind="css: {'icon-remove icon-white': selected, 'icon-ok': !selected()}"></i></button></td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
-				<div class="courses-selections"><hr></div>
-				<div id="courses-backlogged" class="courses-selections disabled">
+			</div>
+			<div class="row">
+				<div class="courses-selections well span10 offset1" data-bind="css: {disabled: !pscEnabled()}">
 					<p class="lead center">Prescribed Courses</p>
 					<table class="table table-hover">
 						<thead>
@@ -125,17 +126,18 @@
 							</tr>
 						</thead>
 						<tbody data-bind="foreach: psc">
-							<tr>
+							<tr data-bind="css: {success: selected}">
 								<td data-bind="text: compcode"></td>
 								<td data-bind="text: number"></td>
 								<td data-bind="text: name"></td>
-								<td><button class="btn" data-bind="css: {'btn-success': selected}"><i data-bind="css: {'icon-check': selected, 'icon-remove-circle': !selected()}"></i></button></td>
+								<td><button class="btn" data-bind="click: toggleSelection, css: {'btn-success': selected}"><i data-bind="css: {'icon-remove icon-white': selected, 'icon-ok': !selected()}"></i></button></td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
-				<div class="courses-selections"><hr></div>
-				<div id="courses-backlogged" class="courses-selections disabled">
+			</div>
+			<div class="row">
+				<div class="courses-selections well span10 offset1" data-bind="css: {disabled: !elEnabled()}">
 					<p class="lead center">Electives / Overload Courses</p>
 					<table class="table table-hover">
 						<thead>
@@ -145,22 +147,38 @@
 								<th>Course Name</th>
 								<th style="width: 1px">Select</th>
 							</tr>
+							<tr data-bind="if: el().length == 0">
+								<td class="placeholder" colspan="4">
+									No Courses Selected
+								</td>
+							</tr>
 						</thead>
-						<tbody data-bind="foreach: psc">
-							<tr>
+						<tbody data-bind="foreach: el">
+							<tr data-bind="css: {success: selected}">
 								<td data-bind="text: compcode"></td>
 								<td data-bind="text: number"></td>
 								<td data-bind="text: name"></td>
-								<td><button class="btn" data-bind="css: {'btn-success': selected}"><i data-bind="css: {'icon-check': selected, 'icon-remove-circle': !selected()}"></i></button></td>
+								<td><button class="btn" data-bind="click: toggleSelection, css: {'btn-success': selected}"><i data-bind="css: {'icon-remove icon-white': selected, 'icon-ok': !selected()}"></i></button></td>
 							</tr>
 						</tbody>
 					</table>
-					<div class="input-prepend">
+					<div id="electiveDrop">
+						<ul class="dropdown-menu" data-bind="foreach: electiveChoices, visible: electiveChoices().length > 0">
+							<li data-bind="css: {active: $data == $parent.selectedValueDropdown()}, event: {mouseover: electiveMouseOver}, click: electiveSelect"><a href="#"><table><tr>
+								<td width="55px" data-bind="text: compcode"></td>
+								<td width="95px" data-bind="text: number"></td>
+								<td data-bind="text: name"></td>
+							</tr></table></a></li>
+						</ul>
+					</div>
+					<div class="input-prepend" data-bind="css: {topOpen: electiveChoices().length > 0}, css: {disabled: !elsEnabled()}">
 						<span class="add-on">Add a course</span>
-						<input class="span4" id="prependedInput" type="text" placeholder="Enter Compcode, Course No. or Course Name">
+						<input class="span4" data-bind="value: electiveQuery, valueUpdate: 'afterkeydown', event: {keydown: electiveQueryKeyDown}" type="text" placeholder="Enter Compcode, Course No. or Course Name">
 					</div>
 				</div>
 			</div>
+			<hr>
+			<button class="btn mainButton" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
 		</div>
 		<div id="sections-container" class="container hide">
 			<div class="breadcrumb">
