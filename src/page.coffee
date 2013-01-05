@@ -1,5 +1,5 @@
 socket = undefined
-viewmodel = viewmodel = undefined
+viewmodel = undefined
 
 class LoginViewModel
 	constructor: ->
@@ -28,7 +28,7 @@ class LoginViewModel
 		@alertStatus undefined
 
 class CourseViewModel
-	constructor: ({@compcode, @number, @name, selected}) ->
+	constructor: ({@_id, @compcode, @number, @name, selected}) ->
 		@selected = ko.observable selected
 	toggleSelection: =>
 		@selected not @selected()
@@ -73,20 +73,72 @@ class CoursesViewModel
 		unless event.which in [13, 38, 40] and @electiveChoices().length > 0
 			return true
 	nextStep: =>
-		bootbox.alert "You haven't registered for all the courses prescribed in your program. As a result you might end up doing an extra semester." if @nextStepWarning()
+		saveCourses = =>
+			viewmodel.pleaseWaitVisible true
+			socket.emit "saveCourses", @toData(), =>
+				viewmodel.pleaseWaitVisible false
+				viewmodel.gotoSectionsView()
+		if @nextStepWarning()
+			bootbox.confirm "You haven't registered for all the courses prescribed in your program. As a result you might end up doing an extra semester.", (result) =>
+				saveCourses() if result
+		else
+			saveCourses()
+	toData: =>
+		bc: _(@bc()).map (x) -> course_id: x._id, selected: x.selected()
+		psc: _(@psc()).map (x) -> course_id: x._id, selected: x.selected()
+		el: _(@allEl()).map (x) -> course_id: x._id, selected: x.selected()
 
+class SectionViewModel
+	constructor: ({@number, @instructor, status}, @parent) ->
+		@status = ko.observable if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
+	chooseLectureSection: =>
+		sectionInfo =
+			course_compcode: @parent.compcode
+			section_number: @number
+			isLectureSection: true
+		socket.emit "chooseSection", sectionInfo, ({status}) =>
+			@parent.selectedLectureSection @number
+			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
+			#Schedule & Conflicts
+	chooseLabSection: =>
+		sectionInfo =
+			course_compcode: @parent.compcode
+			section_number: @number
+			isLabSection: true
+		socket.emit "chooseSection", sectionInfo, ({status}) =>
+			@parent.selectedLabSection @number
+			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
+			#Schedule & Conflicts
+
+class CourseSectionsViewModel
+	constructor: ({@compcode, @number, @name, @hasLectures, @hasLab, lectureSections, labSections, selectedLectureSection, selectedLabSection}) ->
+		@lectureSections = ko.observableArray (new SectionViewModel section, @ for section in lectureSections ? [])
+		@labSections = ko.observableArray (new SectionViewModel section, @ for section in labSections ? [])
+		@selectedLectureSection = ko.observable selectedLectureSection
+		@selectedLabSection = ko.observable selectedLabSection
+		@selectedLectureSectionText = ko.computed => "Lecture" + if @selectedLectureSection()? then ": " + @selectedLectureSection() else ""
+		@selectedLabSectionText = ko.computed => "Lab" + if @selectedLabSection()? then ": " + @selectedLabSection() else ""
+		@selectedLectureSectionStatus = ko.computed => _(@lectureSections()).find((x) => x.number is @selectedLectureSection()).status() if @selectedLectureSection()?
+		@selectedLabSectionStatus = ko.computed => _(@labSections()).find((x) => x.number is @selectedLabSection()).status() if @selectedLabSection()?
+
+class SectionsViewModel
+	constructor: ->
+		@courses = ko.observableArray []
+	gotoCoursesView: =>
+		viewmodel.gotoCoursesView()
 
 class BodyViewModel
 	constructor: ->
 		@studentName = ko.observable undefined
 		@studentId = ko.observable undefined
-		@studentNI = ko.computed => "#{@studentName} (#{@studentId})"
+		@studentNI = ko.computed => "#{@studentName()} (#{@studentId()})"
 		@authenticated = ko.observable false
 		@semesterTitle = ko.observable undefined
 		@startTime = ko.observable undefined
 		@activeView = ko.observable undefined
 		@loginViewModel = new LoginViewModel()
 		@coursesViewModel = new CoursesViewModel()
+		@sectionsViewModel = new SectionsViewModel()
 		@pleaseWaitVisible = ko.observable false
 		@activeViewNZ = ko.computed =>
 			if @pleaseWaitVisible() then "pleaseWait"
@@ -95,12 +147,19 @@ class BodyViewModel
 	gotoCoursesView: =>
 		@activeView "coursesView"
 		@pleaseWaitVisible true
-		socket.emit "getCourses", ({bc, psc, el, reqEl}) =>
+		socket.emit "getCourses", ({success, bc, psc, el, reqEl}) =>
 			@coursesViewModel.bc (new CourseViewModel course for course in bc ? [])
 			@coursesViewModel.psc (new CourseViewModel course for course in psc ? [])
 			@coursesViewModel.allEl (new CourseViewModel course for course in el ? [])
 			@coursesViewModel.reqEl reqEl ? 0
 			@pleaseWaitVisible false
+	gotoSectionsView: =>
+		@activeView "sectionsView"
+		@pleaseWaitVisible true
+		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts}) =>
+			@sectionsViewModel.courses (new CourseSectionsViewModel course for course in selectedcourses ? [])
+			@pleaseWaitVisible false
+			#Schedule & Conflicts
 
 $ ->
 	window.viewmodel = viewmodel = new BodyViewModel()
@@ -113,6 +172,8 @@ $ ->
 			viewmodel.semesterTitle semesterTitle
 			viewmodel.startTime new Date startTime
 			viewmodel.pleaseWaitVisible false
+
+	$('input[rel=tooltip]').tooltip()
 
 $.extend
 	postJSON: (url, data, callback) ->
@@ -127,47 +188,14 @@ $.extend
 
 $(document).ready ->
 	return
-	$("#loginbox input").addClass if $(document).width() >= 1200 then "span3" else "span2"
-	$("#courses-sections, .courses-selections").addClass if $(document).width() >= 1200 then "span8 offset2" else "span12"
-	$("#timetable-grid").addClass if $(document).width() >= 1200 then "span10 offset1" else "span12"
-	$(window).resize ->
-		if $(document).width() >= 1200
-			$("#loginbox input").removeClass("span2").addClass("span3")
-			$("#courses-sections, .courses-selections").removeClass("span12").addClass("span8 offset2")
-			$("#timetable-grid").removeClass("span12").addClass("span10 offset1")
-		else
-			$("#loginbox input").removeClass("span3").addClass("span2")
-			$("#courses-sections, .courses-selections").removeClass("span8 offset2").addClass("span12")
-			$("#timetable-grid").removeClass("span10 offset1").addClass("span12")
 
-	resetContainers = ->
-		$("#prelogin-container, #login-container, #sections-container").addClass("hide")
-		$("#courses-sections tbody").remove()
-		$("#timetable-grid tbody tr td:not(:first-of-type)").text ""
-
-	pubsub = io.connect "http://bpd-cdms-pubsub.herokuapp.com:80"
-	pubsub.on "connect", ->
-		setupLoginContainer()
-
-	setupLoginContainer = ->
-		resetContainers()
-		pubsub.removeAllListeners() if global.student?
-		global = {}
-		$("#login-container").removeClass("hide")
-		$(".nav.pull-right").addClass("hide")
-		$("#current-student").text("")
-		$("#input-studentid").val("")
-		$("#input-password").val("")
-
-	$("#input-studentid").tooltip()
-	$("#submit-login").click ->
-		#truncated
+	#pubsub = io.connect "http://bpd-cdms-pubsub.herokuapp.com:80"
+	#pubsub.on "connect", ->
+	#	setupLoginContainer()
 
 	setupSectionsContainer = ->
-		resetContainers()
-		$("#prelogin-container").removeClass "hide"
-		$(".nav.pull-right").removeClass("hide")
-		$("#current-student").text("#{global.student.name} (#{global.student.studentId})")
+		$("#courses-sections tbody").remove()
+		$("#timetable-grid tbody tr td:not(:first-of-type)").text ""
 
 		setSchedule = (schedule) ->
 			$("#timetable-grid tbody tr td:not(:nth-of-type(1))").text ""
@@ -195,99 +223,9 @@ $(document).ready ->
 				$("#register_button").removeClass "disabled"
 
 		$.postJSON "/api/initializeSectionsScreen", hash: global.hash, (data) ->
-			$("#prelogin-container").addClass "hide"
-			$("#sections-container").removeClass "hide"
 			return alert "Please restart your session by refreshing this page." unless data.success
-			global.student[key] = value for key, value of data when key isnt "success"
-			$("<tbody></tbody>").appendTo("#courses-sections table")
 			for course in data.selectedcourses
-				hasLectures = ->
-					selectedSection = if course.selectedLectureSection? then ": #{course.selectedLectureSection}" else ""
-					sectionColorClass =
-						if selectedSection isnt ""
-							section = (section for section in course.lectureSections when section.number is course.selectedLectureSection)[0]
-							if section.status.isFull then "status-full btn-danger"
-							else if section.status.lessThan5 then "status-limited btn-warning"
-							else "status-free btn-success"
-						else
-							""
-					"""
-					<div class="btn-group" data-sectiontype="lecture">
-						<button class="btn dropdown-toggle #{sectionColorClass}" data-sectiontype="lecture" data-selectedsection="#{course.selectedLectureSection ? ""}" data-toggle="dropdown">Lecture#{selectedSection} <span class="caret"></span></button>
-						<ul class="dropdown-menu">
-							#{
-								ret =
-									for section in course.lectureSections
-										liClass = if section.status.isFull then "error" else if section.status.lessThan5 then "warning" else ""
-										"<li class='#{liClass}' data-course='#{course.compcode}' data-sectiontype='lecture' data-section='#{section.number}'><a><strong>#{section.number}</strong>: #{section.instructor}</a></li>"
-								ret.join("\n")
-							}
-						</ul>
-					</div>
-					"""
-				hasLab = ->
-					selectedSection = if course.selectedLabSection? then ": #{course.selectedLabSection}" else ""
-					sectionColorClass =
-						if selectedSection isnt ""
-							section = (section for section in course.labSections when section.number is course.selectedLabSection)[0]
-							if section.status.isFull then "status-full btn-danger"
-							else if section.status.lessThan5 then "status-limited btn-warning"
-							else "status-free btn-success"
-						else
-							""
-					"""
-					<div class="btn-group" data-sectiontype="lab">
-						<button class="btn dropdown-toggle #{sectionColorClass}" data-sectiontype="lab" data-selectedsection="#{course.selectedLabSection ? ""}" data-toggle="dropdown">Lab#{selectedSection} <span class="caret"></span></button>
-						<ul class="dropdown-menu">
-							#{
-								ret =
-									for section in course.labSections
-										liClass = if section.status.isFull then "error" else if section.status.lessThan5 then "warning" else ""
-										"<li class='#{liClass}' data-course='#{course.compcode}' data-sectiontype='lab' data-section='#{section.number}'><a><strong>#{section.number}</strong>: #{section.instructor}</a></li>"
-								ret.join("\n")
-							}
-						</ul>
-					</div>
-					"""
-				tr =
-					"""
-					<tr data-compcode="#{course.compcode}" data-coursenumber="#{course.number}">
-						<td>#{course.compcode}</td>
-						<td>#{course.number}</td>
-						<td>#{course.name}</td>
-						<td #{if course.isProject then "" else 'class="btn-toolbar"'}>
-							#{
-								if course.isProject
-									course.supervisor
-								else
-									"#{if course.hasLectures then hasLectures() else ""}\n#{if course.hasLab then hasLab() else ""}"
-							}
-						</td>
-					</tr>
-					"""
-				tr = $(tr).appendTo("#courses-sections table tbody")
-				tr.find("td div.btn-group li").click ->
-					elem = $(@)
-					sectionInfo =
-						course_compcode: parseInt elem.attr "data-course"
-						section_number: parseInt elem.attr "data-section"
-						isLectureSection: if elem.attr("data-sectiontype") is "lecture" then true
-						isLabSection: if elem.attr("data-sectiontype") is "lab" then true
-					$.postJSON "/api/chooseSection", sectionInfo: sectionInfo, hash: global.hash, (data) ->
-						return alert "Please restart your session by refreshing this page." unless data.success
-						sectionTypeText = if elem.attr("data-sectiontype") is "lecture" then "Lecture" else if elem.attr("data-sectiontype") is "lab" then "Lab"
-						elem.parents("div.btn-group").children("button").html "#{sectionTypeText}: #{elem.attr "data-section"} <span class='caret'></span>"
-						elem.parents("div.btn-group").children("button").removeClass("status-conflict status-full status-limited status-free btn-danger btn-warning btn-success")
-						elem.parents("div.btn-group").children("button").attr "data-selectedsection", sectionInfo.section_number
-						if data.status or data.status is "yellow"
-							elem.parents("div.btn-group").children("button").addClass if data.status is true then "status-free btn-success" else "status-limited btn-warning"
-							elem.parents("tr").removeClass("error")
-						else
-							elem.parents("div.btn-group").children("button").addClass("status-full btn-danger")
-							elem.parents("tr").addClass("error")
-						setSchedule data.schedule
-						setConflicts data.conflicts
-						$("#timetable-grid tbody tr td").removeClass "hover"
+				#...|||...#
 				tr.mouseenter ->
 					elem = $(@)
 					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").addClass "hover"

@@ -22,10 +22,9 @@
 			<div class="navbar-inner">
 				<div class="container">
 					<div class="brand">BPDC - Registration System</div>
-					<ul class="nav pull-right hide">
+					<ul class="nav pull-right" data-bind="visible: authenticated">
 						<li><a data-bind="text: studentNI" href="#"></a></li>
-						<li class="divider-vertical" data-bind="visible: authenticated"></li>
-						<li data-bind="visible: authenticated"><a href="#">Logout</a></li>
+						<li><a href="#">Logout</a></li>
 					</ul>
 				</div>
 			</div>
@@ -82,8 +81,7 @@
 		<div id="courses-container" class="container" data-bind="with: coursesViewModel, visible: activeViewNZ() == 'coursesView'">
 			<div class="breadcrumb">
 				<li><span>Courses</span><span class="divider">&nbsp;&gt;</span></li>
-				<li><span class="muted">Timetable</span><span class="divider">&nbsp;&gt;</span></li>
-				<li><span class="muted">Finalize</span></li>
+				<li><span class="muted">Timetable</span></li>
 			</div>
 			<div class="hero-unit">
 				<h1>Choose your Courses</h1>
@@ -180,18 +178,18 @@
 			<hr>
 			<button class="btn mainButton" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
 		</div>
-		<div id="sections-container" class="container hide">
+		<div id="sections-container" class="container" data-bind="with: sectionsViewModel, visible: activeViewNZ() == 'sectionsView'">
 			<div class="breadcrumb">
-				<li><a>Courses</a><span class="divider">&nbsp;&gt;</span></li>
-				<li><span>Timetable</span><span class="divider">&nbsp;&gt;</span></li>
-				<li><span class="muted">Finalize</span></li>
+				<li data-bind="click: gotoCoursesView"><a href="#">Courses</a><span class="divider">&nbsp;&gt;</span></li>
+				<li><span>Timetable</span></li>
 			</div>
 			<div class="hero-unit">
 				<h1>Build Your Timetable</h1>
 				<p>Choose your sections to fill in your Timetable Schedule. Your sections are not reserved until you complete the registration process by clicking on the <em>Register</em> button. <em>Green</em> denotes that more than 5 seats are available, <em>Yellow</em> denotes that only 5 seats are left and <em>Red</em> denotes that either the section has reached its capacity or that it is clashing with another selected section.</p>
+				<p>Click on <em>Courses</em> above to modify your course selections.</p>
 			</div>
 			<div class="row">
-				<div id="courses-sections">
+				<div id="courses-sections" class="span10 offset1">
 					<p class="lead center">Courses</p>
 					<table class="table table-hover">
 						<thead>
@@ -202,6 +200,35 @@
 								<th style="width: 220px">Section / Faculty</th>
 							</tr>
 						</thead>
+						<tbody data-bind="foreach: courses">
+							<tr>
+								<td data-bind="text: compcode"></td>
+								<td data-bind="text: number"></td>
+								<td data-bind="text: name"></td>
+								<td class="btn-toolbar">
+									<div class="btn-group" data-bind="if: lectureSections().length > 0">
+										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLectureSectionStatus() == 'isFull', 'btn-warning': selectedLectureSectionStatus() == 'lessThan5'}" data-toggle="dropdown">
+											<span data-bind="text: selectedLectureSectionText"></span> <span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu" data-bind="foreach: lectureSections">
+											<li data-bind="css: {error: status() == 'isFull', warning: status() == 'lessThan5', active: $parent.selectedLectureSection() == number}, click: chooseLectureSection">
+												<a href="#"><strong data-bind="text: number"></strong>: <span data-bind="text: instructor"></span></a>
+											</li>
+										</ul>
+									</div>
+									<div class="btn-group" data-bind="if: labSections().length > 0">
+										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLabSectionStatus() == 'isFull', 'btn-warning': selectedLabSectionStatus() == 'lessThan5'}" data-toggle="dropdown">
+											<span data-bind="text: selectedLabSectionText"></span> <span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu" data-bind="foreach: labSections">
+											<li data-bind="css: {error: status() == 'isFull', warning: status() == 'lessThan5', active: $parent.selectedLabSection() == number}, click: chooseLabSection">
+												<a href="#"><strong data-bind="text: number"></strong>: <span data-bind="text: instructor"></span></a>
+											</li>
+										</ul>
+									</div>
+								</td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>
@@ -331,7 +358,7 @@
 				</div>
 			</div>
 			<hr>
-			<button id="register_button" class="btn btn-large btn-primary">Register</button>
+			<button class="btn btn-primary mainButton">Confirm &amp; Register</button>
 		</div>
 	</body>
 </html>

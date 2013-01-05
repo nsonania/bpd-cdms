@@ -47,8 +47,8 @@ io.sockets.on "connection", (socket) ->
 			el =
 				for x in el
 					c = courses._find (y) -> y.get("_id").equals x
-					lecturesCapacity = if c.get("hasLectures")? then (c.get("lectureSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
-					labsCapacity = if c.get("hasLab")? then (c.get("labSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
+					lecturesCapacity = if c.get("hasLectureSections")? then (c.get("lectureSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
+					labsCapacity = if c.get("hasLabSections")? then (c.get("labSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
 					totalCapacity = Math.max lecturesCapacity, labsCapacity
 					await db.Student.count {$or: [{bc: c.get "_id"}, {psc: c.get "_id"}, {selectedcourses: $elemMatch: course_id: c.get "_id"}]}, defer err, count
 					leftCapacity = totalCapacity - count
@@ -76,6 +76,18 @@ io.sockets.on "connection", (socket) ->
 				el: el
 				reqEl: student.get("reqEl") ? 0
 
+	socket.on "saveCourses", (data, callback) ->
+		await db.Student.findById socket.student_id, defer err, student
+		return callback success: false unless student?
+		selectedcourses = student.get("selectedcourses") ? []
+		allC = [data.bc, data.psc, data.el]._flatten()
+		selectedcourses = selectedcourses._filter (x) -> x.course_id.toString() in allC._filter((y) -> y.selected)._map (y) -> y.course_id
+		selectedcourses = selectedcourses.concat allC._filter((x) -> x.selected and x.course_id not in selectedcourses._map (y) -> y.course_id.toString())._map (x) -> course_id: db.toObjectId x.course_id
+		student.set "selectedcourses", selectedcourses
+		student.markModified "selectedcourses"
+		student.save ->
+			callback true
+
 	socket.on "initializeSectionsScreen", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
 		return callback success: false unless student?
@@ -90,14 +102,14 @@ io.sockets.on "connection", (socket) ->
 							number: course.number
 							name: course.name
 							isProject: course.isProject
-							hasLectures: course.hasLectures
-							hasLab: course.hasLab
-							lectureSections: if course.hasLectures then for section in course.lectureSections
+							hasLectures: course.hasLectureSections
+							hasLab: course.hasLabSections
+							lectureSections: if course.hasLectureSections then for section in course.lectureSections
 								await core.sectionStatus course_id: course._id, section_number: section.number, isLectureSection: true, defer status
 								number: section.number
 								instructor: section.instructor
 								status: status
-							labSections: if course.hasLab then for section in course.labSections
+							labSections: if course.hasLabSections then for section in course.labSections
 								await core.sectionStatus course_id: course._id, section_number: section.number, isLabSection: true, defer status
 								number: section.number
 								instructor: section.instructor
@@ -108,13 +120,11 @@ io.sockets.on "connection", (socket) ->
 					schedule: scheduleconflicts.schedule
 					conflicts: scheduleconflicts.conflicts
 
-	socket.on "chooseSection", ({sectionInfo}, callback) ->
+	socket.on "chooseSection", (sectionInfo, callback) ->
 		await db.Student.findById socket.student_id, defer err, student
 		return callback success: false unless student?
-		student = socket.student
 		db.Course.find(_id: $in: student.get("selectedcourses")._map((x) -> db.toObjectId x.course_id)).lean().exec (err, courses) ->
 			thisCourse = courses._find (x) -> x.compcode is sectionInfo.course_compcode
-			console.log req.body
 			thisCourse.sections = if sectionInfo.isLectureSection then thisCourse.lectureSections else if sectionInfo.isLabSection then thisCourse.labSections
 			stringifiedTimeslots = JSON.stringify thisCourse.sections._find((x) -> x.number is sectionInfo.section_number).timeslots
 			slotsFull = student.get("selectedcourses")
@@ -142,7 +152,6 @@ io.sockets.on "connection", (socket) ->
 	socket.on "confirmRegistration", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
 		return callback success: false unless student?
-		student = socket.student
 		for selectedcourse in student.get "selectedcourses"
 			if selectedcourse.selectedLectureSection?
 				await core.sectionStatus course_id: selectedcourse.course_id, section_number: selectedcourse.selectedLectureSection, isLectureSection: true, defer result
