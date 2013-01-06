@@ -4,8 +4,8 @@ This file deals with declaring the Schema and provide direct access to Mongoose 
 
 mongoose = {Schema} = require "mongoose"
 
-mongoose.connect "mongodb://#{process.env.DB_USER}:#{process.env.DB_PASSWORD}@dbh73.mongolab.com:27737/bpd-cdms"			#MongoLab (Cloud)
-# mongoose.connect "mongodb://localhost:27017/bpd-cdms"																		#Local
+# mongoose.connect "mongodb://#{process.env.DB_USER}:#{process.env.DB_PASSWORD}@dbh73.mongolab.com:27737/bpd-cdms"			#MongoLab (Cloud)
+mongoose.connect "mongodb://localhost:27017/bpd-cdms"																		#Local
 
 collections = ["Course", "Student", "Misc"]
 for collection in collections
