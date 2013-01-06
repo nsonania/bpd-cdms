@@ -9,6 +9,7 @@ methods = [
 	"uniq"
 	"flatten"
 	"each"
+	"reduce"
 ]
 
 for method in methods then do (method) ->

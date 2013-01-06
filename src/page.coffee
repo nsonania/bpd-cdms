@@ -96,19 +96,21 @@ class SectionViewModel
 			course_compcode: @parent.compcode
 			section_number: @number
 			isLectureSection: true
-		socket.emit "chooseSection", sectionInfo, ({status}) =>
+		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
 			@parent.selectedLectureSection @number
 			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
 			#Schedule & Conflicts
+			viewmodel.sectionsViewModel.setSchedule schedule
 	chooseLabSection: =>
 		sectionInfo =
 			course_compcode: @parent.compcode
 			section_number: @number
 			isLabSection: true
-		socket.emit "chooseSection", sectionInfo, ({status}) =>
+		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
 			@parent.selectedLabSection @number
 			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
 			#Schedule & Conflicts
+			viewmodel.sectionsViewModel.setSchedule schedule
 
 class CourseSectionsViewModel
 	constructor: ({@compcode, @number, @name, @hasLectures, @hasLab, lectureSections, labSections, selectedLectureSection, selectedLabSection}) ->
@@ -124,8 +126,18 @@ class CourseSectionsViewModel
 class SectionsViewModel
 	constructor: ->
 		@courses = ko.observableArray []
+		@schedule = (ko.observableArray [] for x in [1..7] for y in [1..10])
+
 	gotoCoursesView: =>
 		viewmodel.gotoCoursesView()
+	setSchedule: (schedule) =>
+		for k1 in [1..7]
+			for k2 in [1..10]
+				@schedule[k2 - 1][k1 - 1].removeAll()
+		for k1, day of schedule
+			for k2, hour of day
+				for course_number in hour
+					@schedule[k2 - 1][k1 - 1].push course_number
 
 class BodyViewModel
 	constructor: ->
@@ -158,8 +170,9 @@ class BodyViewModel
 		@pleaseWaitVisible true
 		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts}) =>
 			@sectionsViewModel.courses (new CourseSectionsViewModel course for course in selectedcourses ? [])
-			@pleaseWaitVisible false
 			#Schedule & Conflicts
+			@sectionsViewModel.setSchedule schedule
+			@pleaseWaitVisible false
 
 $ ->
 	window.viewmodel = viewmodel = new BodyViewModel()
