@@ -78,7 +78,7 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "login", (accessCode, callback) ->
 		socket.auth = true
-		console.log "Login"
+		console.log "Login: #{accessCode} - #{process.env.ACCESSCODE}"
 		callback do ->
 			if accessCode is process.env.ACCESSCODE
 				true
