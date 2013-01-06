@@ -27,15 +27,18 @@ io.set "log level", 0
 io.sockets.on "connection", (socket) ->
 
 	socket.on "login", ({studentId, password}, callback) ->
+		await db.Misc.findOne desc: "Semester Details", defer err, semester
+		startTime = new Date semester.get "startTime"
+		return callback success: false, reason: "notOpen" if startTime > new Date()
 		db.Student.findOne studentId: studentId.toUpperCase(), password: password, (err, student) ->
-			return callback success: false unless student?
-			return callback success: true, registered: true if student.registered
+			return callback success: false, reason: "authFailure" unless student?
 			socket.student_id = student.get "_id"
 			callback
 				success: true
 				student:
 					studentId: student.get "studentId"
 					name: student.get "name"
+					status: if student.get("validated") then "validated" else if student.get("registered") then "registered" else if student.get("difficultTimetable") then "difficultTimetable" else "not registered"
 
 	socket.on "getCourses", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
@@ -167,9 +170,11 @@ io.sockets.on "connection", (socket) ->
 			for course in student.get("selectedcourses") then do (course) ->
 				if course.selectedLectureSection?
 					core.sectionStatus course_id: course.course_id, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
+						console.log "aaa"
 						pubsub.emit "publish", courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
 				if course.selectedLabSection?
 					core.sectionStatus course_id: course.course_id, section_number: course.selectedLabSection, isLabSection: true, (data) ->
+						console.log "bbb"
 						pubsub.emit "publish", courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
 
 	socket.on "getSemesterDetails", (callback) ->
@@ -177,5 +182,36 @@ io.sockets.on "connection", (socket) ->
 			callback
 				semesterTitle: semester.get "title"
 				startTime: semester.get "startTime"
+
+	socket.on "difficultTimetable", (callback) ->
+		await db.Student.findById socket.student_id, defer err, student
+		return callback success: false unless student?
+		student.set "difficultTimetable", true
+		student.markModified "difficultTimetable"
+		student.save ->
+			callback true
+
+	socket.on "logout", (callback) ->
+		await db.Student.findById socket.student_id, defer err, student
+		return callback success: false unless student?
+		if not student.get("registered") and not student.get("difficultTimetable")
+			student.get("selectedcourses")._each (x) ->
+				delete x.selectedLectureSection
+				delete x.selectedLabSection
+			student.markModified "selectedcourses"
+			student.save -> callback true
+		else
+			callback true
+		delete socket.student_id
+
+	socket.on "disconnect", ->
+		if socket.student_id?
+			await db.Student.findById socket.student_id, defer err, student
+			if not student.get("registered") and not student.get("difficultTimetable")
+				student.get("selectedcourses")._each (x) ->
+					delete x.selectedLectureSection
+					delete x.selectedLabSection
+				student.markModified "selectedcourses"
+				student.save()
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "worker #{process.pid}: Listening on port #{port}"

@@ -12,20 +12,33 @@ class LoginViewModel
 		socket.emit "login", studentId: @studentId() ? "", password: md5(@password() ? ""), (data) =>
 			viewmodel.pleaseWaitVisible false
 			unless data.success
-				@alertStatus "authFailure"
-			else if data.registered
-				@alertStatus "alreadyRegistered"
+				@alertStatus data.reason
 			else
 				viewmodel.studentName data.student.name
 				viewmodel.studentId data.student.studentId
+				viewmodel.studentStatus data.student.status
 				viewmodel.authenticated true
-				viewmodel.gotoCoursesView()
-				socket.once "destroySession", ->
-					alert "Your session has expired."
-					viewmodel.authenticated false
-					viewmodel.activeView "loginView"
+				if viewmodel.studentStatus() is "not registered"
+					viewmodel.gotoCoursesView()
+				else
+					viewmodel.gotoSectionsView()
+				socket.once "destroySession", =>
+					bootbox.alert "Your session has expired."
+					@logout()
+		@studentId = ko.observable undefined
+		@password = ko.observable undefined
 	dismissAlert: =>
 		@alertStatus undefined
+	logout: =>
+		viewmodel.pleaseWaitVisible true
+		socket.emit "logout", ->
+			viewmodel.studentName undefined
+			viewmodel.studentId undefined
+			viewmodel.studentStatus undefined
+			viewmodel.authenticated false
+			viewmodel.activeView "loginView"
+			viewmodel.pleaseWaitVisible false
+
 
 class CourseViewModel
 	constructor: ({@_id, @compcode, @number, @name, selected}) ->
@@ -120,13 +133,17 @@ class CourseSectionsViewModel
 		@selectedLabSection = ko.observable selectedLabSection
 		@selectedLectureSectionText = ko.computed => "Lecture" + if @selectedLectureSection()? then ": " + @selectedLectureSection() else ""
 		@selectedLabSectionText = ko.computed => "Lab" + if @selectedLabSection()? then ": " + @selectedLabSection() else ""
-		@selectedLectureSectionStatus = ko.computed => _(@lectureSections()).find((x) => x.number is @selectedLectureSection()).status() if @selectedLectureSection()?
-		@selectedLabSectionStatus = ko.computed => _(@labSections()).find((x) => x.number is @selectedLabSection()).status() if @selectedLabSection()?
+		@selectedLectureSectionStatus = ko.computed => _(@lectureSections()).find((x) => x.number is @selectedLectureSection()).status() ? "success" if @selectedLectureSection()?
+		@selectedLabSectionStatus = ko.computed => _(@labSections()).find((x) => x.number is @selectedLabSection()).status() ? "success" if @selectedLabSection()?
+		@selectedLectureSectionTextFull = ko.computed => (@selectedLectureSectionText() + " (#{_(@lectureSections()).find((x) => x.number is @selectedLectureSection()).instructor})") if @selectedLectureSection()?
+		@selectedLabSectionTextFull = ko.computed => (@selectedLabSectionText() + " (#{_(@labSections()).find((x) => x.number is @selectedLabSection()).instructor})") if @selectedLabSection()?
 
 class SectionsViewModel
 	constructor: ->
 		@courses = ko.observableArray []
 		@schedule = (ko.observableArray [] for x in [1..7] for y in [1..10])
+		@registerEnabled = ko.computed => _.chain(@schedule).flatten(true).all((x) -> x().length <= 1).value() and 
+			_(@courses()).all (x) -> (x.lectureSections().length is 0 or x.selectedLectureSection()?) and (x.labSections().length is 0 or x.selectedLabSection()?)
 
 	gotoCoursesView: =>
 		viewmodel.gotoCoursesView()
@@ -138,12 +155,25 @@ class SectionsViewModel
 			for k2, hour of day
 				for course_number in hour
 					@schedule[k2 - 1][k1 - 1].push course_number
+	register: =>
+		socket.emit "confirmRegistration", (result) ->
+			return bootbox.alert "Invalid Registration. Please try refreshing your window to create a new session." if not result.success and result.invalidRegistration?
+			viewmodel.studentStatus "registered"
+	needHelp: =>
+		bootbox.confirm """
+			Continue only if you have tried all combinations and are not able to build a valid timetable.
+			Choose your sections wherever possible before you proceed.
+			Once you click Ok, you will be locked out and will have to approach the Registration Incharge.
+		""", (result) ->
+			return unless result
+			socket.emit "difficultTimetable", -> viewmodel.studentStatus "difficultTimetable"
 
 class BodyViewModel
 	constructor: ->
 		@studentName = ko.observable undefined
 		@studentId = ko.observable undefined
 		@studentNI = ko.computed => "#{@studentName()} (#{@studentId()})"
+		@studentStatus = ko.observable undefined
 		@authenticated = ko.observable false
 		@semesterTitle = ko.observable undefined
 		@startTime = ko.observable undefined
@@ -187,88 +217,3 @@ $ ->
 			viewmodel.pleaseWaitVisible false
 
 	$('input[rel=tooltip]').tooltip()
-
-$.extend
-	postJSON: (url, data, callback) ->
-		jQuery.ajax
-			type: "POST"
-			url: url
-			data: JSON.stringify(data)
-			success: callback
-			dataType: "json"
-			contentType: "application/json"
-			processData: false
-
-$(document).ready ->
-	return
-
-	#pubsub = io.connect "http://bpd-cdms-pubsub.herokuapp.com:80"
-	#pubsub.on "connect", ->
-	#	setupLoginContainer()
-
-	setupSectionsContainer = ->
-		$("#courses-sections tbody").remove()
-		$("#timetable-grid tbody tr td:not(:first-of-type)").text ""
-
-		setSchedule = (schedule) ->
-			$("#timetable-grid tbody tr td:not(:nth-of-type(1))").text ""
-			$("#timetable-grid tbody tr td:not(:nth-of-type(1))").removeClass "error"
-			for k1, day of schedule
-				k1 = parseInt k1
-				for k2, hour of day
-					k2 = parseInt k2
-					$("#timetable-grid tr:nth-of-type(#{if k2 < 10 then k2 else 11}) td:nth-of-type(#{k1 + 1})").html _(hour).map((x) -> x.course_number + if x.type is "Lab" then " (Lab)" else "").join "<br>"
-					if hour.length > 1
-						$("#timetable-grid tr:nth-of-type(#{if k2 < 10 then k2 else 11}) td:nth-of-type(#{k1 + 1})").addClass "error"
-
-		setConflicts = (conflicts) ->
-			$("#courses-sections tbody tr").removeClass "error"
-			$("#courses-sections tbody tr .btn-group .btn").removeClass "status-conflict btn-danger btn-warning btn-success"
-			for conflict in conflicts
-				$("#courses-sections tbody tr[data-coursenumber='#{conflict.course_number}']").addClass("error")
-					.find(".btn-group[data-sectiontype='#{conflict.type}']").children(".btn").addClass "status-conflict btn-danger"
-			$("#courses-sections tbody tr .btn-group .btn.status-free").not(".status-conflict").addClass "btn-success"
-			$("#courses-sections tbody tr .btn-group .btn.status-limited").not(".status-conflict").addClass "btn-warning"
-			$("#courses-sections tbody tr .btn-group .btn.status-conflict, .btn.status-full").addClass "btn-danger"
-			if $("#courses-sections tbody tr .btn-group .btn:not(.btn-success, .btn-warning)").length > 0
-				$("#register_button").addClass "disabled"
-			else
-				$("#register_button").removeClass "disabled"
-
-		$.postJSON "/api/initializeSectionsScreen", hash: global.hash, (data) ->
-			return alert "Please restart your session by refreshing this page." unless data.success
-			for course in data.selectedcourses
-				#...|||...#
-				tr.mouseenter ->
-					elem = $(@)
-					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").addClass "hover"
-				tr.mouseleave ->
-					elem = $(@)
-					$("#timetable-grid tbody tr td").filter(-> $(@).text().match elem.attr "data-coursenumber").removeClass "hover"
-				pubsub.on "course_#{course.compcode}", (data) ->
-					$("li[data-course='#{course.compcode}'][data-sectiontype='#{data.sectionType}'][data-section='#{data.sectionNumber}']")
-						.removeClass("error warning")
-						.addClass if data.status.isFull then "error" else if data.status.lessThan5 then "warning" else ""
-					$("tr[data-compcode='#{course.compcode}'] .btn[data-sectiontype'#{data.sectionType}'][data-selectedsection='#{data.sectionNumber}']").not("status-conflict")
-						.removeClass("status-full status-limited status-free btn-danger btn-warning btn-success")
-						.addClass if data.status.isFull then "status-full btn-danger" else if data.status.lessThan5 then "status-limited btn-warning" else "status-free btn-success"	
-					if $("#courses-sections tbody tr .btn-group .btn:not(.btn-success, .btn-warning)").length > 0
-						$("#register_button").addClass "disabled"
-					else
-						$("#register_button").removeClass "disabled"
-			setSchedule data.schedule
-			setConflicts data.conflicts
-
-	$("#register_button").click ->
-		return if $(@).hasClass "disabled"
-		$.postJSON "/api/confirmRegistration", hash: global.hash, (data) ->
-			if data.success
-				alert "Registration Complete!"
-			else if data.invalidRegistration
-				alert "Registration was not successful. Please login again."
-			else
-				alert "An unknown error has occured. Please login again."
-			setupLoginContainer()
-
-	$("#logout_button").click ->
-		setupLoginContainer()
