@@ -24,10 +24,10 @@ exports.importCourses = (data, callback) ->
 			if line[0] not in [null, undefined]
 				if course?
 					if lectureSections.length > 0
-						course.set "hasLectures", true
+						course.set "hasLectureSections", true
 						course.set "lectureSections", lectureSections
 					if labSections.length > 0
-						course.set "hasLab", true
+						course.set "hasLabSections", true
 						course.set "labSections", labSections
 					await course.save defer err, robj
 				_oic = undefined
@@ -63,10 +63,10 @@ exports.importCourses = (data, callback) ->
 				capacity: 20
 		if course?
 			if lectureSections.length > 0
-				course.set "hasLectures", true
+				course.set "hasLectureSections", true
 				course.set "lectureSections", lectureSections
 			if labSections.length > 0
-				course.set "hasLab", true
+				course.set "hasLabSections", true
 				course.set "labSections", labSections
 			await course.save defer err, robj
 		console.log "Import Courses Done."
@@ -114,6 +114,8 @@ exports.importStudents = (data, callback) ->
 					password: md5 line[3] if line[3]?
 					bc: line[4].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[4]?
 					psc: line[5].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[5]?
+					el: line[6].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[5]?
+					reqEl: Number line[7]
 				await student.save defer err, robj
 			console.log "Import Students Done."
 			callback true

@@ -163,7 +163,7 @@ class SelectedCourseViewModel
 		selectedLabSection: @selectedLabSection()
 
 class StudentViewModel
-	constructor: ({studentId, name, password, registered, validated, bc, psc, el, selectedcourses, _id}) ->
+	constructor: ({studentId, name, password, registered, validated, bc, psc, el, reqEl, selectedcourses, _id}) ->
 		@_id = ko.observable _id ? undefined
 		@studentId = ko.observable studentId ? undefined
 		@name = ko.observable name ? undefined
@@ -174,6 +174,7 @@ class StudentViewModel
 		@bc = ko.observableArray bc ? []
 		@psc = ko.observableArray psc ? []
 		@el = ko.observableArray el ? []
+		@reqEl = ko.observable reqEl ? 0
 		@selectedcourses = ko.observableArray (new SelectedCourseViewModel sc for sc in selectedcourses ? [])
 		@visible = ko.observable true
 		@courses = ko.computed =>
@@ -269,6 +270,7 @@ class StudentViewModel
 		bc: @bc() if @bc().length > 0
 		psc: @psc() if @psc().length > 0
 		el: @el() if @el().length > 0
+		reqEl: @reqEl()
 		selectedcourses: course.toData() for course in @selectedcourses()
 
 class StudentsViewModel
