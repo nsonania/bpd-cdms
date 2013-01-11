@@ -1,8 +1,9 @@
 {spawn} = require "child_process"
 
 spawnProcess = (prc, args, verbose = true, callback) ->
+	isWin = process.platform.match(/^win/)?
 	callback ?= (result) -> console.log if result then "Task completed" else "Task failed"
-	cp = spawn prc, args, if verbose then stdio: "inherit" else null
+	cp = spawn "#{prc}#{if isWin then ".cmd" else ""}", args, if verbose then stdio: "inherit" else null
 	std = out: "", err: ""
 	unless verbose
 		cp.stdout.on "data", (data) ->

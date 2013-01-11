@@ -1,3 +1,4 @@
+envimport = require "./envimport"
 express = require "express"
 http = require "http"
 socket_io = require "socket.io"
@@ -8,7 +9,7 @@ core = require "./core"
 
 cp = spawn "cake", ["build"]
 await cp.on "exit", defer code
-return console.log "Build failed! Run 'cake build' to display build errors." if code isnt 0
+return console.log "Build failed with code #{code}! Run 'cake build' to display build errors." if code isnt 0
 
 expressServer = express()
 expressServer.configure ->
@@ -170,12 +171,14 @@ io.sockets.on "connection", (socket) ->
 			for course in student.get("selectedcourses") then do (course) ->
 				if course.selectedLectureSection?
 					core.sectionStatus course_id: course.course_id, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
-						console.log "aaa"
-						pubsub.emit "publish", courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
+						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id?)._filter((x) -> x?)).lean().exec (err, students) ->
+							stds = students._filter((x) -> x.selectedcourses._any((y) -> y.course_id is course.course_id and y.selectedLectureSection is course.selectedLectureSection)).map (x) -> x._id.toString()
+							io.sockets.clients()._filter((x) -> x.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
 				if course.selectedLabSection?
 					core.sectionStatus course_id: course.course_id, section_number: course.selectedLabSection, isLabSection: true, (data) ->
-						console.log "bbb"
-						pubsub.emit "publish", courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
+						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id?)._filter((x) -> x?)).lean().exec (err, students) ->
+							stds = students._filter((x) -> x.selectedcourses._any((y) -> y.course_id is course.course_id and y.selectedLabSection is course.selectedLabSection)).map (x) -> x._id.toString()
+							io.sockets.clients()._filter((x) -> x.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, courses._find((x) -> x._id.equals course.course_id).compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
 
 	socket.on "getSemesterDetails", (callback) ->
 		db.Misc.findOne desc: "Semester Details", (err, semester) ->

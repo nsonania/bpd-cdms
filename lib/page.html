@@ -217,7 +217,7 @@
 								<td data-bind="text: name"></td>
 								<td class="btn-toolbar" data-bind="visible: $root.studentStatus() == 'not registered'">
 									<div class="btn-group" data-bind="if: lectureSections().length > 0">
-										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLectureSectionStatus() == 'isFull', 'btn-warning': selectedLectureSectionStatus() == 'lessThan5'}" data-toggle="dropdown">
+										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLectureSectionStatus() == 'isFull', 'btn-warning': selectedLectureSectionStatus() == 'lessThan5', 'btn-success': selectedLectureSectionStatus() == 'success'}" data-toggle="dropdown">
 											<span data-bind="text: selectedLectureSectionText"></span> <span class="caret"></span>
 										</button>
 										<ul class="dropdown-menu" data-bind="foreach: lectureSections">
@@ -227,7 +227,7 @@
 										</ul>
 									</div>
 									<div class="btn-group" data-bind="if: labSections().length > 0">
-										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLabSectionStatus() == 'isFull', 'btn-warning': selectedLabSectionStatus() == 'lessThan5'}" data-toggle="dropdown">
+										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLabSectionStatus() == 'isFull', 'btn-warning': selectedLabSectionStatus() == 'lessThan5', 'btn-success': selectedLectureSectionStatus() == 'success'}" data-toggle="dropdown">
 											<span data-bind="text: selectedLabSectionText"></span> <span class="caret"></span>
 										</button>
 										<ul class="dropdown-menu" data-bind="foreach: labSections">

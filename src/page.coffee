@@ -112,7 +112,6 @@ class SectionViewModel
 		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
 			@parent.selectedLectureSection @number
 			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
-			#Schedule & Conflicts
 			viewmodel.sectionsViewModel.setSchedule schedule
 	chooseLabSection: =>
 		sectionInfo =
@@ -122,7 +121,6 @@ class SectionViewModel
 		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
 			@parent.selectedLabSection @number
 			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
-			#Schedule & Conflicts
 			viewmodel.sectionsViewModel.setSchedule schedule
 
 class CourseSectionsViewModel
@@ -200,7 +198,6 @@ class BodyViewModel
 		@pleaseWaitVisible true
 		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts}) =>
 			@sectionsViewModel.courses (new CourseSectionsViewModel course for course in selectedcourses ? [])
-			#Schedule & Conflicts
 			@sectionsViewModel.setSchedule schedule
 			@pleaseWaitVisible false
 
@@ -215,5 +212,12 @@ $ ->
 			viewmodel.semesterTitle semesterTitle
 			viewmodel.startTime new Date startTime
 			viewmodel.pleaseWaitVisible false
+
+	socket.on "sectionUpdate", (compcode, data) ->
+		d = _(viewmodel.sectionsViewModel.courses()).find((x) -> x.compcode is compcode)
+		if data.sectionType is "lecture"
+			_(d.lectureSections()).find((x) -> x.number is data.sectionNumber).status if data.status.isFull then "isFull" else if data.status.lessThan5 then "lessThan5" else undefined
+		else if data.sectionType is "lab"
+			_(d.labSections()).find((x) -> x.number is data.sectionNumber).status if data.status.isFull then "isFull" else if data.status.lessThan5 then "lessThan5" else undefined
 
 	$('input[rel=tooltip]').tooltip()
