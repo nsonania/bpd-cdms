@@ -7,7 +7,7 @@ methods = [
 	"any", "all", "contains"
 	"union", "intersection", "difference"
 	"uniq"
-	"flatten"
+	"flatten", "groupBy"
 	"each"
 ]
 

@@ -42,15 +42,32 @@ class SectionViewModel
 		timeslots: _(timeslots).flatten()
 
 class CourseViewModel
-	constructor: ({compcode, number, name, lectureSections, labSections, otherDates, openTo, _id}) ->
-		@_id = ko.observable _id ? undefined
+	constructor: ({compcode, number, name, @lectureSections, @labSections, otherDates}) ->
 		@compcode = ko.observable compcode ? null
 		@number = ko.observable number ? null
 		@name = ko.observable name ? null
-		@lectureSections = ko.observableArray (new SectionViewModel section for section in lectureSections ? [])
-		@labSections = ko.observableArray (new SectionViewModel section for section in labSections ? [])
 		@visible = ko.observable true
 		@otherDates = ko.observable otherDates ? []
+		@sharedSections = ko.computed
+			read: =>
+				return unless viewmodel.coursesViewModel()?
+				_.chain(viewmodel.coursesViewModel().courses()).filter((x) => x.lectureSections is @lectureSections and x.labSections is @labSections and x isnt @).map((x) => x.compcode()).value().join ", "
+			write: (value) =>
+				return unless viewmodel.coursesViewModel()?
+				oldS = _(viewmodel.coursesViewModel().courses()).filter (x) => x.lectureSections is @lectureSections and x.labSections is @labSections
+				newS = _.chain(value.split(/\ *[;,\/]\ */)).map((x) => _(viewmodel.coursesViewModel().courses()).find (y) => y.compcode() is Number x).union([@]).uniq().value()
+				addS = _(newS).difference oldS
+				remS = _(oldS).difference newS
+				oldLectureSections = oldS[0].lectureSections
+				oldLabSections = oldS[0].labSections
+				newLectureSections = _(ko.observableArray oldLectureSections()).map (x) -> new SectionViewModel x.toData()
+				newLabSections = _(ko.observableArray oldLabSections()).map (x) -> new SectionViewModel x.toData()
+				_(addS).each (x) ->
+					x.lectureSections = oldLectureSections
+					x.labSections = oldLabSections
+				_(remS).each (x) ->
+					x.lectureSections = newLectureSections
+					x.labSections = newLabSections
 	selectCourse: =>
 		viewmodel.coursesViewModel().currentCourse @
 	deleteCourse: =>
@@ -81,7 +98,6 @@ class CourseViewModel
 		@labSections.push section = new SectionViewModel()
 		section.editSection()
 	toData: =>
-		_id: @_id()
 		compcode: @compcode()
 		number: @number()
 		name: @name()
@@ -92,7 +108,18 @@ class CourseViewModel
 		otherDates: @otherDates()
 class CoursesViewModel
 	constructor: ({courses}) ->
-		@courses = ko.observableArray (new CourseViewModel course for course in courses)
+		@courses = ko.observableArray _.chain(courses).map((x) ->
+			lectureSections =  ko.observableArray (new SectionViewModel section for section in x.lectureSections ? [])
+			labSections = ko.observableArray (new SectionViewModel section for section in x.labSections ? [])
+			_(x.titles).map (y) ->
+				new CourseViewModel
+					compcode: y.compcode
+					number: y.number
+					name: y.name
+					lectureSections: lectureSections
+					labSections: labSections
+					otherDates: x.otherDates
+		).flatten().value()
 		@sort = ko.observable "compcode"
 		@filteredCourses = ko.computed => _.chain(@courses()).filter((x) -> x.visible()).sortBy((x) => x[@sort()]()).value()
 		@currentCourse = ko.observable @filteredCourses()[0]
@@ -115,7 +142,18 @@ class CoursesViewModel
 		viewmodel.pleaseWaitStatus "Fetching Courses..."
 		socket.emit "getCourses", (courses) =>
 			viewmodel.pleaseWaitStatus undefined
-			@courses (new CourseViewModel course for course in courses)
+			@courses _.chain(courses).map((x) ->
+				lectureSections =  ko.observableArray (new SectionViewModel section for section in x.lectureSections ? [])
+				labSections = ko.observableArray (new SectionViewModel section for section in x.labSections ? [])
+				_(x.titles).map (y) ->
+					new CourseViewModel
+						compcode: y.compcode
+						number: y.number
+						name: y.name
+						lectureSections: lectureSections
+						labSections: labSections
+						otherDates: x.otherDates
+			).flatten().value()
 			@currentCourse @filteredCourses()[0]
 	commitCourses: =>
 		viewmodel.pleaseWaitStatus "Saving changes..."
@@ -150,15 +188,26 @@ class CoursesViewModel
 			@fetchCourses()
 	toData: =>
 		course.toData() for course in @courses()
+		_.chain(@courses()).groupBy((x) -> x.lectureSections).map((x) ->
+			titles:
+				for y in x
+					compcode: y.compcode()
+					number: y.number()
+					name: y.name()
+			hasLectureSections: true if x[0].lectureSections().length > 0
+			lectureSections: section.toData() for section in x[0].lectureSections() if x[0].lectureSections().length > 0
+			hasLabSections: true if x[0].labSections().length > 0
+			labSections: section.toData() for section in x[0].labSections() if x[0].labSections().length > 0
+			otherDates: x[0].otherDates()
+		).value()
 
 class SelectedCourseViewModel
-	constructor: ({course_id, selectedLectureSection, selectedLabSection}) ->
-		@course_id = ko.observable course_id
+	constructor: ({compcode, selectedLectureSection, selectedLabSection}) ->
+		@compcode = ko.observable compcode
 		@selectedLectureSection = ko.observable selectedLectureSection
 		@selectedLabSection = ko.observable selectedLabSection
-		@course = ko.computed => _(viewmodel.coursesViewModel().courses()).find (x) -> x._id is @course_id
 	toData: =>
-		course_id: @course_id()
+		compcode: @compcode()
 		selectedLectureSection: @selectedLectureSection()
 		selectedLabSection: @selectedLabSection()
 
@@ -180,12 +229,12 @@ class StudentViewModel
 		@courses = ko.computed =>
 			for course in viewmodel.coursesViewModel().courses()
 				course: course
-				bc: @bc().indexOf(course._id()) >= 0
-				psc: @psc().indexOf(course._id()) >= 0
-				el: @el().indexOf(course._id()) >= 0
-				selected: _(@selectedcourses()).any (x) => x.course_id() is course._id()
-				selectedLectureSection: _(@selectedcourses()).find((x) => x.course_id() is course._id()).selectedLectureSection() if course.lectureSections().length > 0 and _(@selectedcourses()).any (x) => x.course_id() is course._id()
-				selectedLabSection: _(@selectedcourses()).find((x) => x.course_id() is course._id()).selectedLabSection() if course.labSections().length > 0 and _(@selectedcourses()).any (x) => x.course_id() is course._id()
+				bc: @bc().indexOf(course.compcode()) >= 0
+				psc: @psc().indexOf(course.compcode()) >= 0
+				el: @el().indexOf(course.compcode()) >= 0
+				selected: _(@selectedcourses()).any (x) => x.compcode() is course.compcode()
+				selectedLectureSection: _(@selectedcourses()).find((x) => x.compcode() is course.compcode()).selectedLectureSection() if course.lectureSections().length > 0 and _(@selectedcourses()).any (x) => x.compcode() is course.compcode()
+				selectedLabSection: _(@selectedcourses()).find((x) => x.compcode() is course.compcode()).selectedLabSection() if course.labSections().length > 0 and _(@selectedcourses()).any (x) => x.compcode() is course.compcode()
 		@filterCategory = ko.observable 1
 		@query = ko.observable ""
 		@filteredCourses = ko.computed =>
@@ -217,42 +266,42 @@ class StudentViewModel
 		@filterCategory 2
 	toggleBc: =>
 		$data = arguments[0]
-		if @bc().indexOf($data.course._id()) >= 0
-			@bc.remove $data.course._id()
+		if @bc().indexOf($data.compcode()) >= 0
+			@bc.remove $data.course.compcode()
 		else
-			@bc.push $data.course._id()
-		@psc.remove $data.course._id()
-		@el.remove $data.course._id()
+			@bc.push $data.course.compcode()
+		@psc.remove $data.course.compcode()
+		@el.remove $data.course.compcode()
 	togglePsc: =>
 		$data = arguments[0]
-		if @psc().indexOf($data.course._id()) >= 0
-			@psc.remove $data.course._id()
+		if @psc().indexOf($data.course.compcode()) >= 0
+			@psc.remove $data.course.compcode()
 		else
-			@psc.push $data.course._id()
-		@bc.remove $data.course._id()
-		@el.remove $data.course._id()
+			@psc.push $data.course.compcode()
+		@bc.remove $data.course.compcode()
+		@el.remove $data.course.compcode()
 	toggleEl: =>
 		$data = arguments[0]
-		if @el().indexOf($data.course._id()) >= 0
-			@el.remove $data.course._id()
+		if @el().indexOf($data.course.compcode()) >= 0
+			@el.remove $data.course.compcode()
 		else
-			@el.push $data.course._id()
-		@bc.remove $data.course._id()
-		@psc.remove $data.course._id()
+			@el.push $data.course.compcode()
+		@bc.remove $data.course.compcode()
+		@psc.remove $data.course.compcode()
 	toggleSelected: =>
 		$data = arguments[0]
-		if _(@selectedcourses()).any((x) -> x.course_id() is $data.course._id())
-			@selectedcourses.remove (x) -> x.course_id() is $data.course._id()
+		if _(@selectedcourses()).any((x) -> x.compcode() is $data.course.compcode())
+			@selectedcourses.remove (x) -> x.compcode() is $data.course.compcode()
 		else
-			@selectedcourses.push new SelectedCourseViewModel course_id: $data.course._id()
+			@selectedcourses.push new SelectedCourseViewModel compcode: $data.course.compcode()
 	selectLectureSection: =>
 		$section = arguments[1]
 		$course = arguments[0][0]
-		_(@selectedcourses()).find((x) -> x.course_id() is $course.course._id()).selectedLectureSection $section.number()
+		_(@selectedcourses()).find((x) -> x.compcode() is $course.course.compcode()).selectedLectureSection $section.number()
 	selectLabSection: =>
 		$section = arguments[1]
 		$course = arguments[0][0]
-		_(@selectedcourses()).find((x) -> x.course_id() is $course.course._id()).selectedLabSection $section.number()
+		_(@selectedcourses()).find((x) -> x.compcode() is $course.course.compcode()).selectedLabSection $section.number()
 	toggleRegistered: =>
 		@registered not @registered()
 	toggleValidated: =>
@@ -395,7 +444,7 @@ class BodyViewModel
 			@authenticated false
 
 $ ->
-	viewmodel = new BodyViewModel()
+	window.viewmodel = viewmodel = new BodyViewModel()
 	viewmodel.pleaseWaitStatus "Connecting..."
 	ko.applyBindings viewmodel, $("body")[0]
 

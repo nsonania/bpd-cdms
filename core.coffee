@@ -31,14 +31,17 @@ exports.importCourses = (data, callback) ->
 						course.set "labSections", labSections
 					await course.save defer err, robj
 				_oic = undefined
-				for oc in oldCourses when (oc.get("compcode").toString() is line[0].toString())
-					_oic = oc.get("_id")
-					await db.Course.findOneAndRemove _id: _oic, defer err, robj
+				for ccode in line[0].split(/\ *[;,\/]\ */)._map((x) -> Number x)
+					for oc in oldCourses when (oc.get("titles")._any (x) -> x.compcode is ccode)
+						_oic = oc.get("_id")
+						await db.Course.findOneAndRemove _id: _oic, defer err, robj
 				course = new db.Course
 					_id: _oic
-					compcode: line[0]
-					number: line[1]
-					name: line[2]
+					titles:
+						line[0].split(/\ *[;,\/]\ */)._map((x) -> Number x)._map (ccode, i) ->
+							compcode: Number ccode
+							number: line[1].split(/\ *[;,\/]\ */)._map((x) -> x)[i]
+							name: line[2]
 					otherDates: od for od in line[9..] when od not in [null, undefined, "*", "-"]
 				lectureSections = []
 				labSections = []
@@ -80,19 +83,13 @@ exports.deleteAllCourses = (callback) ->
 			await course.save defer err, robj
 		callback true
 
-prepStudent = (student) ->
-	student.selectedcourses._each (x) -> x.course_id = db.toObjectId x.course_id
-	(student.bc = student.bc._map (x) -> db.toObjectId x) if student.bc?
-	(student.psc = student.psc._map (x) -> db.toObjectId x) if student.psc?
-	student
-
 exports.commitStudents = (new_students, callback) ->
 	db.Student.find {}, (err, oldStudents) ->
 		for student in oldStudents
 			await student.remove defer err, robj
 			await student.save defer err, robj
 		for obj in new_students
-			student = new db.Student prepStudent obj
+			student = new db.Student obj
 			await student.save defer err, robj
 		callback true
 
@@ -112,9 +109,9 @@ exports.importStudents = (data, callback) ->
 					studentId: line[0]
 					name: line[1]
 					password: md5 line[3] if line[3]?
-					bc: line[4].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[4]?
-					psc: line[5].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[5]?
-					el: line[6].toLowerCase().split(/\ *[;,]\ */)._map((x) -> courses._find (y) -> "#{y.compcode}/#{y.number}".toLowerCase().split(/\ *\/\ */)._contains x)._filter((x) -> x?)._uniq()._map((x) -> x._id) if line[5]?
+					bc: line[4].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq()
+					psc: line[5].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq()
+					el: line[6].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq()
 					reqEl: Number line[7]
 				await student.save defer err, robj
 			console.log "Import Students Done."
