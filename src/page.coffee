@@ -1,6 +1,18 @@
 socket = undefined
 viewmodel = undefined
 
+arrayGroup = (array, lambda) ->
+	group = []
+	for obj in array
+		k = lambda obj
+		if _(group).any((x) -> x.criteria is k)
+			_(group).find((x) -> x.criteria is k).collection.push obj
+		else
+			group.push
+				criteria: k
+				collection: [obj]
+	group
+
 class ScheduleSlot
 	constructor: ({day, hour, busy}) ->
 		@day = ko.observable day
@@ -51,23 +63,23 @@ class CourseViewModel
 		@sharedSections = ko.computed
 			read: =>
 				return unless viewmodel.coursesViewModel()?
-				_.chain(viewmodel.coursesViewModel().courses()).filter((x) => x.lectureSections is @lectureSections and x.labSections is @labSections and x isnt @).map((x) => x.compcode()).value().join ", "
+				_.chain(viewmodel.coursesViewModel().courses()).filter((x) => x.lectureSections() is @lectureSections() and x.labSections() is @labSections() and x isnt @).map((x) => x.compcode()).value().join ", "
 			write: (value) =>
 				return unless viewmodel.coursesViewModel()?
-				oldS = _(viewmodel.coursesViewModel().courses()).filter (x) => x.lectureSections is @lectureSections and x.labSections is @labSections
-				newS = _.chain(value.split(/\ *[;,\/]\ */)).map((x) => _(viewmodel.coursesViewModel().courses()).find (y) => y.compcode() is Number x).union([@]).uniq().value()
+				oldS = _(viewmodel.coursesViewModel().courses()).filter (x) => x.lectureSections() is @lectureSections() and x.labSections() is @labSections()
+				newS = _.chain(value.split(/\ *[;,\/]\ */)).filter((x) -> x not in ["", null, undefined]).map((x) => _(viewmodel.coursesViewModel().courses()).find (y) => y.compcode() is Number x).union([@]).uniq().value()
 				addS = _(newS).difference oldS
 				remS = _(oldS).difference newS
 				oldLectureSections = oldS[0].lectureSections
 				oldLabSections = oldS[0].labSections
-				newLectureSections = _(ko.observableArray oldLectureSections()).map (x) -> new SectionViewModel x.toData()
-				newLabSections = _(ko.observableArray oldLabSections()).map (x) -> new SectionViewModel x.toData()
+				newLectureSections = ko.observableArray _(oldLectureSections()).map (x) -> new SectionViewModel x.toData()
+				newLabSections = ko.observableArray _(oldLabSections()).map (x) -> new SectionViewModel x.toData()
 				_(addS).each (x) ->
-					x.lectureSections = oldLectureSections
-					x.labSections = oldLabSections
+					x.lectureSections oldLectureSections()
+					x.labSections oldLabSections()
 				_(remS).each (x) ->
-					x.lectureSections = newLectureSections
-					x.labSections = newLabSections
+					x.lectureSections newLectureSections()
+					x.labSections newLabSections()
 	selectCourse: =>
 		viewmodel.coursesViewModel().currentCourse @
 	deleteCourse: =>
@@ -187,19 +199,17 @@ class CoursesViewModel
 			viewmodel.pleaseWaitStatus undefined
 			@fetchCourses()
 	toData: =>
-		course.toData() for course in @courses()
-		_.chain(@courses()).groupBy((x) -> x.lectureSections).map((x) ->
+		_(arrayGroup @courses(), (x) -> x.lectureSections()).map (x) ->
 			titles:
-				for y in x
+				for y in x.collection
 					compcode: y.compcode()
 					number: y.number()
 					name: y.name()
-			hasLectureSections: true if x[0].lectureSections().length > 0
-			lectureSections: section.toData() for section in x[0].lectureSections() if x[0].lectureSections().length > 0
-			hasLabSections: true if x[0].labSections().length > 0
-			labSections: section.toData() for section in x[0].labSections() if x[0].labSections().length > 0
-			otherDates: x[0].otherDates()
-		).value()
+			hasLectureSections: true if x.collection[0].lectureSections().length > 0
+			lectureSections: section.toData() for section in x.collection[0].lectureSections() if x.collection[0].lectureSections().length > 0
+			hasLabSections: true if x.collection[0].labSections().length > 0
+			labSections: section.toData() for section in x.collection[0].labSections() if x.collection[0].labSections().length > 0
+			otherDates: x.collection[0].otherDates()
 
 class SelectedCourseViewModel
 	constructor: ({compcode, selectedLectureSection, selectedLabSection}) ->
