@@ -363,7 +363,7 @@
 								<div class="control-group">
 									<label class="control-label">Password</label>
 									<div class="controls">
-										<span data-bind="text: newPassword, visible: typeof newPassword() !== 'undefined' && newPassword() !== null && newPassword() !== ''"></span>
+										<input type="text" data-bind="value: newPassword, visible: typeof newPassword() !== 'undefined' && newPassword() !== null && newPassword() !== ''" readOnly></input>
 										<button class="btn" data-bind="click: resetPassword">Reset</button>
 									</div>
 								</div>

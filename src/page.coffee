@@ -222,12 +222,12 @@ class SelectedCourseViewModel
 		selectedLabSection: @selectedLabSection()
 
 class StudentViewModel
-	constructor: ({studentId, name, password, registered, validated, bc, psc, el, reqEl, selectedcourses, _id}) ->
+	constructor: ({studentId, name, newPassword, password, registered, validated, bc, psc, el, reqEl, selectedcourses, _id}) ->
 		@_id = ko.observable _id ? undefined
 		@studentId = ko.observable studentId ? undefined
 		@name = ko.observable name ? undefined
 		@password = ko.observable password ? undefined
-		@newPassword = ko.observable undefined
+		@newPassword = ko.observable newPassword ? undefined
 		@registered = ko.observable registered ? undefined
 		@validated = ko.observable validated ? undefined
 		@bc = ko.observableArray bc ? []
@@ -317,8 +317,8 @@ class StudentViewModel
 	toggleValidated: =>
 		@validated not @validated()
 	resetPassword: =>
-		@newPassword = md5(Date.toString())[0..8]
-		@password = md5 @newPassword()
+		@newPassword md5(Date())[0...8]
+		@password md5 @newPassword()
 	toData: =>
 		_id: @_id()
 		studentId: @studentId()
@@ -347,7 +347,7 @@ class StudentsViewModel
 			if student.name().toLowerCase().indexOf(query) >= 0
 				student.visible true
 	newStudent: =>
-		@students.push student = new StudentViewModel {}
+		@students.push student = new StudentViewModel newPassword: (np = md5(Date())[0...8]), password: md5 np
 		student.selectStudent()
 		scrollTo 0, document.height
 	selectFile: =>
