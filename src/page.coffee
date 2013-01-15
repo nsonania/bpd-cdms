@@ -41,7 +41,7 @@ class LoginViewModel
 
 
 class CourseViewModel
-	constructor: ({@_id, @compcode, @number, @name, selected}) ->
+	constructor: ({@compcode, @number, @name, selected}) ->
 		@selected = ko.observable selected
 	toggleSelection: =>
 		@selected not @selected()
@@ -97,16 +97,16 @@ class CoursesViewModel
 		else
 			saveCourses()
 	toData: =>
-		bc: _(@bc()).map (x) -> course_id: x._id, selected: x.selected()
-		psc: _(@psc()).map (x) -> course_id: x._id, selected: x.selected()
-		el: _(@allEl()).map (x) -> course_id: x._id, selected: x.selected()
+		bc: _(@bc()).map (x) -> compcode: x.compcode, selected: x.selected()
+		psc: _(@psc()).map (x) -> compcode: x.compcode, selected: x.selected()
+		el: _(@allEl()).map (x) -> compcode: x.compcode, selected: x.selected()
 
 class SectionViewModel
 	constructor: ({@number, @instructor, status}, @parent) ->
 		@status = ko.observable if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
 	chooseLectureSection: =>
 		sectionInfo =
-			course_compcode: @parent.compcode
+			compcode: @parent.compcode
 			section_number: @number
 			isLectureSection: true
 		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
@@ -115,7 +115,7 @@ class SectionViewModel
 			viewmodel.sectionsViewModel.setSchedule schedule
 	chooseLabSection: =>
 		sectionInfo =
-			course_compcode: @parent.compcode
+			compcode: @parent.compcode
 			section_number: @number
 			isLabSection: true
 		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
