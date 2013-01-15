@@ -222,7 +222,7 @@ class SelectedCourseViewModel
 		selectedLabSection: @selectedLabSection()
 
 class StudentViewModel
-	constructor: ({studentId, name, newPassword, password, registered, validated, bc, psc, el, reqEl, selectedcourses, _id}) ->
+	constructor: ({studentId, name, newPassword, password, registered, validated, difficultTimetable, bc, psc, el, reqEl, selectedcourses, _id}) ->
 		@_id = ko.observable _id ? undefined
 		@studentId = ko.observable studentId ? undefined
 		@name = ko.observable name ? undefined
@@ -230,6 +230,7 @@ class StudentViewModel
 		@newPassword = ko.observable newPassword ? undefined
 		@registered = ko.observable registered ? undefined
 		@validated = ko.observable validated ? undefined
+		@difficultTimetable = ko.observable difficultTimetable ? undefined
 		@bc = ko.observableArray bc ? []
 		@psc = ko.observableArray psc ? []
 		@el = ko.observableArray el ? []
@@ -316,6 +317,8 @@ class StudentViewModel
 		@registered not @registered()
 	toggleValidated: =>
 		@validated not @validated()
+	toggleDifficultTimetable: =>
+		@difficultTimetable not @difficultTimetable()
 	resetPassword: =>
 		@newPassword md5(Date())[0...8]
 		@password md5 @newPassword()

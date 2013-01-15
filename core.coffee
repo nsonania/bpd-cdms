@@ -121,7 +121,7 @@ exports.importStudents = (data, callback) ->
 					await student.save defer err, robj
 				console.log "Import Students Done."
 				callback true
-			catch
+			catch error
 				console.log "Import Students: Error Parsing CSV file."
 				callback false
 
