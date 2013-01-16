@@ -27,68 +27,40 @@ io = socket_io.listen server
 io.set "log level", 0
 io.sockets.on "connection", (socket) ->
 
-	socket.on "getCourses", (callback) ->
-		callback false unless socket.auth?
-		console.log "Fetching Courses"
-		db.Course.find({}).lean().exec (err, courses) -> callback courses
-
-	socket.on "commitCourses", (courses, callback) ->
-		callback false unless socket.auth?
-		console.log "Committing Courses"
-		core.commitCourses courses, callback
-
-	socket.on "importCourses", (courses, callback) ->
-		callback false unless socket.auth?
-		console.log "Importing Courses"
-		core.importCourses courses, callback
-
-	socket.on "deleteAllCourses", (callback) ->
-		callback false unless socket.auth?
-		console.log "Delete All Courses"
-		core.deleteAllCourses callback
-
 	socket.on "getStudents", (callback) ->
-		callback false unless socket.auth?
-		console.log "Fetching Students"
+		return callback false unless socket.auth?
+		console.log "Fetching Students for #{socket.auth.username}."
 		db.Student.find({}).lean().exec (err, students) -> callback students
 
-	socket.on "commitStudents", (students, callback) ->
-		callback false unless socket.auth?
-		console.log "Committing Students"
-		core.commitStudents students, callback
-
-	socket.on "importStudents", (students, callback) ->
-		callback false unless socket.auth?
-		console.log "Importing Students"
-		core.importStudents students, callback
-
-	socket.on "deleteAllStudents", (callback) ->
-		callback false unless socket.auth?
-		console.log "Delete All Students"
-		core.deleteAllStudents callback
-
-	socket.on "getSemester", (callback) ->
-		callback false unless socket.auth?
-		console.log "Fetching Semester Details"
-		db.Misc.findOne(desc: "Semester Details").lean().exec (err, semester) -> callback semester
-
-	socket.on "commitSemester", (semester, callback) ->
-		callback false unless socket.auth?
-		console.log "Committing Semester"
-		core.commitSemester semester, callback
-
-	socket.on "login", (accessCode, callback) ->
-		socket.auth = true
-		console.log "Login: #{accessCode} - #{process.env.ACCESSCODE}"
-		callback do ->
-			if accessCode is process.env.ACCESSCODE
-				true
-			else
-				false
+	socket.on "login", (username, password, callback) ->
+		db.Validator.findOne username: username, password: md5(password), (err, authInfo) ->
+			return callback false unless authInfo?
+			io.sockets.clients()._filter((x) -> x.auth is socket.auth and x isnt socket)._each (x) ->
+				console.console.log "#{x.auth} remotely logged out."
+				x.emit "destroySession"
+				delete x.auth
+			socket.auth =
+				_id: authInfo.get "_id"
+				username: authInfo.get "username"
+			console.log "#{socket.auth.username} logged in."
+			callback true
 
 	socket.on "logout", (callback) ->
-		console.log "Logout"
+		console.log "#{socket.auth.username} logged out."
 		delete socket.auth
 		callback true
+
+	socket.on "validate", (student_id, callback) ->
+		return callback false unless socket.auth?
+		db.Student.findById student_id, (err, student) ->
+			return callback false unless student?
+			return callback false if student.get "validated"
+			console.log "#{student.get("name")} validated by #{socket.auth.username}."
+			student.set "validated", true
+			student.set "validatedBy", socket.auth._id
+			student.markModified "validated"
+			student.markModified "validatedBy"
+			student.save()
+			callback true
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
