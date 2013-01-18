@@ -22,6 +22,13 @@ class StudentViewModel
 		@validated = ko.observable validated ? undefined
 		@difficultTimetable = ko.observable difficultTimetable ? undefined
 		@visible = ko.observable true
+		@validateMessage = ko.computed =>
+			unless @registered()
+				"Registration Not Complete"
+			else if @validated()
+				"Registration Validated"
+			else
+				"Validate"
 	selectStudent: =>
 		viewmodel.studentsViewModel().currentStudent @
 	validate: =>
@@ -64,17 +71,18 @@ class BodyViewModel
 		@password = ko.observable undefined
 		@loginAlertStatus = ko.observable undefined
 	gotoStudents: =>
-		viewmodel.pleaseWaitStatus "Fetching Students..."
-		socket.emit "getStudents", (students) ->
-			viewmodel.pleaseWaitStatus undefined
-			viewmodel.studentsViewModel new StudentsViewModel students: students
-			viewmodel.activeView "studentsView"
+		@pleaseWaitStatus "Fetching Students..."
+		socket.emit "getStudents", (students) =>
+			@pleaseWaitStatus undefined
+			@studentsViewModel new StudentsViewModel students: students
+			@activeView "studentsView"
 			$("#studentheader, #studentdetails").affix offset: top: 290
 			$('button[rel=tooltip]').tooltip()
 	login: =>
-		viewmodel.pleaseWaitStatus "Authenticating..."
-		socket.emit "login", accessCode, (success) =>
-			viewmodel.pleaseWaitStatus undefined
+		@loginAlertStatus undefined
+		@pleaseWaitStatus "Authenticating..."
+		socket.emit "login", @username(), md5(@password()), (success) =>
+			@pleaseWaitStatus undefined
 			if success
 				@authenticated true
 				@password undefined
@@ -96,3 +104,10 @@ $ ->
 	socket = io.connect()
 	socket.on "connect", ->
 		viewmodel.pleaseWaitStatus undefined
+
+	socket.on "studentStatusChanged", (student_id, what, that) ->
+		_(viewmodel.studentsViewModel().students()).find((x) -> x._id() is student_id)[what] that
+
+	socket.on "destroySession", ->
+		viewmodel.logout()
+		viewmodel.loginAlertStatus "remoteLogout"

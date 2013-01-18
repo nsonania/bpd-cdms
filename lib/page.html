@@ -22,9 +22,9 @@
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
-					<a class="brand" href="#" data-bind="click: gotoHome">BPDC - Registration System</a>
+					<a class="brand" href="#">BPDC - Registration System</a>
 					<ul class="nav pull-right">
-						<li><a data-bind="text: username" href="#"></a></li>
+						<li><a data-bind="visible: authenticated, text: username" href="#"></a></li>
 						<li data-bind="visible: authenticated, click: logout"><a href="#">Logout</a></li>
 					</ul>
 				</div>
@@ -32,7 +32,7 @@
 		</div>
 		<div id="incompatible-size">
 			<br><br><br><br><br>
-			<p class="lead tcenter">1200px minimum width required.</p>
+			<p class="lead tcenter">768px minimum width required.</p>
 		</div>
 		<div id="pleaseWaitBox" data-bind="visible: pleaseWaitVisible">
 			<br><br><br><br><br>
@@ -46,30 +46,32 @@
 					<p>Use this portal to validate students' registrations.</p>
 				</div>
 				<div class="row">
-					<div id="loginbox" class="span6 offset3">
-						<div id="loginbox" class="well span6 offset3">
-							<div class="form-horizontal">
-								<legend>Login</legend>
-								<div class="alert alert-error" data-bind="visible: loginAlertStatus() == 'authFailure'">
-									<button type="button" class="close" data-bind="click: dismissLoginAlert">&times;</button>
-									<strong>Authentication Failure!</strong> Check if your Username &amp; Password are correct.
+					<div id="loginbox" class="well span6 offset3">
+						<div class="form-horizontal">
+							<legend>Login</legend>
+							<div class="alert alert-error" data-bind="visible: loginAlertStatus() == 'authFailure'">
+								<button type="button" class="close" data-bind="click: dismissLoginAlert">&times;</button>
+								<strong>Authentication Failure!</strong> Check if your Username &amp; Password are correct.
+							</div>
+							<div class="alert alert-info" data-bind="visible: loginAlertStatus() == 'remoteLogout'">
+								<button type="button" class="close" data-bind="click: dismissLoginAlert">&times;</button>
+								<strong>Session Terminated!</strong> This account has been used to log in from a different location.
+							</div>
+							<div class="control-group">
+								<label class="control-label">Username</label>
+								<div class="controls">
+									<input data-bind="value: username" class="span3" type="text" placeholder="Username">
 								</div>
-								<div class="control-group">
-									<label class="control-label">Username</label>
-									<div class="controls">
-										<input data-bind="value: username" class="span3" type="text" placeholder="Username">
-									</div>
+							</div>
+							<div class="control-group">
+								<label class="control-label">Password</label>
+								<div class="controls">
+									<input data-bind="value: password" class="span3" type="password"placeholder="Password">
 								</div>
-								<div class="control-group">
-									<label class="control-label">Password</label>
-									<div class="controls">
-										<input data-bind="value: password" class="span3" type="password"placeholder="Password">
-									</div>
-								</div>
-								<div class="control-group">
-									<div class="controls">
-										<button data-bind="click: login" class="btn btn-primary">Login</button>
-									</div>
+							</div>
+							<div class="control-group">
+								<div class="controls">
+									<button data-bind="click: login" class="btn btn-primary">Login</button>
 								</div>
 							</div>
 						</div>
@@ -98,10 +100,10 @@
 								</ul>
 							</div>
 						</div>
-						<div class="row">
-							<table class="table span6">
+						<div>
+							<table class="table container">
 								<tr>
-									<th width="30%" data-bind="click: sortStudentId">Student Id<i class="icon-arrow-up" data-bind="visible: sort() == 'studentId'"></i></th>
+									<th width="140px" data-bind="click: sortStudentId">Student Id<i class="icon-arrow-up" data-bind="visible: sort() == 'studentId'"></i></th>
 									<th data-bind="click: sortName">Name<i class="icon-arrow-up" data-bind="visible: sort() == 'name'"></i></th>
 								</tr>
 								<tr>
@@ -111,49 +113,13 @@
 						</div>
 					</div>
 				</div>
-				<div id="studentdetails" class="row container" data-spy="affix" data-offset-top="290" data-bind="with: currentStudent">
-					<div class="span6 offset6">
-						<div class="form-horizontal">
-							<div class="navbar">
-								<div class="navbar-inner">
-									<div class="brand">Student Information</div>
-									<div class="btn-group pull-right">
-										<button class="btn" data-bind="click: deleteStudent" title="Remove Student" rel="tooltip"><i class="icon-trash"></i></button>
-									</div>
-								</div>
-							</div>
-							<div class="box-bordered">
-								<br>
-								<div class="control-group">
-									<label class="control-label">Student Id</label>
-									<div class="controls">
-										<span data-bind="text: studentId"></span>
-									</div>
-								</div>
-								<div class="control-group">
-									<label class="control-label">Student Name</label>
-									<div class="controls">
-										<span data-bind="text: name"></span>
-									</div>
-								</div>
-								<div class="control-group">
-									<label class="control-label">Status</label>
-									<div class="controls form-inline">
-										<button class="btn" data-bind="css: {'btn-success': registered}" disable>Registered</button>
-										<button class="btn" data-bind="css: {'btn-success': validated}, click: validate, enable: registered() && !validated()">Validated</button>
-										<button class="btn" data-bind="css: {'btn-danger': difficultTimetable}" disable>Difficult Timetable</button>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div id="studentlist" class="row">
-					<table class="table table-hover span6 table-visibleStriped">
+				<div id="studentlist">
+					<table class="table table-hover container table-visibleStriped">
 						<tbody data-bind="foreach: filteredStudents">
 							<tr data-bind="css: {info: $parent.currentStudent() == $data}, click: selectStudent">
 								<td data-bind="text: typeof studentId() !== 'undefined' && studentId() !== null && studentId() !== '' ? studentId() : '---'"></td>
 								<td data-bind="text: typeof name() !== 'undefined' && name() !== null && name() !== '' ? name() : '-----'"></td>
+								<td><button class="btn span4" data-bind="css: {'btn-success': validated, 'btn-primary': !validated() && registered()}, click: validate, enable: registered() && !validated(), text: validateMessage"></button></td>
 							</tr>
 						</tbody>
 					</table>

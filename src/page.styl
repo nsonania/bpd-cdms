@@ -11,7 +11,7 @@
 	background-color white
 	z-index 2
 
-	@media (min-width: 1200px)
+	@media (min-width: 768px)
 		display none
 
 #pleaseWaitBox
@@ -24,11 +24,10 @@
 	z-index 2
 
 #compatible-size
-	@media (max-width: 1199px)
+	@media (max-width: 767px)
 		display none
 
 #courselist, #studentlist
-	width 50%
 	margin-top 99px
 	position relative
 
@@ -51,7 +50,9 @@
 #studentlist .table tr td
 	&:nth-of-type(1)
 		text-align left
-		width 30%
+		width 140px
+	&:nth-of-type(3)
+		text-align right
 
 #coursedetails, #studentdetails
 	margin-top 62px
@@ -89,11 +90,7 @@
 			left 0
 			top -20px
 			height 119px
-			right 50%
 			background-color white
-
-		.row
-			width 50%
 
 		.navbar, .table
 			position relative
@@ -148,8 +145,10 @@
 			width 10%
 			text-align right
 
-table.table
-	border-bottom solid 1px #DDD
+#studentlist
+	tr:last-of-type
+		td
+			border-bottom solid 1px #DDD
 
 .sectionsdetails
 	width 300px
