@@ -22,11 +22,8 @@ class LoginViewModel
 					viewmodel.gotoCoursesView()
 				else
 					viewmodel.gotoSectionsView()
-				socket.once "destroySession", =>
-					bootbox.alert "Your session has expired."
-					@logout()
-		@studentId = ko.observable undefined
-		@password = ko.observable undefined
+		@studentId undefined
+		@password undefined
 	dismissAlert: =>
 		@alertStatus undefined
 	logout: =>
@@ -73,7 +70,7 @@ class CoursesViewModel
 		@pscEnabled = ko.computed => _(@bc()).all((x) -> x.selected()) and @el().length <= @reqEl()
 		@elEnabled = ko.computed => _(@bc()).all (x) -> x.selected()
 		@elsEnabled = ko.computed => @el().length < @reqEl() or _(@psc()).all((x) -> x.selected()) or not @elEnabled()
-		@nextStepWarning = ko.computed => not @elsEnabled() or not @elEnabled()
+		@nextStepWarning = ko.computed => @el().length < @reqEl() or _(@psc()).any (x) -> not x.selected()
 	electiveQueryKeyDown: =>
 		event = arguments[1]
 		if event.which is 38 and @electiveChoices().indexOf(@selectedValueDropdown()) > 0
@@ -140,9 +137,12 @@ class SectionsViewModel
 	constructor: ->
 		@courses = ko.observableArray []
 		@schedule = (ko.observableArray [] for x in [1..7] for y in [1..10])
-		@registerEnabled = ko.computed => _.chain(@schedule).flatten(true).all((x) -> x().length <= 1).value() and 
-			_(@courses()).all (x) -> (x.lectureSections().length is 0 or x.selectedLectureSection()?) and (x.labSections().length is 0 or x.selectedLabSection()?)
-
+		@registerEnabled = ko.computed =>
+			c1 = _.chain(@schedule).flatten(true).all((x) -> x().length <= 1).value() and 
+					_(@courses()).all (x) -> (x.lectureSections().length is 0 or x.selectedLectureSection()?) and (x.labSections().length is 0 or x.selectedLabSection()?)
+			return false unless c1
+			not _([0..6]).any (j) => _([4..6]).all (i) => @schedule[i][j]().length is 1
+		@dtcEnabled = ko.computed => _(@schedule).any (x) -> _(x).any (y) -> y().length > 1
 	gotoCoursesView: =>
 		viewmodel.gotoCoursesView()
 	setSchedule: (schedule) =>
@@ -155,7 +155,7 @@ class SectionsViewModel
 					@schedule[k2 - 1][k1 - 1].push course_number
 	register: =>
 		socket.emit "confirmRegistration", (result) ->
-			return bootbox.alert "Invalid Registration. Please try refreshing your window to create a new session." if not result.success and result.invalidRegistration?
+			return bootbox.alert "Invalid Registration. Please refresh your browser and register again." if not result.success and result.invalidRegistration?
 			viewmodel.studentStatus "registered"
 	needHelp: =>
 		bootbox.confirm """
@@ -208,10 +208,13 @@ $ ->
 
 	socket = io.connect()
 	socket.on "connect", ->
-		socket.emit "getSemesterDetails", ({semesterTitle, startTime}) ->
-			viewmodel.semesterTitle semesterTitle
-			viewmodel.startTime new Date startTime
-			viewmodel.pleaseWaitVisible false
+		socket.emit "getSemesterDetails", ({success, semesterTitle, startTime, reason}) ->
+			if success
+				viewmodel.semesterTitle semesterTitle
+				viewmodel.startTime new Date startTime
+				viewmodel.pleaseWaitVisible false
+			else
+				viewmodel.loginViewModel.alertStatus reason
 
 	socket.on "sectionUpdate", (compcode, data) ->
 		d = _(viewmodel.sectionsViewModel.courses()).find((x) -> x.compcode is compcode)
@@ -219,5 +222,12 @@ $ ->
 			_(d.lectureSections()).find((x) -> x.number is data.sectionNumber).status if data.status.isFull then "isFull" else if data.status.lessThan5 then "lessThan5" else undefined
 		else if data.sectionType is "lab"
 			_(d.labSections()).find((x) -> x.number is data.sectionNumber).status if data.status.isFull then "isFull" else if data.status.lessThan5 then "lessThan5" else undefined
+
+	socket.on "statusChanged", (status) ->
+		viewmodel.studentStatus status
+
+	socket.on "destroySession", =>
+		viewmodel.loginViewModel.logout()
+		viewmodel.loginViewModel.alertStatus "remoteLogout"
 
 	$('input[rel=tooltip]').tooltip()

@@ -2,6 +2,7 @@ envimport = require "./envimport"
 express = require "express"
 http = require "http"
 socket_io = require "socket.io"
+socket_io_client = require "socket.io-client"
 md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
@@ -34,6 +35,7 @@ io.sockets.on "connection", (socket) ->
 		return callback success: false, reason: "notOpen" if startTime > new Date()
 		db.Student.findOne studentId: studentId.toUpperCase(), password: password, (err, student) ->
 			return callback success: false, reason: "authFailure" unless student?
+			io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.equals(student._id) and x isnt socket)._each (x) -> x.emit "destroySession"
 			socket.student_id = student.get "_id"
 			callback
 				success: true
@@ -163,22 +165,25 @@ io.sockets.on "connection", (socket) ->
 		student.markModified "registered"
 		student.save ->
 			callback success: true
+		ipc?.emit "broadcast", "studentStatusChanged", [socket.student_id, "registered", true]
 		db.Course.find({titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)}, "compcode").lean().exec (err, courses) ->
 			for course in student.get("selectedcourses") then do (course) ->
 				if course.selectedLectureSection?
 					core.sectionStatus compcode: course.compcode, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
 						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
 							stds = students._filter((x) -> x.selectedcourses._any((y) -> y.compcode is course.compcode and y.selectedLectureSection is course.selectedLectureSection)).map (x) -> x._id.toString()
-							io.sockets.clients()._filter((x) -> x.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
+							io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
 				if course.selectedLabSection?
 					core.sectionStatus compcode: course.compcode, section_number: course.selectedLabSection, isLabSection: true, (data) ->
 						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
 							stds = students._filter((x) -> x.selectedcourses._any((y) -> y.compcode is course.compcode and y.selectedLabSection is course.selectedLabSection)).map (x) -> x._id.toString()
-							io.sockets.clients()._filter((x) -> x.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
+							io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
 
 	socket.on "getSemesterDetails", (callback) ->
 		db.Misc.findOne desc: "Semester Details", (err, semester) ->
+			return callback success: false, reason: "notSetup" unless semester?
 			callback
+				success: true
 				semesterTitle: semester.get "title"
 				startTime: semester.get "startTime"
 
@@ -212,5 +217,17 @@ io.sockets.on "connection", (socket) ->
 					delete x.selectedLabSection
 				student.markModified "selectedcourses"
 				student.save()
+
+ipc = socket_io_client.connect "http://localhost:#{process.env.IPC_PORT}"
+ipc.on "connect", ->
+
+	ipc.on "broadcast", (message, data) ->
+		if message is "studentStatusChanged"
+			[student_id, what, that] = data
+			if (socket = io.sockets.clients()._find (x) -> x.student_id? and x.student_id.toString() is student_id)?
+				if what is "registered" and not that
+					socket.emit "statusChanged", "not registered"
+				else if that
+					socket.emit "statusChanged", what
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "worker #{process.pid}: Listening on port #{port}"

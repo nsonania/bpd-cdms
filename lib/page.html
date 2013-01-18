@@ -41,11 +41,15 @@
 			</div>
 		</div>
 		<div id="login-container" class="container" data-bind="with: loginViewModel, visible: !authenticated()">
-			<div id="semester-hero" class="hero-unit">
+			<div id="semester-hero" class="hero-unit" data-bind="visible: alertStatus() != 'notSetup'">
 				<h1 data-bind="text: $parent.semesterTitle"></h1>
 				<p>This process will guide you to enroll into your courses for this semester step-by-step.</p>
 			</div>
-			<div class="row">
+			<div id="semester-hero" class="hero-unit" data-bind="visible: alertStatus() == 'notSetup'">
+				<h1>Under Construction</h1>
+				<p>The Semester Registration Process hasn't been setup yet.</p>
+			</div>
+			<div class="row" data-bind="visible: alertStatus() != 'notSetup'">
 				<div id="loginbox" class="well span6 offset3">
 					<div class="form-horizontal">
 						<legend>Login</legend>
@@ -56,6 +60,10 @@
 						<div class="alert alert-info" data-bind="visible: alertStatus() == 'notOpen'">
 							<button type="button" class="close" data-bind="click: dismissAlert">&times;</button>
 							<strong>You are too early!</strong> Registrations open at <span data-bind="text: $parent.startTime"></span>.
+						</div>
+						<div class="alert alert-info" data-bind="visible: alertStatus() == 'remoteLogout'">
+							<button type="button" class="close" data-bind="click: dismissAlert">&times;</button>
+							<strong>Session Terminated!</strong> This account has been used to login from another location.
 						</div>
 						<div class="control-group">
 							<label class="control-label">Student Id</label>
@@ -183,11 +191,15 @@
 				<li data-bind="click: gotoCoursesView, visible: $root.studentStatus() == 'not registered'"><a href="#">Courses</a><span class="divider">&nbsp;&gt;</span></li>
 				<li data-bind="visible: $root.studentStatus() != 'not registered'"><span class="muted">Courses</span><span class="divider">&nbsp;&gt;</span></li>
 				<li><span>Timetable</span></li>
-				<li class="pull-right" data-bind="click: needHelp, visible: $root.studentStatus() == 'not registered'"><a href="#">Difficult Timetable</a></li>
+				<li class="pull-right" data-bind="visible: $root.studentStatus() == 'not registered'">
+					<a data-bind="click: needHelp, visible: dtcEnabled()" href="#">Difficult Timetable</a>
+					<span class="muted" data-bind="visible: !dtcEnabled()">Difficult Timetable</span>
+				</li>
 			</div>
 			<div class="hero-unit" data-bind="visible: $root.studentStatus() == 'not registered'">
 				<h1>Build Your Timetable</h1>
 				<p>Choose your sections to fill in your Timetable Schedule. Your sections are not reserved until you complete the registration process by clicking on the <em>Register</em> button. <em>Green</em> denotes that more than 5 seats are available, <em>Yellow</em> denotes that only 5 seats are left and <em>Red</em> denotes that either the section has reached its capacity or that it is clashing with another selected section.</p>
+				<p>Please make sure that you have at least one free hour dedicated for lunch between 11 AM and 2 PM everyday.</p>
 				<p>Click on <em>Courses</em> above to modify your course selections. If you face difficulties in building a valid timetable, click on <em>Difficult Timetable</em> above and approach the Registration Incharge.</p>
 			</div>
 			<div class="hero-unit" data-bind="visible: $root.studentStatus() == 'registered' || $root.studentStatus() == 'validated'">
