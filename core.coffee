@@ -133,6 +133,24 @@ exports.deleteAllStudents = (callback) ->
 			await student.save defer err, robj
 		callback true
 
+exports.commitValidators = (new_validators, callback) ->
+	db.Validator.find {}, (err, oldValidators) ->
+		for validator in oldValidators
+			await validator.remove defer err, robj
+			await validator.save defer err, robj
+		for obj in new_validators
+			validator = new db.Validator obj
+			await validator.save defer err, robj
+		callback true
+
+exports.deleteAllValidators = (callback) ->
+	db.Validator.find {}, (err, validators) ->
+		return console.log err if err?
+		for validator in validators
+			await validator.remove defer err, robj
+			await validator.save defer err, robj
+		callback true
+
 exports.commitSemester = (semester, callback) ->
 	db.Misc.findOneAndRemove desc: "Semester Details", (err, robj) ->
 		obj = new db.Misc

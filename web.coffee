@@ -67,6 +67,21 @@ io.sockets.on "connection", (socket) ->
 		console.log "Delete All Students"
 		core.deleteAllStudents callback
 
+	socket.on "getValidators", (callback) ->
+		callback false unless socket.auth?
+		console.log "Fetching Validators"
+		db.Validator.find({}).lean().exec (err, validators) -> callback validators
+
+	socket.on "commitValidators", (validators, callback) ->
+		callback false unless socket.auth?
+		console.log "Committing Validators"
+		core.commitValidators validators, callback
+
+	socket.on "deleteAllValidators", (callback) ->
+		callback false unless socket.auth?
+		console.log "Delete All Validators"
+		core.deleteAllValidators callback
+
 	socket.on "getSemester", (callback) ->
 		callback false unless socket.auth?
 		console.log "Fetching Semester Details"

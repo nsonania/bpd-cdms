@@ -27,7 +27,7 @@
 	@media (max-width: 1199px)
 		display none
 
-#courselist, #studentlist
+#courselist, #studentlist, #validatorlist
 	width 50%
 	margin-top 99px
 	position relative
@@ -53,7 +53,7 @@
 		text-align left
 		width 30%
 
-#coursedetails, #studentdetails
+#coursedetails, #studentdetails, #validatordetails
 	margin-top 62px
 	
 	&.affix-top
@@ -70,7 +70,7 @@
 			border-bottom-right-radius 0
 			border-bottom none
 
-#courseheader, #studentheader
+#courseheader, #studentheader, #validatorheader
 	z-index 1
 	height 0px
 
@@ -80,11 +80,11 @@
 	&.affix
 		top 60px
 
-	#courseheader-inner, #studentheader-inner
+	#courseheader-inner, #studentheader-inner, #validatorheader-inner
 		position relative
 		height 0px
 
-		#courseheader-back, #studentheader-inner
+		#courseheader-back, #studentheader-back, #validatorheader-back
 			position absolute
 			left 0
 			top -20px
@@ -113,6 +113,10 @@
 		text-align right
 
 #studentheader .table
+	th:nth-of-type(1)
+		text-align left
+
+#validatorheader .table
 	th:nth-of-type(1)
 		text-align left
 

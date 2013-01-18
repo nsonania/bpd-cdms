@@ -27,6 +27,7 @@
 						<li data-bind="visible: authenticated, click: gotoHome, css: {active: activeView() == 'homeView'}"><a href="#">Semester</a></li>
 						<li data-bind="visible: authenticated, click: gotoCourses, css: {active: activeView() == 'coursesView'}"><a href="#">Courses</a></li>
 						<li data-bind="visible: authenticated, click: gotoStudents, css: {active: activeView() == 'studentsView'}"><a href="#">Students</a></li>
+						<li data-bind="visible: authenticated, click: gotoValidators, css: {active: activeView() == 'validatorsView'}"><a href="#">Validators</a></li>
 					</ul>
 					<ul class="nav pull-right">
 						<li data-bind="visible: authenticated, click: logout"><a href="#">Logout</a></li>
@@ -446,6 +447,90 @@
 							<tr data-bind="css: {info: $parent.currentStudent() == $data}, click: selectStudent">
 								<td data-bind="text: typeof studentId() !== 'undefined' && studentId() !== null && studentId() !== '' ? studentId() : '---'"></td>
 								<td data-bind="text: typeof name() !== 'undefined' && name() !== null && name() !== '' ? name() : '-----'"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div id="validators-container" data-bind="with: validatorsViewModel, visible: activeView() == 'validatorsView' && authenticated()" class="container">
+				<div class="hero-unit">
+					<h1>Validators</h1>
+					<p>Add, remove, and modify validators.</p>
+				</div>
+				<div style="height: 1px"></div>
+				<div id="validatorheader" data-spy="affix" class="container" data-offset-top="290">
+					<div id="validatorheader-inner">
+						<div id="validatorheader-back"></div>
+						<div class="navbar">
+							<div class="navbar-inner">
+								<div class="brand">Validators</div>
+								<ul class="nav pull-right">
+									<li class="navbar-form">
+										<div class="input-prepend">
+											<span class="add-on"><i class="icon-search"></i></span>
+											<input type="text" data-bind="event: {keyup: filter}" placeholder="Search">
+										</div>
+									</li>
+									<li class="divider-vertical"></li>
+									<li class="btn-group">
+										<button class="btn" data-bind="click: newValidator" title="Add Validator" rel="tooltip"><i class="icon-plus"></i></button>
+										<button class="btn" data-bind="click: deleteAll" title="Delete All Validators" rel="tooltip"><i class="icon-trash"></i></button>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="row">
+							<table class="table span6">
+								<tr>
+									<th>Validator</th>
+								</tr>
+								<tr>
+									<td colspan="6" style="padding: 0;"></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div id="validatordetails" class="row container" data-spy="affix" data-offset-top="290" data-bind="with: currentValidator">
+					<div class="span6 offset6">
+						<div class="form-horizontal">
+							<div class="navbar">
+								<div class="navbar-inner">
+									<div class="brand">Validator Information</div>
+									<div class="btn-group pull-right">
+										<button class="btn" data-bind="click: deleteValidator" title="Remove Validator" rel="tooltip"><i class="icon-trash"></i></button>
+									</div>
+								</div>
+							</div>
+							<div class="box-bordered">
+								<br>
+								<div class="control-group">
+									<label class="control-label">Username</label>
+									<div class="controls">
+										<input type="text" placeholder="Username" data-bind="value: username">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label">Password</label>
+									<div class="controls">
+										<input type="text" data-bind="value: newPassword, visible: typeof newPassword() !== 'undefined' && newPassword() !== null && newPassword() !== ''" readOnly></input>
+										<button class="btn" data-bind="click: resetPassword">Reset</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<br>
+						<div class="pull-right commitBar">
+							<button class="btn" data-bind="click: $parent.fetchValidators">Revert Changes</button>
+							<button class="btn btn-primary" data-bind="click: $parent.commitValidators">Commit Changes</button>
+						</div>
+					</div>
+				</div>
+				<div id="validatorlist" class="row">
+					<table class="table table-hover span6 table-visibleStriped">
+						<tbody data-bind="foreach: filteredValidators">
+							<tr data-bind="css: {info: $parent.currentValidator() == $data}, click: selectValidator">
+								<td data-bind="text: typeof username() !== 'undefined' && username() !== null && username() !== '' ? username() : '-----'"></td>
 							</tr>
 						</tbody>
 					</table>

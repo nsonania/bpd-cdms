@@ -391,6 +391,60 @@ class StudentsViewModel
 	toData: =>
 		student.toData() for student in @students()
 
+class ValidatorViewModel
+	constructor: ({username, newPassword, password, _id}) ->
+		@_id = ko.observable _id ? undefined
+		@username = ko.observable username ? undefined
+		@password = ko.observable password ? undefined
+		@newPassword = ko.observable newPassword ? undefined
+		@visible = ko.observable true
+	selectValidator: =>
+		viewmodel.validatorsViewModel().currentValidator @
+	deleteValidator: =>
+		viewmodel.validatorsViewModel().validators.remove @
+		viewmodel.validatorsViewModel().filteredValidators()[0].selectValidator()
+	resetPassword: =>
+		@newPassword md5(Date())[0...8]
+		@password md5 @newPassword()
+	toData: =>
+		_id: @_id()
+		username: @username()
+		password: @password()
+
+class ValidatorsViewModel
+	constructor: ({validators}) ->
+		@validators = ko.observableArray (new ValidatorViewModel validator for validator in validators)
+		@filteredValidators = ko.computed => _.chain(@validators()).filter((x) -> x.visible()).sortBy((x) => x.username()).value()
+		@currentValidator = ko.observable @filteredValidators()[0]
+	filter: =>
+		query = $(arguments[1].currentTarget).val().toLowerCase()
+		for validator in @validators()
+			validator.visible false
+			if validator.username().toLowerCase().indexOf(query) >= 0
+				validator.visible true
+	newValidator: =>
+		@validators.push validator = new ValidatorViewModel newPassword: (np = md5(Date())[0...8]), password: md5 np
+		validator.selectValidator()
+		scrollTo 0, document.height
+	fetchValidators: =>
+		viewmodel.pleaseWaitStatus "Fetching Validators..."
+		socket.emit "getValidators", (students) =>
+			viewmodel.pleaseWaitStatus undefined
+			@validators (new ValidatorViewModel validator for validator in validators)
+			@currentValidator @filteredValidators()[0]
+	commitValidators: =>
+		viewmodel.pleaseWaitStatus "Saving changes..."
+		validators = @toData()
+		socket.emit "commitValidators", validators, (result) =>
+			viewmodel.pleaseWaitStatus undefined
+	deleteAll: =>
+		viewmodel.pleaseWaitStatus "Deleting all Validators..."
+		socket.emit "deleteAllValidators", (success) =>
+			viewmodel.pleaseWaitStatus undefined
+			@fetchValidators()
+	toData: =>
+		validator.toData() for validator in @validators()
+
 class SemesterViewModel
 	constructor: ->
 		@title = ko.observable null
@@ -415,6 +469,7 @@ class BodyViewModel
 	constructor: ->
 		@coursesViewModel = ko.observable undefined
 		@studentsViewModel = ko.observable undefined
+		@validatorsViewModel = ko.observable undefined
 		@pleaseWaitStatus = ko.observable undefined
 		@pleaseWaitVisible = ko.computed => @pleaseWaitStatus()?
 		@activeView = ko.observable undefined
@@ -439,6 +494,14 @@ class BodyViewModel
 				viewmodel.activeView "studentsView"
 				$("#studentheader, #studentdetails").affix offset: top: 290
 				$('button[rel=tooltip]').tooltip()
+	gotoValidators: =>
+		viewmodel.pleaseWaitStatus "Fetching Validators..."
+		socket.emit "getValidators", (validators) ->
+			viewmodel.pleaseWaitStatus undefined
+			viewmodel.validatorsViewModel new ValidatorsViewModel validators: validators
+			viewmodel.activeView "validatorsView"
+			$("#validatorheader, #validatordetails").affix offset: top: 290
+			$('button[rel=tooltip]').tooltip()
 	gotoHome: =>
 		@activeView "homeView"
 		@semester.fetchSemester()
