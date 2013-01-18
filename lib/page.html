@@ -93,8 +93,10 @@
 			</div>
 			<div class="hero-unit">
 				<h1>Choose your Courses</h1>
-				<p data-bind="if: bc().length > 0">Your courses are divided into 3 sections, namely: <em>Backlogged Courses</em>, <em>Prescribed Courses</em> for the current semester and <em>Electives / Overload Courses</em> containing required electives and optional courses that you would like to enroll in. You will have to select all your backlogs to select prescribed and elective courses. You will have to select all your backlogs and prescribed courses to be able to enroll into overload courses.<span data-bind="visible: reqEl() > 0"> You are required to choose atleast <span data-bind="text: reqEl">2</span> elective<span data-bind="visible: reqEl() > 1">s</span>.</span></p>
-				<p data-bind="if: bc().length == 0">Your courses are divided into 2 sections, namely: <em>Prescribed Courses</em> for the current semester and <em>Electives / Overload Courses</em> containing required electives and optional courses that you would like to enroll in. You will have to select all your prescribed courses to be able to enroll into overload courses.<span data-bind="visible: reqEl() > 0"> You are required to choose atleast <span data-bind="text: reqEl">2</span> elective<span data-bind="visible: reqEl() > 1">s</span>.</span></p></p>
+				<p data-bind="if: bc().length > 0 && psc().length > 0">Your courses are divided into 3 sections, namely: <em>Backlogged Courses</em>, <em>Prescribed Courses</em> for the current semester and <em>Electives / Overload Courses</em> containing required electives and optional courses that you would like to enroll in. You will have to select all your backlogs to select prescribed and elective courses. You will have to select all your backlogs and prescribed courses to be able to enroll into overload courses.<span data-bind="visible: reqEl() > 0"> You are required to choose at least <span data-bind="text: reqEl">2</span> elective<span data-bind="visible: reqEl() > 1">s</span>.</span></p>
+				<p data-bind="if: bc().length == 0 && psc().length > 0">Your courses are divided into 2 sections, namely: <em>Prescribed Courses</em> for the current semester and <em>Electives / Overload Courses</em> containing required electives and optional courses that you would like to enroll in. You will have to select all your prescribed courses to be able to enroll into overload courses.<span data-bind="visible: reqEl() > 0"> You are required to choose at least <span data-bind="text: reqEl"></span> elective<span data-bind="visible: reqEl() > 1">s</span>.</span></p></p>
+				<p data-bind="if: bc().length > 0 && psc().length == 0">Your courses are divided into 2 sections, namely: <em>Backlogged Courses</em> for the current semester and <em>Electives / Overload Courses</em> containing required electives and optional courses that you would like to enroll in. You will have to select all your backlogged courses to be able to enroll into elective or overload courses.<span data-bind="visible: reqEl() > 0"> You are required to choose at least <span data-bind="text: reqEl"></span> elective<span data-bind="visible: reqEl() > 1">s</span>.</span></p></p>
+				<p data-bind="if: bc().length == 0 && psc().length == 0"><span data-bind="visible: reqEl() > 0"> You are required to choose at least <span data-bind="text: reqEl"></span> elective<span data-bind="visible: reqEl() > 1">s</span>.</span></p></p>
 			</div>
 			<div class="row">
 				<div class="courses-selections well span10 offset1" data-bind="visible: bc().length > 0, css: {disabled: !blEnabled()}">
@@ -120,7 +122,7 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="courses-selections well span10 offset1" data-bind="css: {disabled: !pscEnabled()}">
+				<div class="courses-selections well span10 offset1" data-bind="visible: psc().length > 0, css: {disabled: !pscEnabled()}">
 					<p class="lead center">Prescribed Courses</p>
 					<table class="table table-hover">
 						<thead>
