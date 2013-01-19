@@ -38,81 +38,81 @@ io.sockets.on "connection", (socket) ->
 			callback false
 
 	socket.on "getCourses", (callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Fetching Courses"
 		db.Course.find({}).lean().exec (err, courses) -> callback courses
 
 	socket.on "commitCourses", (courses, callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Committing Courses"
 		core.commitCourses courses, callback
 		ipc?.emit "broadcast", "updatedCourses"
 
 	socket.on "importCourses", (courses, callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Importing Courses"
 		core.importCourses courses, callback
 		ipc?.emit "broadcast", "updatedCourses"
 
 	socket.on "deleteAllCourses", (callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Delete All Courses"
 		core.deleteAllCourses callback
 		ipc?.emit "broadcast", "updatedCourses"
 
 	socket.on "getStudents", (callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Fetching Students"
 		db.Student.find({}).lean().exec (err, students) -> callback students
 
 	socket.on "commitStudents", (students, callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Committing Students"
 		core.commitStudents students, callback
 		ipc?.emit "broadcast", "updatedStudents"
 
 	socket.on "importStudents", (students, callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Importing Students"
 		core.importStudents students, callback
 		ipc?.emit "broadcast", "updatedStudents"
 
 	socket.on "deleteAllStudents", (callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Delete All Students"
 		core.deleteAllStudents callback
 		ipc?.emit "broadcast", "updatedStudents"
 
 	socket.on "getValidators", (callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Fetching Validators"
 		db.Validator.find({}).lean().exec (err, validators) -> callback validators
 
 	socket.on "commitValidators", (validators, callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Committing Validators"
 		core.commitValidators validators, callback
 		ipc?.emit "broadcast", "updatedValidators"
 
 	socket.on "importValidators", (validators, callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Importing Validators"
 		core.importValidators validators, callback
 		ipc?.emit "broadcast", "updatedValidators"
 
 	socket.on "deleteAllValidators", (callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Delete All Validators"
 		core.deleteAllValidators callback
 		ipc?.emit "broadcast", "updatedValidators"
 
 	socket.on "getSemester", (callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Fetching Semester Details"
 		db.Misc.findOne(desc: "Semester Details").lean().exec (err, semester) -> callback semester
 
 	socket.on "commitSemester", (semester, callback) ->
-		callback false unless socket.auth?
+		return callback false unless socket.auth?
 		console.log "Committing Semester"
 		core.commitSemester semester, callback
 		ipc?.emit "broadcast", "updatedSemester"
