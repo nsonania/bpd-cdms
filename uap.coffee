@@ -2,9 +2,15 @@ _ = require "underscore"
 
 methods = [
 	"select", "filter"
-	"find"
-	"map", "detect"
+	"find", "detect"
+	"map"
+	"any", "all"
+	"union", "intersection", "difference"
+	"uniq"
+	"flatten"
+	"each"
+	"reduce"
 ]
 
-for method in methods
-	Array.prototype[method] = -> _[method] @, arguments...
+for method in methods then do (method) ->
+	Array.prototype["_#{method}"] = -> _[method] @, arguments...
