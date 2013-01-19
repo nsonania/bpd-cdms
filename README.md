@@ -3,7 +3,7 @@ bpd-cdms
 
 BPD — Centralized Data Management System.
 
-dbui
+validation
 ----
 
-This branch deals with populating the database from `.csv` files.
+This branch deals with the registration validation system.
