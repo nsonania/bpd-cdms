@@ -143,6 +143,27 @@ exports.commitValidators = (new_validators, callback) ->
 			await validator.save defer err, robj
 		callback true
 
+exports.importValidators = (data, callback) ->
+	db.Validator.find {}, (err, oldValidators) ->
+		return console.log err if err?
+		lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(/,(?=(?:[^"\\]*(?:\\.|"(?:[^"\\]*\\.)*[^"\\]*"))*[^"]*$)/g)._map((y) -> y.replace /(^\")|(\"$)/g, "")._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
+		try
+			for line in lines[5..]
+				_oic = undefined
+				for oc in oldValidators when (oc.get("username").toString() is line[0].toString())
+					_oic = oc.get("_id")
+					await db.Validator.findOneAndRemove _id: _oic, defer err, robj
+				validator = new db.Validator
+					_id: _oic
+					username: line[0]
+					password: md5 line[1]
+				await validator.save defer err, robj
+			console.log "Import Validators Done."
+			callback true
+		catch error
+			console.log "Import Validators: Error Parsing CSV file."
+			callback false
+
 exports.deleteAllValidators = (callback) ->
 	db.Validator.find {}, (err, validators) ->
 		return console.log err if err?

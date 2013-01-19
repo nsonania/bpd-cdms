@@ -51,20 +51,26 @@
 					<p>Use this portal to modify courses' and students' details.</p>
 				</div>
 				<div class="row">
-					<div id="loginbox" class="span6 offset3">
-						<div class="well">
-							<div class="form-horizontal">
-								<legend>Login</legend>
-								<div class="control-group">
-									<label class="control-label">Access Code</label>
-									<div class="controls">
-										<input class="span3" type="password" id="input-accesscode" placeholder="Access Code">
-									</div>
+					<div id="loginbox" class="well span6 offset3">
+						<div class="form-horizontal">
+							<legend>Login</legend>
+							<div class="alert alert-error" data-bind="visible: loginAlertStatus() == 'authFailure'">
+								<button type="button" class="close" data-bind="click: dismissLoginAlert">&times;</button>
+								<strong>Authentication Failure!</strong> Check if your access code is valid.
+							</div>
+							<div class="alert alert-info" data-bind="visible: loginAlertStatus() == 'remoteLogout'">
+								<button type="button" class="close" data-bind="click: dismissLoginAlert">&times;</button>
+								<strong>Session Terminated!</strong> This portal has been accessed from another location.
+							</div>
+							<div class="control-group">
+								<label class="control-label">Access Code</label>
+								<div class="controls">
+									<input class="span3" type="password" id="input-accesscode" placeholder="Access Code">
 								</div>
-								<div class="control-group">
-									<div class="controls">
-										<button id="submit-login" class="btn btn-primary" data-bind="click: login">Login</button>
-									</div>
+							</div>
+							<div class="control-group">
+								<div class="controls">
+									<button id="submit-login" class="btn btn-primary" data-bind="click: login">Login</button>
 								</div>
 							</div>
 						</div>
@@ -227,6 +233,12 @@
 									<label class="control-label">Sections shared with</label>
 									<div class="controls">
 										<input type="text" placeholder="None" data-bind="value: sharedSections">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label">Test Dates</label>
+									<div class="controls">
+										<input type="text" placeholder="Test Dates" data-bind="value: otherDatesNI">
 									</div>
 								</div>
 							</div>
@@ -474,6 +486,7 @@
 									<li class="divider-vertical"></li>
 									<li class="btn-group">
 										<button class="btn" data-bind="click: newValidator" title="Add Validator" rel="tooltip"><i class="icon-plus"></i></button>
+										<button class="btn" data-bind="click: selectFile" title="Import from .csv" rel="tooltip"><i class="icon-file"></i></button>
 										<button class="btn" data-bind="click: deleteAll" title="Delete All Validators" rel="tooltip"><i class="icon-trash"></i></button>
 									</li>
 								</ul>

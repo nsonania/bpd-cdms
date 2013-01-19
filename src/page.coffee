@@ -54,16 +54,15 @@ class SectionViewModel
 		timeslots: _(timeslots).flatten()
 
 class CourseViewModel
-	constructor: ({compcode, number, name, @lectureSections, @labSections, otherDates}) ->
+	constructor: ({compcode, number, name, @lectureSections, @labSections, @otherDates}) ->
 		@compcode = ko.observable compcode ? null
 		@number = ko.observable number ? null
 		@name = ko.observable name ? null
 		@visible = ko.observable true
-		@otherDates = ko.observable otherDates ? []
 		@sharedSections = ko.computed
 			read: =>
 				return unless viewmodel.coursesViewModel()?
-				_.chain(viewmodel.coursesViewModel().courses()).filter((x) => x.lectureSections() is @lectureSections() and x.labSections() is @labSections() and x isnt @).map((x) => x.compcode()).value().join ", "
+				_.chain(viewmodel.coursesViewModel().courses()).filter((x) => x.lectureSections() is @lectureSections() and x.labSections() is @labSections() and x isnt @).map((x) => x.compcode()).sortBy((x) -> x).value().join ", "
 			write: (value) =>
 				return unless viewmodel.coursesViewModel()?
 				oldS = _(viewmodel.coursesViewModel().courses()).filter (x) => x.lectureSections() is @lectureSections() and x.labSections() is @labSections()
@@ -72,14 +71,24 @@ class CourseViewModel
 				remS = _(oldS).difference newS
 				oldLectureSections = oldS[0].lectureSections
 				oldLabSections = oldS[0].labSections
+				oldOtherDates = oldS[0].otherDates
 				newLectureSections = ko.observableArray _(oldLectureSections()).map (x) -> new SectionViewModel x.toData()
 				newLabSections = ko.observableArray _(oldLabSections()).map (x) -> new SectionViewModel x.toData()
+				newOtherDates = ko.observableArray oldOtherDates().slice()
 				_(addS).each (x) ->
 					x.lectureSections oldLectureSections()
 					x.labSections oldLabSections()
+					x.otherDates oldOtherDates()
 				_(remS).each (x) ->
 					x.lectureSections newLectureSections()
 					x.labSections newLabSections()
+					x.otherDates newOtherDates()
+		@otherDatesNI = ko.computed
+			read: =>
+				@otherDates().join ", "
+			write: (value) =>
+				@otherDates.removeAll()
+				@otherDates.push _(value.split(/\ *[;,]\ */)).filter((x) -> x not in ["", null, undefined])...
 	selectCourse: =>
 		viewmodel.coursesViewModel().currentCourse @
 	deleteCourse: =>
@@ -123,6 +132,7 @@ class CoursesViewModel
 		@courses = ko.observableArray _.chain(courses).map((x) ->
 			lectureSections =  ko.observableArray (new SectionViewModel section for section in x.lectureSections ? [])
 			labSections = ko.observableArray (new SectionViewModel section for section in x.labSections ? [])
+			otherDates = ko.observableArray (date for date in x.otherDates ? [])
 			_(x.titles).map (y) ->
 				new CourseViewModel
 					compcode: y.compcode
@@ -130,7 +140,7 @@ class CoursesViewModel
 					name: y.name
 					lectureSections: lectureSections
 					labSections: labSections
-					otherDates: x.otherDates
+					otherDates: otherDates
 		).flatten().value()
 		@sort = ko.observable "compcode"
 		@filteredCourses = ko.computed => _.chain(@courses()).filter((x) -> x.visible()).sortBy((x) => x[@sort()]()).value()
@@ -157,6 +167,7 @@ class CoursesViewModel
 			@courses _.chain(courses).map((x) ->
 				lectureSections =  ko.observableArray (new SectionViewModel section for section in x.lectureSections ? [])
 				labSections = ko.observableArray (new SectionViewModel section for section in x.labSections ? [])
+				otherDates = ko.observableArray (date for date in x.otherDates ? [])
 				_(x.titles).map (y) ->
 					new CourseViewModel
 						compcode: y.compcode
@@ -164,7 +175,7 @@ class CoursesViewModel
 						name: y.name
 						lectureSections: lectureSections
 						labSections: labSections
-						otherDates: x.otherDates
+						otherDates: otherDates
 			).flatten().value()
 			@currentCourse @filteredCourses()[0]
 	commitCourses: =>
@@ -426,9 +437,24 @@ class ValidatorsViewModel
 		@validators.push validator = new ValidatorViewModel newPassword: (np = md5(Date())[0...8]), password: md5 np
 		validator.selectValidator()
 		scrollTo 0, document.height
+	selectFile: =>
+		$fup = $("<input type='file' accept='text/csv'>")
+		$fup.one "change", =>
+			return if $fup[0].files.length is 0
+			fs = new FileReader()
+			fs.onload = (e) =>
+				viewmodel.pleaseWaitStatus "Importing Validators..."
+				socket.emit "importValidators", e.target.result, (success) =>
+					viewmodel.pleaseWaitStatus undefined
+					if success
+						@fetchValidators()
+					else
+						alert "Parsing Error. Please recheck .csv file for errors."
+			fs.readAsText $fup[0].files[0]
+		$fup.trigger "click"
 	fetchValidators: =>
 		viewmodel.pleaseWaitStatus "Fetching Validators..."
-		socket.emit "getValidators", (students) =>
+		socket.emit "getValidators", (validators) =>
 			viewmodel.pleaseWaitStatus undefined
 			@validators (new ValidatorViewModel validator for validator in validators)
 			@currentValidator @filteredValidators()[0]
@@ -475,6 +501,7 @@ class BodyViewModel
 		@activeView = ko.observable undefined
 		@authenticated = ko.observable false
 		@semester = new SemesterViewModel()
+		@loginAlertStatus = ko.observable undefined
 	gotoCourses: =>
 		viewmodel.pleaseWaitStatus "Fetching Courses..."
 		socket.emit "getCourses", (courses) ->
@@ -507,6 +534,7 @@ class BodyViewModel
 		@semester.fetchSemester()
 		$('input[rel=datetime]').datetimepicker()
 	login: =>
+		@loginAlertStatus undefined
 		accessCode = $("#input-accesscode").val()
 		socket.emit "login", accessCode, (success) =>
 			viewmodel.pleaseWaitStatus undefined
@@ -514,9 +542,12 @@ class BodyViewModel
 				@authenticated true
 				@gotoHome()
 			else
-				alert "Incorrect Password"
+				@loginAlertStatus "authFailure"
+	dismissLoginAlert: =>
+		@loginAlertStatus undefined
 	logout: =>
 		socket.emit "logout", =>
+			$("#input-accesscode").val("")
 			@authenticated false
 
 $ ->
@@ -527,3 +558,7 @@ $ ->
 	socket = io.connect()
 	socket.on "connect", ->
 		viewmodel.pleaseWaitStatus undefined
+
+	socket.on "destroySession", ->
+		viewmodel.logout()
+		viewmodel.loginAlertStatus "remoteLogout"
