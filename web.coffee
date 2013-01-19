@@ -22,6 +22,13 @@ expressServer.configure ->
 	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 	expressServer.use expressServer.router
 
+expressServer.get "/students_selections.csv", (req, res, next) ->
+	core.exportStudentsSelections "lib/students_selections.csv", (body) ->
+		res.setHeader "Content-Type", "text/csv"
+		res.setHeader "Content-Length", body.length
+		res.setHeader "Content-Disposition", "attachment;filename=students_selections.csv"
+		res.setHeader "Cache-Control", "no-cache"
+		res.end body
 server = http.createServer expressServer
 
 io = socket_io.listen server

@@ -180,3 +180,13 @@ exports.commitSemester = (semester, callback) ->
 			startTime: new Date semester.startTime
 		await obj.save defer er, robj
 		callback true
+
+exports.exportStudentsSelections = (file, callback) ->
+	str = ""
+	db.Student.find validated: true, (err, students) ->
+		str += "Student Id, Comp. Code, Lecture Section, Lab Section\n"
+		for student in students
+			str += student.get("studentId") + "\n"
+			for course in student.get "selectedcourses"
+				str += "," + course.compcode + "," + (if course.selectedLectureSection? then course.selectedLectureSection else "") + "," + (if course.selectedLabSection? then course.selectedLabSection else "") + "\n"
+		callback str

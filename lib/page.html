@@ -330,6 +330,7 @@
 									<li class="btn-group">
 										<button class="btn" data-bind="click: newStudent" title="Add Student" rel="tooltip"><i class="icon-plus"></i></button>
 										<button class="btn" data-bind="click: selectFile" title="Import from .csv" rel="tooltip"><i class="icon-file"></i></button>
+										<button class="btn" data-bind="click: exportCSV" title="Export Validated Students as .csv" rel="tooltip"><i class="icon-download-alt"></i></button>
 										<button class="btn" data-bind="click: deleteAll" title="Delete All Students" rel="tooltip"><i class="icon-trash"></i></button>
 									</li>
 								</ul>
@@ -390,7 +391,7 @@
 									<label class="control-label">Status</label>
 									<div class="controls form-inline">
 										<button class="btn" data-bind="css: {'btn-success': registered}, click: toggleRegistered, disable: validated">Registered</button>
-										<button class="btn" data-bind="css: {'btn-success': validated}, click: toggleValidated, enable: registered">Validated</button>
+										<button class="btn vbn" data-bind="css: {'btn-success': validated}, click: toggleValidated, enable: registered">Validated</button>
 										<button class="btn" data-bind="css: {'btn-danger': difficultTimetable}, click: toggleDifficultTimetable, disable: registered">Difficult Timetable</button>
 									</div>
 								</div>

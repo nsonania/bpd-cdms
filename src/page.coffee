@@ -233,7 +233,7 @@ class SelectedCourseViewModel
 		selectedLabSection: @selectedLabSection()
 
 class StudentViewModel
-	constructor: ({studentId, name, newPassword, password, registered, validated, difficultTimetable, bc, psc, el, reqEl, selectedcourses, _id}) ->
+	constructor: ({studentId, name, newPassword, password, registered, validated, validatedBy, difficultTimetable, bc, psc, el, reqEl, selectedcourses, _id}) ->
 		@_id = ko.observable _id ? undefined
 		@studentId = ko.observable studentId ? undefined
 		@name = ko.observable name ? undefined
@@ -241,6 +241,15 @@ class StudentViewModel
 		@newPassword = ko.observable newPassword ? undefined
 		@registered = ko.observable registered ? undefined
 		@validated = ko.observable validated ? undefined
+		@validatedBy = ko.observable validatedBy ? undefined
+		@validatedByNI = ko.computed =>
+			if @validated()
+				if @validatedBy()?
+					"Validated by #{@validatedBy()}"
+				else
+					"Validated"
+			else
+				"Not Validated"
 		@difficultTimetable = ko.observable difficultTimetable ? undefined
 		@bc = ko.observableArray bc ? []
 		@psc = ko.observableArray psc ? []
@@ -276,6 +285,8 @@ class StudentViewModel
 					true
 	selectStudent: =>
 		viewmodel.studentsViewModel().currentStudent @
+		$('button.vbn').tooltip "destroy"
+		$('button.vbn').tooltip title: @validatedByNI
 	deleteStudent: =>
 		viewmodel.studentsViewModel().students.remove @
 		viewmodel.studentsViewModel().filteredStudents()[0].selectStudent()
@@ -340,6 +351,7 @@ class StudentViewModel
 		password: @password()
 		registered: @registered()
 		validated: @validated()
+		validatedBy: @validatedBy()
 		bc: @bc() if @bc().length > 0
 		psc: @psc() if @psc().length > 0
 		el: @el() if @el().length > 0
@@ -379,6 +391,8 @@ class StudentsViewModel
 						alert "Parsing Error. Please recheck .csv file for errors."
 			fs.readAsText $fup[0].files[0]
 		$fup.trigger "click"
+	exportCSV: =>
+		window.open "students_selections.csv"
 	sortStudentId: =>
 		@sort "studentId"
 	sortName: =>
