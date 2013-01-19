@@ -64,6 +64,7 @@ io.sockets.on "connection", (socket) ->
 					name: c.get("titles")._find((y) -> y.compcode is x).name
 					leftCapacity: leftCapacity
 					selected: student.get("selectedcourses")._any (y) -> x is y.compcode
+					otherDates: c.get "otherDates"
 			callback
 				bc:
 					for x in bc when (c = courses._find (y) -> y.get("titles")._any (z) -> z.compcode is x)?
@@ -71,12 +72,14 @@ io.sockets.on "connection", (socket) ->
 						number: c.get("titles")._find((y) -> y.compcode is x).number
 						name: c.get("titles")._find((y) -> y.compcode is x).name
 						selected: student.get("selectedcourses")._any (y) -> x is y.compcode
+						otherDates: c.get "otherDates"
 				psc:
 					for x in psc when (c = courses._find (y) -> y.get("titles")._any (z) -> z.compcode is x)?
 						compcode: x
 						number: c.get("titles")._find((y) -> y.compcode is x).number
 						name: c.get("titles")._find((y) -> y.compcode is x).name
 						selected: student.get("selectedcourses")._any (y) -> x is y.compcode
+						otherDates: c.get "otherDates"
 				el: el
 				reqEl: student.get("reqEl") ? 0
 
@@ -121,6 +124,7 @@ io.sockets.on "connection", (socket) ->
 								status: status
 							selectedLectureSection: selcourse.selectedLectureSection
 							selectedLabSection: selcourse.selectedLabSection
+							otherDates: course.otherDates
 					schedule: scheduleconflicts.schedule
 
 	socket.on "chooseSection", (sectionInfo, callback) ->

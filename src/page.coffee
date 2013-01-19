@@ -36,10 +36,14 @@ class LoginViewModel
 			viewmodel.activeView "loginView"
 			viewmodel.pleaseWaitVisible false
 
+class TestDateViewModel
+	constructor: (@date) ->
+		@clashing = ko.computed => _.chain(viewmodel.coursesViewModel.allSelectedCourses()).map((x) => x.otherDates()).flatten(1).filter((x) => x.date is @date).value().length > 1
 
 class CourseViewModel
-	constructor: ({@compcode, @number, @name, selected}) ->
+	constructor: ({@compcode, @number, @name, selected, otherDates}) ->
 		@selected = ko.observable selected
+		@otherDates = ko.observableArray (new TestDateViewModel date for date in otherDates)
 	toggleSelection: =>
 		@selected not @selected()
 	electiveMouseOver: =>
@@ -71,6 +75,8 @@ class CoursesViewModel
 		@elEnabled = ko.computed => _(@bc()).all (x) -> x.selected()
 		@elsEnabled = ko.computed => @el().length < @reqEl() or _(@psc()).all((x) -> x.selected()) or not @elEnabled()
 		@nextStepWarning = ko.computed => @el().length < @reqEl() or _(@psc()).any (x) -> not x.selected()
+		@allSelectedCourses = ko.computed => _.chain([@bc(), @psc(), @el()]).flatten(1).filter((x) -> x.selected()).value()
+		@clashingOtherDates = ko.computed => _(@allSelectedCourses()).any (x) -> _(x.otherDates()).any (y) -> y.clashing()
 	electiveQueryKeyDown: =>
 		event = arguments[1]
 		if event.which is 38 and @electiveChoices().indexOf(@selectedValueDropdown()) > 0
@@ -121,7 +127,7 @@ class SectionViewModel
 			viewmodel.sectionsViewModel.setSchedule schedule
 
 class CourseSectionsViewModel
-	constructor: ({@compcode, @number, @name, @hasLectures, @hasLab, lectureSections, labSections, selectedLectureSection, selectedLabSection}) ->
+	constructor: ({@compcode, @number, @name, @hasLectures, @hasLab, lectureSections, labSections, selectedLectureSection, selectedLabSection, @otherDates}) ->
 		@lectureSections = ko.observableArray (new SectionViewModel section, @ for section in lectureSections ? [])
 		@labSections = ko.observableArray (new SectionViewModel section, @ for section in labSections ? [])
 		@selectedLectureSection = ko.observable selectedLectureSection
