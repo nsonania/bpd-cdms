@@ -88,7 +88,7 @@ io.sockets.on "connection", (socket) ->
 					number: c.get("titles")._find((y) -> y.compcode is x).number
 					name: c.get("titles")._find((y) -> y.compcode is x).name
 					leftCapacity: leftCapacity
-					selected: student.get("selectedcourses")._any (y) -> x is y.compcode
+					selected: (student.get("selectedcourses") ? [])._any (y) -> x is y.compcode
 					otherDates: c.get "otherDates"
 			callback
 				bc:
@@ -96,14 +96,14 @@ io.sockets.on "connection", (socket) ->
 						compcode: x
 						number: c.get("titles")._find((y) -> y.compcode is x).number
 						name: c.get("titles")._find((y) -> y.compcode is x).name
-						selected: student.get("selectedcourses")._any (y) -> x is y.compcode
+						selected: (student.get("selectedcourses") ? [])._any (y) -> x is y.compcode
 						otherDates: c.get "otherDates"
 				psc:
 					for x in psc when (c = courses._find (y) -> y.get("titles")._any (z) -> z.compcode is x)?
 						compcode: x
 						number: c.get("titles")._find((y) -> y.compcode is x).number
 						name: c.get("titles")._find((y) -> y.compcode is x).name
-						selected: student.get("selectedcourses")._any (y) -> x is y.compcode
+						selected: (student.get("selectedcourses") ? [])._any (y) -> x is y.compcode
 						otherDates: c.get "otherDates"
 				el: el
 				reqEl: student.get("reqEl") ? 0
@@ -233,7 +233,7 @@ io.sockets.on "connection", (socket) ->
 	socket.on "logout", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
 		return callback success: false unless student?
-		if not student.get("registered") and not student.get("difficultTimetable")
+		if not student.get("registered") and not student.get("difficultTimetable") and student.get("selectedcourses")?
 			student.get("selectedcourses")._each (x) ->
 				delete x.selectedLectureSection
 				delete x.selectedLabSection
@@ -247,7 +247,7 @@ io.sockets.on "connection", (socket) ->
 	socket.on "disconnect", ->
 		if socket.student_id?
 			await db.Student.findById socket.student_id, defer err, student
-			if not student.get("registered") and not student.get("difficultTimetable")
+			if not student.get("registered") and not student.get("difficultTimetable") and student.get("selectedcourses")?
 				student.get("selectedcourses")._each (x) ->
 					delete x.selectedLectureSection
 					delete x.selectedLabSection
