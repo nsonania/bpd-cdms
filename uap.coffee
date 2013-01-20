@@ -10,6 +10,7 @@ methods = [
 	"flatten"
 	"each"
 	"reduce"
+	"first", "last"
 ]
 
 for method in methods then do (method) ->

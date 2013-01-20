@@ -7,6 +7,8 @@ md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
 core = require "./core"
+pdfExport = require "./pdfExport"
+fs = require "fs"
 
 cp = spawn "cake", ["build"]
 await cp.on "exit", defer code
@@ -21,6 +23,29 @@ expressServer.configure ->
 		next()
 	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 	expressServer.use expressServer.router
+
+expressServer.get "/registrationCard", (req, res, next) ->
+	socket = io.sockets.clients()._find((x) -> x.sid is req.query.sid)
+	res.send 404, "Unrecognized sid." unless socket?
+	db.Misc.findOne desc: "Semester Details", (err, semester) ->
+		return res.send 404, "Registrations not open yet." unless semester?
+		db.Student.findById socket.student_id, (err, student) ->
+			return res.send 500, "Student missing from database." unless student?
+			db.Course.find titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode), (err, courses) ->
+				data =
+					studentId: student.get "studentId"
+					studentName: student.get "name"
+					semesterTitle: semester.get "title"
+					courses: student.get("selectedcourses")._map (selcourse) ->
+						compcode: selcourse.compcode
+						number: courses._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.number
+						name: courses._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.name
+						lecture: selcourse.selectedLectureSection
+						lab: selcourse.selectedLabSection
+				pdfExport.generateRC data, ->
+					res.sendfile "lib/rc_#{student.get "studentId"}.pdf", ->
+						fs.unlink "lib/rc_#{student.get "studentId"}.pdf"
+						delete socket.sid
 
 server = http.createServer expressServer
 
@@ -199,6 +224,12 @@ io.sockets.on "connection", (socket) ->
 		student.save ->
 			callback true
 
+	socket.on "setup_sid", (callback) ->
+		await db.Student.findById socket.student_id, defer err, student
+		return callback success: false unless student?
+		(sid = md5(student.get("_id").toString() + Date())) until sid? and io.sockets.clients()._all((x) -> x.sid isnt sid)
+		callback socket.sid = sid
+
 	socket.on "logout", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
 		return callback success: false unless student?
@@ -211,6 +242,7 @@ io.sockets.on "connection", (socket) ->
 		else
 			callback true
 		delete socket.student_id
+		delete socket.sid
 
 	socket.on "disconnect", ->
 		if socket.student_id?

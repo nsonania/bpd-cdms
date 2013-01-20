@@ -202,7 +202,9 @@
 				</div>
 			</div>
 			<hr>
-			<button class="btn mainButton" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep, disable: clashingOtherDates"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
+			<div class="center">
+				<button class="btn" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep, disable: clashingOtherDates"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
+			</div>
 		</div>
 		<div id="sections-container" class="container" data-bind="with: sectionsViewModel, visible: activeViewNZ() == 'sectionsView'">
 			<div class="breadcrumb">
@@ -419,9 +421,12 @@
 				</div>
 			</div>
 			<hr data-bind="visible: $root.studentStatus() != 'difficultTimetable'">
-			<button class="btn btn-primary mainButton" data-bind="click: register, enable: registerEnabled, visible: $root.studentStatus() == 'not registered'">Confirm &amp; Register</button>
-			<button class="btn btn-warning mainButton" data-bind="visible: $root.studentStatus() == 'registered'" disabled>Registration not yet validated!</button>
-			<button class="btn btn-success mainButton" data-bind="visible: $root.studentStatus() == 'validated'" disabled>Registration Validated</button>
+			<div class="center">
+				<button class="btn btn-primary" rel="tooltip" title="Print your Registration Card" data-bind="visible: $root.studentStatus() != 'not registered', click: printRC"><i class="icon-print icon-white"></i></button>
+				<button class="btn btn-primary" data-bind="click: register, enable: registerEnabled, visible: $root.studentStatus() == 'not registered'">Confirm &amp; Register</button>
+				<button class="btn btn-warning" data-bind="visible: $root.studentStatus() == 'registered'" disabled>Registration not yet validated!</button>
+				<button class="btn btn-success" data-bind="visible: $root.studentStatus() == 'validated'" disabled>Registration Validated</button>
+			</div>
 		</div>
 	</body>
 </html>

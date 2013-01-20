@@ -162,6 +162,8 @@ class SectionsViewModel
 	register: =>
 		socket.emit "confirmRegistration", (result) ->
 			return bootbox.alert "Invalid Registration. Please refresh your browser and register again." if not result.success and result.invalidRegistration?
+			bootbox.alert "You have registered for your courses. Print, sign and submit your Registration Card for validation."
+			$('input[rel=tooltip]').tooltip()
 			viewmodel.studentStatus "registered"
 	needHelp: =>
 		bootbox.confirm """
@@ -171,6 +173,11 @@ class SectionsViewModel
 		""", (result) ->
 			return unless result
 			socket.emit "difficultTimetable", -> viewmodel.studentStatus "difficultTimetable"
+	printRC: =>
+		win = window.open()
+		console.log win
+		socket.emit "setup_sid", (sid) ->
+			win.location = "registrationCard?sid=#{sid}"
 
 class BodyViewModel
 	constructor: ->

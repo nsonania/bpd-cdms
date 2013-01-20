@@ -1,5 +1,6 @@
 db = require "./db"
 uap = require "./uap"
+PDFDocument = require "pdfkit"
 
 exports.sectionStatus = (sectionInfo, callback) ->
 	query =
