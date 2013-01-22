@@ -22,5 +22,8 @@
 		"underscore": "~1.4",
 		"mongoose": "~3.2",
 		"pdfkit": "~0.1"
+	},
+	"scripts": {
+		"start": "cake run"
 	}
 }

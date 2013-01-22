@@ -10,10 +10,6 @@ core = require "./core"
 pdfExport = require "./pdfExport"
 fs = require "fs"
 
-cp = spawn "cake", ["build"]
-await cp.on "exit", defer code
-return console.log "Build failed with code #{code}! Run 'cake build' to display build errors." if code isnt 0
-
 expressServer = express()
 expressServer.configure ->
 
@@ -26,7 +22,7 @@ expressServer.configure ->
 
 expressServer.get "/registrationCard", (req, res, next) ->
 	socket = io.sockets.clients()._find((x) -> x.sid is req.query.sid)
-	res.send 404, "Unrecognized sid." unless socket?
+	return res.send 404, "Invalid sid. This could happen if you tried to refresh the page." unless socket?
 	db.Misc.findOne desc: "Semester Details", (err, semester) ->
 		return res.send 404, "Registrations not open yet." unless semester?
 		db.Student.findById socket.student_id, (err, student) ->
@@ -36,15 +32,23 @@ expressServer.get "/registrationCard", (req, res, next) ->
 					studentId: student.get "studentId"
 					studentName: student.get "name"
 					semesterTitle: semester.get "title"
+					registeredDate: student.get "registeredOn"
 					courses: student.get("selectedcourses")._map (selcourse) ->
 						compcode: selcourse.compcode
 						number: courses._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.number
 						name: courses._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.name
 						lecture: selcourse.selectedLectureSection
 						lab: selcourse.selectedLabSection
+						type:
+							if student.get("bc")?.indexOf(selcourse.compcode) >= 0
+								"BC"
+							else if student.get("psc")?.indexOf(selcourse.compcode) >= 0
+								"PSC"
+							else
+								"EL"
 				pdfExport.generateRC data, ->
-					res.sendfile "lib/rc_#{student.get "studentId"}.pdf", ->
-						fs.unlink "lib/rc_#{student.get "studentId"}.pdf"
+					res.sendfile "pdfGen/rc_#{student.get "studentId"}.pdf", ->
+						fs.unlink "pdfGen/rc_#{student.get "studentId"}.pdf"
 						delete socket.sid
 
 server = http.createServer expressServer
@@ -192,6 +196,8 @@ io.sockets.on "connection", (socket) ->
 				return callback success: false, invalidRegistration: true if result.isFull?
 		student.set "registered", true
 		student.markModified "registered"
+		student.set "registeredOn", new Date()
+		student.markModified "registeredOn"
 		student.save ->
 			callback success: true
 		ipc?.emit "broadcast", "studentStatusChanged", [socket.student_id, "registered", true]

@@ -64,7 +64,7 @@ class CoursesViewModel
 			return [] if @electiveQuery() is ""
 			els = _(@allEl()).filter (x) =>
 				return false if x.selected()
-				return true if x.compcode.toLowerCase().indexOf(@electiveQuery().toLowerCase()) >= 0
+				return true if x.compcode.toString().toLowerCase().indexOf(@electiveQuery().toLowerCase()) >= 0
 				return true if x.number.toLowerCase().indexOf(@electiveQuery().toLowerCase()) >= 0
 				return true if x.name.toLowerCase().indexOf(@electiveQuery().toLowerCase()) >= 0
 				false
