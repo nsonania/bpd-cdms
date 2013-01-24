@@ -276,4 +276,4 @@ server.listen (port = process.env.PORT ? 5000), -> console.log "worker #{process
 
 setInterval ->
 	db.Misc.findOneAndUpdate desc: "Stats", {currentStudents: io.sockets.clients()_filter((x) -> x.student_id?).length}, {upsert: true}, (err) ->
-, 5000
+, 1000
