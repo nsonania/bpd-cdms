@@ -538,7 +538,7 @@ class StatsViewModel
 					@currentDifficultTimetable currentDifficultTimetable ? "--"
 					@currentValidators currentValidators ? "--"
 			rec()
-			setInterval rec, 5000
+			setInterval rec, 1000
 
 class BodyViewModel
 	constructor: ->
