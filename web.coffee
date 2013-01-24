@@ -275,5 +275,5 @@ ipc.on "connect", ->
 server.listen (port = process.env.PORT ? 5000), -> console.log "worker #{process.pid}: Listening on port #{port}"
 
 setInterval ->
-	db.Misc.findOneAndUpdate desc: "Stats", {currentStudents: io.sockets.clients().length}, {upsert: true}, (err) ->
+	db.Misc.findOneAndUpdate desc: "Stats", {currentStudents: io.sockets.clients()_filter((x) -> x.student_id?).length}, {upsert: true}, (err) ->
 , 5000
