@@ -3,7 +3,7 @@ bpd-cdms
 
 BPD — Centralized Data Management System.
 
-pubsub
-------
+ipchost
+-------
 
-This branch deals with the __pubsub__ module.
+This branch deals with synchronizing notifications between the portals.
