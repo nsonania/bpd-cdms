@@ -32,7 +32,7 @@ class StudentViewModel
 	selectStudent: =>
 		viewmodel.studentsViewModel().currentStudent @
 	validate: =>
-		socket.emit "validate", @_id, (success) =>
+		socket.emit "validate", @_id(), (success) =>
 			@validated true if success
 
 class StudentsViewModel
