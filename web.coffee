@@ -72,5 +72,5 @@ ipc.on "connect", ->
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
 
 setInterval ->
-	db.Misc.findAndUpdate desc: "Stats", {currentValidators: io.sockets.clients().length}, {upsert: true}
+	db.Misc.findOneAndUpdate desc: "Stats", {currentValidators: io.sockets.clients().length}, {upsert: true}, (err) ->
 , 5000
