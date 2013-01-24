@@ -7,10 +7,6 @@ md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
 
-cp = spawn "cake", ["build"]
-await cp.on "exit", defer code
-return console.log "Build failed! Run 'cake build' to display build errors." if code isnt 0
-
 expressServer = express()
 expressServer.configure ->
 
