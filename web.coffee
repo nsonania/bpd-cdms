@@ -22,13 +22,22 @@ expressServer.configure ->
 	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 	expressServer.use expressServer.router
 
-expressServer.get "/students_selections.csv", (req, res, next) ->
-	core.exportStudentsSelections "lib/students_selections.csv", (body) ->
+expressServer.get "/students.csv", (req, res, next) ->
+	core.exportStudentsSelections req.query.cat, (body) ->
 		res.setHeader "Content-Type", "text/csv"
 		res.setHeader "Content-Length", body.length
-		res.setHeader "Content-Disposition", "attachment;filename=students_selections.csv"
+		res.setHeader "Content-Disposition", "attachment;filename=students.csv"
 		res.setHeader "Cache-Control", "no-cache"
 		res.end body
+
+expressServer.get "/course.csv", (req, res, next) ->
+	core.exportCourse req.query.compcode, (body) ->
+		res.setHeader "Content-Type", "text/csv"
+		res.setHeader "Content-Length", body.length
+		res.setHeader "Content-Disposition", "attachment;filename=course.csv"
+		res.setHeader "Cache-Control", "no-cache"
+		res.end body
+
 server = http.createServer expressServer
 
 io = socket_io.listen server
@@ -123,6 +132,11 @@ io.sockets.on "connection", (socket) ->
 		console.log "Committing Semester"
 		core.commitSemester semester, callback
 		ipc?.emit "broadcast", "updatedSemester"
+
+	socket.on "getStats", (callback) ->
+		return callback false unless socket.auth?
+		console.log "Fetching Stats"
+		core.getStats callback
 
 	socket.on "logout", (callback) ->
 		console.log "Logout"

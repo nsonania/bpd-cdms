@@ -118,6 +118,8 @@ class CourseViewModel
 	addLabSection: =>
 		@labSections.push section = new SectionViewModel()
 		section.editSection()
+	exportCSV: =>
+		window.open "course.csv?compcode=#{@compcode()}"
 	toData: =>
 		compcode: @compcode()
 		number: @number()
@@ -256,7 +258,6 @@ class StudentViewModel
 		@el = ko.observableArray el ? []
 		@reqEl = ko.observable reqEl ? 0
 		@selectedcourses = ko.observableArray (new SelectedCourseViewModel sc for sc in selectedcourses ? [])
-		@visible = ko.observable true
 		@courses = ko.computed =>
 			for course in viewmodel.coursesViewModel().courses()
 				course: course
@@ -337,6 +338,7 @@ class StudentViewModel
 		_(@selectedcourses()).find((x) -> x.compcode() is $course.course.compcode()).selectedLabSection $section.number()
 	toggleRegistered: =>
 		@registered not @registered()
+		@difficultTimetable false
 	toggleValidated: =>
 		@validated not @validated()
 	toggleDifficultTimetable: =>
@@ -352,6 +354,7 @@ class StudentViewModel
 		registered: @registered()
 		validated: @validated()
 		validatedBy: @validatedBy()
+		difficultTimetable: @difficultTimetable()
 		bc: @bc() if @bc().length > 0
 		psc: @psc() if @psc().length > 0
 		el: @el() if @el().length > 0
@@ -362,16 +365,24 @@ class StudentsViewModel
 	constructor: ({students}) ->
 		@students = ko.observableArray (new StudentViewModel student for student in students)
 		@sort = ko.observable "studentId"
-		@filteredStudents = ko.computed => _.chain(@students()).filter((x) -> x.visible()).sortBy((x) => x[@sort()]()).value()
+		@filterCategory = ko.observable 0
+		@query = ko.observable ""
+		@filteredStudents = ko.computed =>
+			query = @query().toLowerCase()
+			cat = 
+				switch @filterCategory()
+					when 0 then @students()
+					when 1 then _(@students()).filter (x) => not x.registered()
+					when 2 then _(@students()).filter (x) => x.registered() and not x.validated()
+					when 3 then _(@students()).filter (x) => x.validated()
+					when 4 then _(@students()).filter (x) => x.difficultTimetable()
+			cat = _(cat).filter (student) =>
+				if student.studentId().toLowerCase().indexOf(query) >= 0
+					true
+				else if student.name().toLowerCase().indexOf(query) >= 0
+					true
+			_(cat).sortBy (x) => x[@sort()]()
 		@currentStudent = ko.observable @filteredStudents()[0]
-	filter: =>
-		query = $(arguments[1].currentTarget).val().toLowerCase()
-		for student in @students()
-			student.visible false
-			if student.studentId().toLowerCase().indexOf(query) >= 0
-				student.visible true
-			if student.name().toLowerCase().indexOf(query) >= 0
-				student.visible true
 	newStudent: =>
 		@students.push student = new StudentViewModel newPassword: (np = md5(Date())[0...8]), password: md5 np
 		student.selectStudent()
@@ -391,8 +402,10 @@ class StudentsViewModel
 						alert "Parsing Error. Please recheck .csv file for errors."
 			fs.readAsText $fup[0].files[0]
 		$fup.trigger "click"
+	filterCat: (cat) => =>
+		@filterCategory cat
 	exportCSV: =>
-		window.open "students_selections.csv"
+		window.open "students.csv?cat=#{@filterCategory()}"
 	sortStudentId: =>
 		@sort "studentId"
 	sortName: =>
@@ -505,11 +518,34 @@ class SemesterViewModel
 		title: @title()
 		startTime: moment(@startTime(), "DD/MM/YYYY HH:mm").toDate()
 
+class StatsViewModel
+	constructor: ->
+		@currentStudents = ko.observable "--"
+		@currentNotRegistered = ko.observable "--"
+		@currentNotValidated = ko.observable "--"
+		@currentValidated = ko.observable "--"
+		@currentDifficultTimetable = ko.observable "--"
+		@currentValidators = ko.observable "--"
+	fetchStats: =>
+			viewmodel.pleaseWaitStatus "Fetching Stats..."
+			rec = =>
+				socket.emit "getStats", ({currentStudents, currentNotRegistered, currentNotValidated, currentValidated, currentDifficultTimetable, currentValidators}) =>
+					viewmodel.pleaseWaitStatus undefined
+					@currentStudents currentStudents ? "--"
+					@currentNotRegistered currentNotRegistered ? "--"
+					@currentNotValidated currentNotValidated ? "--"
+					@currentValidated currentValidated ? "--"
+					@currentDifficultTimetable currentDifficultTimetable ? "--"
+					@currentValidators currentValidators ? "--"
+			rec()
+			setInterval rec, 5000
+
 class BodyViewModel
 	constructor: ->
 		@coursesViewModel = ko.observable undefined
 		@studentsViewModel = ko.observable undefined
 		@validatorsViewModel = ko.observable undefined
+		@statsViewModel = new StatsViewModel()
 		@pleaseWaitStatus = ko.observable undefined
 		@pleaseWaitVisible = ko.computed => @pleaseWaitStatus()?
 		@activeView = ko.observable undefined
@@ -547,6 +583,9 @@ class BodyViewModel
 		@activeView "homeView"
 		@semester.fetchSemester()
 		$('input[rel=datetime]').datetimepicker()
+	gotoStats: =>
+		@activeView "statsView"
+		@statsViewModel.fetchStats()
 	login: =>
 		@loginAlertStatus undefined
 		accessCode = $("#input-accesscode").val()

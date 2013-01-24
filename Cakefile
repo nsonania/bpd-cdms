@@ -27,8 +27,12 @@ task "build", "build 'src/' to 'lib/'", ->
 		console.log if result then "Task completed" else "Task failed"
 		process.exit if result then 0 else 1
 
-task "run", "run 'iced web.coffee'", ->
-	spawnProcess "iced", ["web.coffee"]
+task "run", "build and run 'iced web.coffee'", ->
+	build (result) ->
+		console.log "Task failed" unless result
+		process.exit 1 unless result
+		spawnProcess "iced", ["web.coffee"], true, (result) ->
+			process.exit if result then 0 else 1
 
 task "debug", "run 'iced --nodejs --debug-brk web.coffee", ->
 	spawnProcess "foreman", ["start", "-f", "debug"]

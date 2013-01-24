@@ -11,7 +11,7 @@
 	background-color white
 	z-index 2
 
-	@media (min-width: 1200px)
+	@media (min-width: 1200px) and (min-height: 768px)
 		display none
 
 #pleaseWaitBox
@@ -24,7 +24,7 @@
 	z-index 2
 
 #compatible-size
-	@media (max-width: 1199px)
+	@media (max-width: 1199px) or (max-height: 767px)
 		display none
 
 #courselist, #studentlist, #validatorlist
@@ -221,5 +221,35 @@ table.table
 .btn.btn-narrow
 	padding 4px 6px
 
+.carret
+	display inline-block
+	margin-top 8px
+	width 0
+	height 0
+	vertical-align top
+	border-top 4px solid #000
+	border-right 4px solid transparent
+	border-left 4px solid transparent
+	content ""
+
+.btn-info
+	.carret
+		border-top 4px solid #fff
+
 input[readOnly]
 	cursor default
+
+.stat-box
+	border solid 1px #CCC
+	border-radius 4px
+	padding 8px
+	p
+		text-align left
+	div
+		line-height 1
+		text-align center
+		font-size 60px
+
+.commitBar
+	button
+		margin-bottom 10px

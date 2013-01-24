@@ -181,12 +181,62 @@ exports.commitSemester = (semester, callback) ->
 		await obj.save defer er, robj
 		callback true
 
-exports.exportStudentsSelections = (file, callback) ->
-	str = ""
-	db.Student.find validated: true, (err, students) ->
+exports.exportStudentsSelections = (cat, callback) ->
+	cats = ["All Students", "Not Registered", "Not Validated", "Validated", "Difficult Timetable"]
+	str = "Students, #{cats[cat]}\n"
+	query =
+		switch Number cat
+			when 0 then {}
+			when 1 then registered: $ne: true
+			when 2 then registered: true, validated: $ne: true
+			when 3 then validated: true
+			when 4 then difficultTimetable: true
+	db.Student.find query, (err, students) ->
+		students = students._sortBy (x) -> x.get "studentId"
 		str += "Student Id, Comp. Code, Lecture Section, Lab Section\n"
 		for student in students
 			str += student.get("studentId") + "\n"
 			for course in student.get "selectedcourses"
 				str += "," + course.compcode + "," + (if course.selectedLectureSection? then course.selectedLectureSection else "") + "," + (if course.selectedLabSection? then course.selectedLabSection else "") + "\n"
 		callback str
+
+exports.exportCourse = (compcode, callback) ->
+	db.Course.findOne titles: $elemMatch: compcode: Number compcode, (err, course) ->
+		db.Student.find validated: true, selectedcourses: $elemMatch: compcode: $in: course.get("titles").map((x) -> Number x.compcode), (err, students) ->
+			return callback false unless course?
+			str = "By Course\n"
+			for title in course.get "titles"
+				str += "Compcode: #{compcode}, Course No: #{title.number}, Course Name: #{title.name}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any (y) -> y.compcode is title.compcode).length}\n"
+				str += "Student Id, Student Name\n"
+				for student in students._filter((x) -> x.get("selectedcourses")._any (y) -> y.compcode is title.compcode)
+					str += "#{student.get "studentId"}, #{student.get "name"}\n"
+				str += "\n"
+			str += "\n"
+			str += "By Section\n"
+			for section in course.get("lectureSections") ? []
+				str += "Lecture Section: #{section.number}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any (y) -> y.selectedLectureSection is section.number).length}\n"
+				str += "Student Id, Student Name\n"
+				for student in students._filter((x) -> x.get("selectedcourses")._any (y) -> y.selectedLectureSection is section.number)
+					str += "#{student.get "studentId"}, #{student.get "name"}\n"
+				str += "\n"
+			for section in course.get("labSections") ? []
+				str += "Lecture Section: #{section.number}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any (y) -> y.selectedLabSection is section.number).length}\n"
+				str += "Student Id, Student Name\n"
+				for student in students._filter((x) -> x.get("selectedcourses")._any (y) -> y.selectedLabSection is section.number)
+					str += "#{student.get "studentId"}, #{student.get "name"}\n"
+				str += "\n"
+			callback str
+
+exports.getStats = (callback) ->
+	await db.Misc.findOne desc: "Stats", defer err, stats
+	await db.Student.count registered: $ne: true, defer err, notRegistered
+	await db.Student.count registered: true, validated: $ne: true, defer err, notValidated
+	await db.Student.count validated: true, defer err, validated
+	await db.Student.count difficultTimetable: true, defer err, difficultTimetable
+	callback
+		currentStudents: stats?.get "currentStudents"
+		currentNotRegistered: notRegistered
+		currentNotValidated: notValidated
+		currentValidated: validated
+		currentDifficultTimetable: difficultTimetable
+		currentValidators: stats?.get "currentValidators"

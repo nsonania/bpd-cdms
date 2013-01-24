@@ -24,10 +24,11 @@
 				<div class="container">
 					<a class="brand" href="#" data-bind="click: gotoHome">BPDC - Registration System</a>
 					<ul class="nav">
-						<li data-bind="visible: authenticated, click: gotoHome, css: {active: activeView() == 'homeView'}"><a href="#">Semester</a></li>
+						<li data-bind="visible: authenticated, click: gotoHome, css: {active: activeView() == 'homeView'}"><a href="#">Home</a></li>
 						<li data-bind="visible: authenticated, click: gotoCourses, css: {active: activeView() == 'coursesView'}"><a href="#">Courses</a></li>
 						<li data-bind="visible: authenticated, click: gotoStudents, css: {active: activeView() == 'studentsView'}"><a href="#">Students</a></li>
 						<li data-bind="visible: authenticated, click: gotoValidators, css: {active: activeView() == 'validatorsView'}"><a href="#">Validators</a></li>
+						<li data-bind="visible: authenticated, click: gotoStats, css: {active: activeView() == 'statsView'}"><a href="#">Stats</a></li>
 					</ul>
 					<ul class="nav pull-right">
 						<li data-bind="visible: authenticated, click: logout"><a href="#">Logout</a></li>
@@ -37,7 +38,7 @@
 		</div>
 		<div id="incompatible-size">
 			<br><br><br><br><br>
-			<p class="lead tcenter">1200px minimum width required.</p>
+			<p class="lead tcenter">1200px minimum width and 768px minimum height required.</p>
 		</div>
 		<div id="pleaseWaitBox" data-bind="visible: pleaseWaitVisible">
 			<br><br><br><br><br>
@@ -196,6 +197,7 @@
 								<div class="navbar-inner">
 									<div class="brand">Course Information</div>
 									<div class="btn-group pull-right">
+										<button class="btn" data-bind="click: exportCSV" title="Export Enrolled Students as .csv" rel="tooltip"><i class="icon-download-alt"></i></button>
 										<button class="btn" data-bind="click: deleteCourse" title="Remove Course" rel="tooltip"><i class="icon-trash"></i></button>
 									</div>
 								</div>
@@ -321,16 +323,23 @@
 								<div class="brand">Students</div>
 								<ul class="nav pull-right">
 									<li class="navbar-form">
-										<div class="input-prepend">
-											<span class="add-on"><i class="icon-search"></i></span>
-											<input type="text" data-bind="event: {keyup: filter}" placeholder="Search">
+										<div class="input-prepend btn-group">
+											<button class="btn dropdown-toggle btn-narrow" data-bind="css: {'btn-info': filterCategory() > 0}" data-toggle="dropdown" title="Filter Students" rel="tooltip"><i class="icon-search" data-bind="css: {'icon-white': filterCategory() > 0}"></i><span class="carret"></span></button>
+											<input type="text" data-bind="value: query, valueUpdate: 'afterkeydown'" placeholder="Search">
+											<ul class="dropdown-menu">
+												<li data-bind="css: {active: filterCategory() == 0}, click: filterCat(0)"><a href="#">All Students</a></li>
+												<li data-bind="css: {active: filterCategory() == 1}, click: filterCat(1)"><a href="#">Not Registered</a></li>
+												<li data-bind="css: {active: filterCategory() == 2}, click: filterCat(2)"><a href="#">Not Validated</a></li>
+												<li data-bind="css: {active: filterCategory() == 3}, click: filterCat(3)"><a href="#">Validated</a></li>
+												<li data-bind="css: {active: filterCategory() == 4}, click: filterCat(4)"><a href="#">Difficult Timetable</a></li>
+											</ul>
 										</div>
 									</li>
 									<li class="divider-vertical"></li>
 									<li class="btn-group">
 										<button class="btn" data-bind="click: newStudent" title="Add Student" rel="tooltip"><i class="icon-plus"></i></button>
 										<button class="btn" data-bind="click: selectFile" title="Import from .csv" rel="tooltip"><i class="icon-file"></i></button>
-										<button class="btn" data-bind="click: exportCSV" title="Export Validated Students as .csv" rel="tooltip"><i class="icon-download-alt"></i></button>
+										<button class="btn" data-bind="click: exportCSV" title="Export Students as .csv" rel="tooltip"><i class="icon-download-alt"></i></button>
 										<button class="btn" data-bind="click: deleteAll" title="Delete All Students" rel="tooltip"><i class="icon-trash"></i></button>
 									</li>
 								</ul>
@@ -405,7 +414,7 @@
 										<div class="brand">Courses</div>
 										<div class="navbar-form pull-right">
 											<div class="input-prepend btn-group">
-												<button class="btn dropdown-toggle btn-narrow" data-toggle="dropdown" title="Filter Courses" rel="tooltip"><i class="icon-search"></i><span class="caret"></span></button>
+												<button class="btn dropdown-toggle btn-narrow" data-bind="css: {'btn-info': filterCategory() > 0}" data-toggle="dropdown" title="Filter Courses" rel="tooltip"><i class="icon-search" data-bind="css: {'icon-white': filterCategory() > 0}"></i><span class="caret"></span></button>
 												<input type="text" data-bind="value: query, valueUpdate: 'afterkeydown'" placeholder="Search">
 												<ul class="dropdown-menu">
 													<li data-bind="css: {active: filterCategory() == 0}, click: filterCat0"><a href="#">All Courses</a></li>
@@ -548,6 +557,53 @@
 							</tr>
 						</tbody>
 					</table>
+				</div>
+			</div>
+			<div id="stats-container" data-bind="with: statsViewModel, visible: activeView() == 'statsView' && authenticated()" class="container">
+				<div class="hero-unit">
+					<h1>Stats</h1>
+					<p>View current statistics. Updates every 5 seconds.</p>
+				</div>
+				<div class="row">
+					<div class="span3">
+						<div class="stat-box">
+							<p>Logged in Students</p>
+							<div data-bind="text: currentStudents">8888</div>
+						</div>
+					</div>
+					<div class="span3">
+						<div class="stat-box">
+							<p>Unregistered Students</p>
+							<div data-bind="text: currentNotRegistered">8888</div>
+						</div>
+					</div>
+					<div class="span3">
+						<div class="stat-box">
+							<p>Unvalidated Students</p>
+							<div data-bind="text: currentNotValidated">8888</div>
+						</div>
+					</div>
+					<div class="span3">
+						<div class="stat-box">
+							<p>Validated Students</p>
+							<div data-bind="text: currentValidated">8888</div>
+						</div>
+					</div>
+				</div>
+				<br>
+				<div class="row">
+					<div class="span3">
+						<div class="stat-box">
+							<p>Difficult Timetable Students</p>
+							<div data-bind="text: currentDifficultTimetable">8888</div>
+						</div>
+					</div>
+					<div class="span3">
+						<div class="stat-box">
+							<p>Logged in Validators</p>
+							<div data-bind="text: currentValidators">8888</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
