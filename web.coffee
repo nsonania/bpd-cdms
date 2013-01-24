@@ -73,4 +73,4 @@ server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on por
 
 setInterval ->
 	db.Misc.findOneAndUpdate desc: "Stats", {currentValidators: io.sockets.clients()_filter((x) -> x.auth).length}, {upsert: true}, (err) ->
-, 5000
+, 1000
