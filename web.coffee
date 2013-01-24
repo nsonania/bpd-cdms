@@ -273,3 +273,7 @@ ipc.on "connect", ->
 					socket.emit "statusChanged", what
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "worker #{process.pid}: Listening on port #{port}"
+
+setInterval ->
+	db.Misc.findAndUpdate desc: "Stats", {currentStudents: io.sockets.clients().length}, {upsert: true}
+, 5000
