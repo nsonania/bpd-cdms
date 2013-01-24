@@ -70,3 +70,7 @@ ipc.on "connect", ->
 			io.sockets.emit "studentStatusChanged", data...
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
+
+setInterval ->
+	db.Misc.findAndUpdate desc: "Stats", {currentValidators: io.sockets.clients().length}, {upsert: true}
+, 5000
