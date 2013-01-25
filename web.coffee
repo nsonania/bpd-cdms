@@ -1,3 +1,6 @@
+# BPD-CDMS
+# Author: Gautham Badhrinathan - b.gautham@gmail.com, fb.com/GotEmB
+
 envimport = require "./envimport"
 express = require "express"
 http = require "http"

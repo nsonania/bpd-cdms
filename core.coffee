@@ -1,4 +1,5 @@
-startTime = Date.now()
+# BPD-CDMS
+# Author: Gautham Badhrinathan - b.gautham@gmail.com, fb.com/GotEmB
 
 md5 = require "MD5"
 db = require "./db"
