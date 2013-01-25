@@ -88,7 +88,7 @@ exports.deleteAllCourses = (callback) ->
 		callback true
 
 exports.commitStudents = (new_students, callback) ->
-	db.Student.find {}, (err, oldStudents) ->
+	db.Student.find _id: $in: new_students._map((x) -> db.toObjectId x._id), (err, oldStudents) ->
 		for student in oldStudents
 			await student.remove defer err, robj
 			await student.save defer err, robj

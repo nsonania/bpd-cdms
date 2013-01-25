@@ -284,6 +284,17 @@ class StudentViewModel
 					true
 				else if course.name().toLowerCase().indexOf(query) >= 0
 					true
+		@modified = ko.observable false
+		@studentId.subscribe -> @modified true
+		@name.subscribe -> @modified true
+		@password.subscribe -> @modified true
+		@registered.subscribe -> @modified true
+		@validated.subscribe -> @modified true
+		@bc.subscribe -> @modified true
+		@psc.subscribe -> @modified true
+		@el.subscribe -> @modified true
+		@reqEl.subscribe -> @modified true
+		@selectedcourses.subscribe -> @modified true
 	selectStudent: =>
 		viewmodel.studentsViewModel().currentStudent @
 		$('button.vbn').tooltip "destroy"
@@ -427,7 +438,7 @@ class StudentsViewModel
 			viewmodel.pleaseWaitStatus undefined
 			@fetchStudents()
 	toData: =>
-		student.toData() for student in @students()
+		student.toData() for student in @students() when student.modified()
 
 class ValidatorViewModel
 	constructor: ({username, newPassword, password, _id}) ->
