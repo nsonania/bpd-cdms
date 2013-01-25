@@ -1,6 +1,5 @@
-###
-This file deals with declaring the Schema and provide direct access to Mongoose collections for the MongoDB database.
-###
+# BPD-CDMS
+# Author: Gautham Badhrinathan - b.gautham@gmail.com, fb.com/GotEmB
 
 mongoose = {Schema} = require "mongoose"
 
