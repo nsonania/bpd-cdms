@@ -432,19 +432,19 @@
 												<td data-bind="text: course.number"></td>
 												<td>
 													<div class="btn-group">
-														<button class="btn btn-small" data-bind="css: {'btn-info': bc}, click: $parent.toggleBc">BC</button>
-														<button class="btn btn-small" data-bind="css: {'btn-info': psc}, click: $parent.togglePsc">PSC</button>
-														<button class="btn btn-small" data-bind="css: {'btn-info': el}, click: $parent.toggleEl">EL</button>
+														<button class="btn btn-small" data-bind="css: {'btn-info': bc}, click: $parent.toggleBc, disable: $parent.registered">BC</button>
+														<button class="btn btn-small" data-bind="css: {'btn-info': psc}, click: $parent.togglePsc, disable: $parent.registered">PSC</button>
+														<button class="btn btn-small" data-bind="css: {'btn-info': el}, click: $parent.toggleEl, disable: $parent.registered">EL</button>
 													</div>
-													<button class="btn btn-small" data-bind="css: {'btn-info': selected}, click: $parent.toggleSelected">Selected</button>
+													<button class="btn btn-small" data-bind="css: {'btn-info': selected}, click: $parent.toggleSelected, disable: $parent.registered">Selected</button>
 													<div class="btn-group" data-bind="visible: selected && course.lectureSections().length > 0">
-														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lecture Section' + (typeof selectedLectureSection !== 'undefined' && selectedLectureSection !== null ? ': ' + selectedLectureSection : '')"></button>
+														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lecture Section' + (typeof selectedLectureSection !== 'undefined' && selectedLectureSection !== null ? ': ' + selectedLectureSection : ''), disable: $parent.registered"></button>
 														<ul class="dropdown-menu" data-bind="foreach: course.lectureSections">
 															<li data-bind="css: {active: $parent.selectedLectureSection == number()}, click: $parents[1].selectLectureSection.bind($data, $parents)"><a href="#" data-bind="text: number() + ': ' + instructor()"></a></li>
 														</ul>
 													</div>
 													<div class="btn-group" data-bind="visible: selected && course.labSections().length > 0">
-														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lab Section' + (typeof selectedLabSection !== 'undefined' && selectedLabSection !== null ? ': ' + selectedLabSection : '')"></button>
+														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lab Section' + (typeof selectedLabSection !== 'undefined' && selectedLabSection !== null ? ': ' + selectedLabSection : ''), disable: $parent.registered"></button>
 														<ul class="dropdown-menu" data-bind="foreach: course.labSections">
 															<li data-bind="css: {active: $parent.selectedLabSection == number()}, click: $parents[1].selectLabSection.bind($data, $parents)"><a href="#" data-bind="text: number() + ': ' + instructor()"></a></li>
 														</ul>

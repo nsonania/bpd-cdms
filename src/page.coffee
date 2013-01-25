@@ -246,7 +246,7 @@ class StudentViewModel
 		@validatedBy = ko.observable validatedBy ? undefined
 		@validatedByNI = ko.computed =>
 			if @validated()
-				if @validatedBy()? and (vuser = _(viewmodel.validatorsViewModel()).find((x) -> x._id is @validatedBy()).username())?
+				if @validatedBy()? and (vuser = _(viewmodel.validatorsViewModel().validators()).find((x) => x._id() is @validatedBy())?.username())?
 					"Validated by #{vuser}"
 				else
 					"Validated"
