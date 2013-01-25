@@ -285,16 +285,16 @@ class StudentViewModel
 				else if course.name().toLowerCase().indexOf(query) >= 0
 					true
 		@modified = ko.observable false
-		@studentId.subscribe -> @modified true
-		@name.subscribe -> @modified true
-		@password.subscribe -> @modified true
-		@registered.subscribe -> @modified true
-		@validated.subscribe -> @modified true
-		@bc.subscribe -> @modified true
-		@psc.subscribe -> @modified true
-		@el.subscribe -> @modified true
-		@reqEl.subscribe -> @modified true
-		@selectedcourses.subscribe -> @modified true
+		@studentId.subscribe => @modified true
+		@name.subscribe => @modified true
+		@password.subscribe => @modified true
+		@registered.subscribe => @modified true
+		@validated.subscribe => @modified true
+		@bc.subscribe => @modified true
+		@psc.subscribe => @modified true
+		@el.subscribe => @modified true
+		@reqEl.subscribe => @modified true
+		@selectedcourses.subscribe => @modified true
 	selectStudent: =>
 		viewmodel.studentsViewModel().currentStudent @
 		$('button.vbn').tooltip "destroy"
