@@ -1,3 +1,6 @@
+# BPD-CDMS
+# Author: Gautham Badhrinathan - b.gautham@gmail.com, fb.com/GotEmB
+
 envimport = require "./envimport"
 http = require "http"
 socket_io = require "socket.io"

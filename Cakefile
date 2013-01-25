@@ -1,3 +1,6 @@
+# BPD-CDMS
+# Author: Gautham Badhrinathan - b.gautham@gmail.com, fb.com/GotEmB
+
 {spawn} = require "child_process"
 
 spawnProcess = (prc, args, verbose = true, callback) ->
