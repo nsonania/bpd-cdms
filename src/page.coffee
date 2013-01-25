@@ -246,8 +246,8 @@ class StudentViewModel
 		@validatedBy = ko.observable validatedBy ? undefined
 		@validatedByNI = ko.computed =>
 			if @validated()
-				if @validatedBy()?
-					"Validated by #{@validatedBy()}"
+				if @validatedBy()? and (vuser = _(viewmodel.validatorsViewModel()).find((x) -> x._id is @validatedBy()).username())?
+					"Validated by #{vuser}"
 				else
 					"Validated"
 			else
@@ -563,14 +563,17 @@ class BodyViewModel
 	gotoStudents: =>
 		viewmodel.pleaseWaitStatus "Fetching Courses..."
 		socket.emit "getCourses", (courses) ->
-			viewmodel.pleaseWaitStatus "Fetching Students..."
+			viewmodel.pleaseWaitStatus "Fetching Validators..."
 			viewmodel.coursesViewModel new CoursesViewModel courses: courses
-			socket.emit "getStudents", (students) ->
-				viewmodel.pleaseWaitStatus undefined
-				viewmodel.studentsViewModel new StudentsViewModel students: students
-				viewmodel.activeView "studentsView"
-				$("#studentheader, #studentdetails").affix offset: top: 290
-				$('button[rel=tooltip]').tooltip()
+			socket.emit "getValidators", (validators) ->
+				viewmodel.pleaseWaitStatus "Fetching Students..."
+				viewmodel.validatorsViewModel new ValidatorsViewModel validators: validators
+				socket.emit "getStudents", (students) ->
+					viewmodel.pleaseWaitStatus undefined
+					viewmodel.studentsViewModel new StudentsViewModel students: students
+					viewmodel.activeView "studentsView"
+					$("#studentheader, #studentdetails").affix offset: top: 290
+					$('button[rel=tooltip]').tooltip()
 	gotoValidators: =>
 		viewmodel.pleaseWaitStatus "Fetching Validators..."
 		socket.emit "getValidators", (validators) ->
