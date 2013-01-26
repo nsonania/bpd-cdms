@@ -1,6 +1,3 @@
-# BPD-CDMS
-# Author: Gautham Badhrinathan - b.gautham@gmail.com, fb.com/GotEmB
-
 envimport = require "./envimport"
 express = require "express"
 http = require "http"
@@ -84,8 +81,7 @@ io.sockets.on "connection", (socket) ->
 		el = student.get("el") ? []
 		db.Course.find {titles: $elemMatch: compcode: $in: (student.get("bc") ? [])._union (student.get("psc") ? [])._union (student.get("el") ? [])}, (err, courses) ->
 			el =
-				for x in el
-					c = courses._find (y) -> y.get("titles")._any (z) -> z.compcode is x
+				for x in el when (c = courses._find (y) -> y.get("titles")._any (z) -> z.compcode is x)?
 					lecturesCapacity = if c.get("hasLectureSections")? then (c.get("lectureSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
 					labsCapacity = if c.get("hasLabSections")? then (c.get("labSections") ? [])._reduce ((sum, y) -> sum + y.capacity), 0
 					totalCapacity = Math.max lecturesCapacity, labsCapacity
