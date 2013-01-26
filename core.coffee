@@ -74,8 +74,9 @@ exports.importCourses = (data, callback) ->
 					course.set "hasLabSections", true
 					course.set "labSections", labSections
 				await course.save defer err, robj
-			console.log "Import Courses Done."
-			callback true
+			db.Course.findAndRemove compcode: $in: ["", null], ->
+				console.log "Import Courses Done."
+				callback true
 		catch error
 			console.log "Import Courses: Error Parsing CSV file."
 			callback false
@@ -120,8 +121,9 @@ exports.importStudents = (data, callback) ->
 						el: line[6].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[6]?
 						reqEl: Number line[7] ? 0
 					await student.save defer err, robj
-				console.log "Import Students Done."
-				callback true
+				db.Student.findAndRemove studentId: $in: ["", null], ->
+					console.log "Import Students Done."
+					callback true
 			catch error
 				console.log "Import Students: Error Parsing CSV file."
 				callback false
@@ -159,8 +161,9 @@ exports.importValidators = (data, callback) ->
 					username: line[0]
 					password: md5 line[1]
 				await validator.save defer err, robj
-			console.log "Import Validators Done."
-			callback true
+			db.Validator.findAndRemove username: $in: ["", null], ->
+				console.log "Import Validators Done."
+				callback true
 		catch error
 			console.log "Import Validators: Error Parsing CSV file."
 			callback false

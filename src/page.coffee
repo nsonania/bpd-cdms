@@ -58,9 +58,9 @@ class SectionViewModel
 
 class CourseViewModel
 	constructor: ({compcode, number, name, @lectureSections, @labSections, @otherDates}) ->
-		@compcode = ko.observable compcode ? null
-		@number = ko.observable number ? null
-		@name = ko.observable name ? null
+		@compcode = ko.observable compcode ? ""
+		@number = ko.observable number ? "null"
+		@name = ko.observable name ? "null"
 		@visible = ko.observable true
 		@sharedSections = ko.computed
 			read: =>
@@ -240,9 +240,9 @@ class SelectedCourseViewModel
 class StudentViewModel
 	constructor: ({studentId, name, newPassword, password, registered, validated, validatedBy, difficultTimetable, bc, psc, el, reqEl, selectedcourses, _id}) ->
 		@_id = ko.observable _id ? undefined
-		@studentId = ko.observable studentId ? undefined
-		@name = ko.observable name ? undefined
-		@password = ko.observable password ? undefined
+		@studentId = ko.observable studentId ? ""
+		@name = ko.observable name ? ""
+		@password = ko.observable password ? ""
 		@newPassword = ko.observable newPassword ? undefined
 		@registered = ko.observable registered ? undefined
 		@validated = ko.observable validated ? undefined
