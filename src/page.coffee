@@ -65,10 +65,10 @@ class CourseViewModel
 		@sharedSections = ko.computed
 			read: =>
 				return unless viewmodel.coursesViewModel()?
-				_.chain(viewmodel.coursesViewModel().courses()).filter((x) => x.lectureSections() is @lectureSections() and x.labSections() is @labSections() and x isnt @).map((x) => x.compcode()).sortBy((x) -> x).value().join ", "
+				_.chain(viewmodel.coursesViewModel().courses()).filter((x) => x.lectureSections? and x.lectureSections?() is @lectureSections?() and x.labSections? and x.labSections?() is @labSections?() and x isnt @).map((x) => x.compcode()).sortBy((x) -> x).value().join ", "
 			write: (value) =>
 				return unless viewmodel.coursesViewModel()?
-				oldS = _(viewmodel.coursesViewModel().courses()).filter (x) => x.lectureSections() is @lectureSections() and x.labSections() is @labSections()
+				oldS = _(viewmodel.coursesViewModel().courses()).filter (x) => x.lectureSections? and x.lectureSections?() is @lectureSections?() and x.labSections? and x.labSections?() is @labSections?()
 				newS = _.chain(value.split(/\ *[;,\/]\ */)).filter((x) -> x not in ["", null, undefined]).map((x) => _(viewmodel.coursesViewModel().courses()).find (y) => y.compcode() is Number x).union([@]).uniq().value()
 				addS = _(newS).difference oldS
 				remS = _(oldS).difference newS
