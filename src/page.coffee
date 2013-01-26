@@ -435,6 +435,7 @@ class StudentsViewModel
 		students = @toData()
 		socket.emit "commitStudents", students, (result) =>
 			viewmodel.pleaseWaitStatus undefined
+			@fetchStudents()
 	deleteAll: =>
 		viewmodel.pleaseWaitStatus "Deleting all Students..."
 		socket.emit "deleteAllStudents", (success) =>
