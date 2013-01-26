@@ -107,7 +107,7 @@ exports.importStudents = (data, callback) ->
 			try
 				for line in lines[5..]
 					_oic = undefined
-					for oc in oldStudents when (oc.get("studentId").toString() is line[0].toString())
+					for oc in oldStudents when (oc.get("studentId")?.toString() is line[0].toString())
 						_oic = oc.get("_id")
 						await db.Student.findOneAndRemove _id: _oic, defer err, robj
 					student = new db.Student
@@ -151,7 +151,7 @@ exports.importValidators = (data, callback) ->
 		try
 			for line in lines[5..]
 				_oic = undefined
-				for oc in oldValidators when (oc.get("username").toString() is line[0].toString())
+				for oc in oldValidators when (oc.get("username")?.toString() is line[0].toString())
 					_oic = oc.get("_id")
 					await db.Validator.findOneAndRemove _id: _oic, defer err, robj
 				validator = new db.Validator
