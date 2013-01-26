@@ -6,6 +6,16 @@ db = require "./db"
 fs = require "fs"
 uap = require "./uap"
 
+dumpError = (err) ->
+	if typeof err is "object"
+		console.log "\nMessage: " + err.message  if err.message
+		if err.stack
+			console.log "\nStacktrace:"
+			console.log "===================="
+			console.log err.stack
+		else
+			console.log "dumpError :: argument is not an object"
+
 exports.commitCourses = (new_courses, callback) ->
 	db.Course.find {}, (err, oldCourses) ->
 		for course in oldCourses
@@ -34,8 +44,8 @@ exports.importCourses = (data, callback) ->
 						await course.save defer err, robj
 					_oic = undefined
 					for ccode in line[0].split(/\ *[;,\/]\ */)._map((x) -> Number x)
-						for oc in oldCourses when (oc.get("titles")._any (x) -> x.compcode is ccode)
-							_oic = oc.get("_id")
+						for oc in oldCourses when (oc?.get("titles")._any (x) -> x.compcode is ccode)
+							_oic = oc?.get("_id")
 							await db.Course.findOneAndRemove _id: _oic, defer err, robj
 					course = new db.Course
 						_id: _oic
@@ -74,11 +84,12 @@ exports.importCourses = (data, callback) ->
 					course.set "hasLabSections", true
 					course.set "labSections", labSections
 				await course.save defer err, robj
-			db.Course.remove compcode: $in: ["", null], ->
+			db.Course.remove titles: $elemMatch: compcode: $in: ["", null], ->
 				console.log "Import Courses Done."
 				callback true
 		catch error
 			console.log "Import Courses: Error Parsing CSV file."
+			dumpError error
 			callback false
 
 exports.deleteAllCourses = (callback) ->
@@ -105,28 +116,29 @@ exports.importStudents = (data, callback) ->
 		db.Student.find {}, (err, oldStudents) ->
 			return console.log err if err?
 			lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(/,(?=(?:[^"\\]*(?:\\.|"(?:[^"\\]*\\.)*[^"\\]*"))*[^"]*$)/g)._map((y) -> y.replace /(^\")|(\"$)/g, "")._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
-			try
-				for line in lines[5..]
-					_oic = undefined
-					for oc in oldStudents when (oc.get("studentId")?.toString() is line[0].toString())
-						_oic = oc.get("_id")
-						await db.Student.findOneAndRemove _id: _oic, defer err, robj
-					student = new db.Student
-						_id: _oic
-						studentId: line[0]
-						name: line[1]
-						password: md5 line[3] if line[3]?
-						bc: line[4].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[4]?
-						psc: line[5].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[5]?
-						el: line[6].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[6]?
-						reqEl: Number line[7] ? 0
-					await student.save defer err, robj
-				db.Student.remove studentId: $in: ["", null], ->
-					console.log "Import Students Done."
-					callback true
-			catch error
-				console.log "Import Students: Error Parsing CSV file."
-				callback false
+			#try
+			for line in lines[5..]
+				_oic = undefined
+				for oc in oldStudents when (oc?.get("studentId")?.toString?() is line[0]?.toString())
+					_oic = oc?.get("_id")
+					await db.Student.findOneAndRemove _id: _oic, defer err, robj
+				student = new db.Student
+					_id: _oic
+					studentId: line[0]
+					name: line[1]
+					password: md5 line[3] if line[3]?
+					bc: line[4].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[4]?
+					psc: line[5].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[5]?
+					el: line[6].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[6]?
+					reqEl: Number line[7] ? 0
+				await student.save defer err, robj
+			db.Student.remove studentId: $in: ["", null], ->
+				console.log "Import Students Done."
+				callback true
+			#catch error
+			#	console.log "Import Students: Error Parsing CSV file."
+			#	dumpError error
+			#	callback false
 
 exports.deleteAllStudents = (callback) ->
 	db.Student.find {}, (err, students) ->
@@ -153,8 +165,8 @@ exports.importValidators = (data, callback) ->
 		try
 			for line in lines[5..]
 				_oic = undefined
-				for oc in oldValidators when (oc.get("username")?.toString() is line[0].toString())
-					_oic = oc.get("_id")
+				for oc in oldValidators when (oc?.get("username")?.toString?() is line[0]?.toString())
+					_oic = oc?.get("_id")
 					await db.Validator.findOneAndRemove _id: _oic, defer err, robj
 				validator = new db.Validator
 					_id: _oic
@@ -166,6 +178,7 @@ exports.importValidators = (data, callback) ->
 				callback true
 		catch error
 			console.log "Import Validators: Error Parsing CSV file."
+			dumpError error
 			callback false
 
 exports.deleteAllValidators = (callback) ->
