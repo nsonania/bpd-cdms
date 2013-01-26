@@ -74,7 +74,7 @@ exports.importCourses = (data, callback) ->
 					course.set "hasLabSections", true
 					course.set "labSections", labSections
 				await course.save defer err, robj
-			db.Course.findAndRemove compcode: $in: ["", null], ->
+			db.Course.remove compcode: $in: ["", null], ->
 				console.log "Import Courses Done."
 				callback true
 		catch error
@@ -121,7 +121,7 @@ exports.importStudents = (data, callback) ->
 						el: line[6].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[6]?
 						reqEl: Number line[7] ? 0
 					await student.save defer err, robj
-				db.Student.findAndRemove studentId: $in: ["", null], ->
+				db.Student.remove studentId: $in: ["", null], ->
 					console.log "Import Students Done."
 					callback true
 			catch error
@@ -161,7 +161,7 @@ exports.importValidators = (data, callback) ->
 					username: line[0]
 					password: md5 line[1]
 				await validator.save defer err, robj
-			db.Validator.findAndRemove username: $in: ["", null], ->
+			db.Validator.remove username: $in: ["", null], ->
 				console.log "Import Validators Done."
 				callback true
 		catch error
