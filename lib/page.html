@@ -150,7 +150,7 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="courses-selections well span10 offset1" data-bind="css: {disabled: !elEnabled()}">
+				<div class="courses-selections well span10 offset1" data-bind="visible: el().length > 0, css: {disabled: !elEnabled()}">
 					<p class="lead center">Electives / Overload Courses</p>
 					<table class="table table-hover">
 						<thead>
@@ -162,7 +162,7 @@
 							</tr>
 							<tr data-bind="if: el().length == 0">
 								<td class="placeholder" colspan="4">
-									No Courses Selected
+									No Courses Available
 								</td>
 							</tr>
 						</thead>
@@ -171,23 +171,10 @@
 								<td data-bind="text: compcode"></td>
 								<td data-bind="text: number"></td>
 								<td data-bind="text: name"></td>
-								<td><button class="btn" data-bind="click: toggleSelection, css: {'btn-success': selected}"><i data-bind="css: {'icon-ok icon-white': selected, 'icon-plus': !selected()}"></i></button></td>
+								<td><button class="btn" data-bind="click: toggleSelection, css: {'btn-success': selected}"><i data-bind="css: {'icon-ok icon-white': selected, 'icon-plus': !selected()}, enable: $parent.elsEnabled() || selected()"></i></button></td>
 							</tr>
 						</tbody>
 					</table>
-					<div id="electiveDrop">
-						<ul class="dropdown-menu" data-bind="foreach: electiveChoices, visible: electiveChoices().length > 0">
-							<li data-bind="css: {active: $data == $parent.selectedValueDropdown()}, event: {mouseover: electiveMouseOver}, click: electiveSelect"><a href="#"><table><tr>
-								<td width="55px" data-bind="text: compcode"></td>
-								<td width="95px" data-bind="text: number"></td>
-								<td data-bind="text: name"></td>
-							</tr></table></a></li>
-						</ul>
-					</div>
-					<div class="input-prepend" data-bind="css: {topOpen: electiveChoices().length > 0}, css: {disabled: !elsEnabled()}">
-						<span class="add-on">Add a course</span>
-						<input class="span4" data-bind="value: electiveQuery, valueUpdate: 'afterkeydown', event: {keydown: electiveQueryKeyDown}" type="text" placeholder="Enter Compcode, Course No. or Course Name">
-					</div>
 				</div>
 			</div>
 			<hr>

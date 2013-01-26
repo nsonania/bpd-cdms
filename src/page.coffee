@@ -59,7 +59,7 @@ class CoursesViewModel
 		@bc = ko.observableArray []
 		@psc = ko.observableArray []
 		@allEl = ko.observableArray []
-		@el = ko.computed => _(@allEl()).filter (x) -> x.selected()
+		@el = ko.computed => _(@allEl()).sortBy (x) -> x.compcode
 		@reqEl = ko.observable 0
 		@electiveQuery = ko.observable ""
 		@selectedValueDropdown = ko.observable undefined
@@ -77,7 +77,7 @@ class CoursesViewModel
 		@pscEnabled = ko.computed => _(@bc()).all((x) -> x.selected()) and @el().length <= @reqEl()
 		@elEnabled = ko.computed => _(@bc()).all (x) -> x.selected()
 		@elsEnabled = ko.computed => @el().length < @reqEl() or _(@psc()).all((x) -> x.selected()) or not @elEnabled()
-		@nextStepWarning = ko.computed => @el().length < @reqEl() or _(@psc()).any (x) -> not x.selected()
+		@nextStepWarning = ko.computed => _(@el()).filter((x) -> x.selected()).length < @reqEl() or _(@psc()).any (x) -> not x.selected()
 		@allSelectedCourses = ko.computed => _.chain([@bc(), @psc(), @el()]).flatten(1).filter((x) -> x.selected()).value()
 		@clashingOtherDates = ko.computed => _(@allSelectedCourses()).any (x) -> _(x.otherDates()).any (y) -> y.clashing()
 	electiveQueryKeyDown: =>
