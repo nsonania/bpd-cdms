@@ -32,8 +32,6 @@ class StudentViewModel
 				"Registration Validated"
 			else
 				"Validate"
-	selectStudent: =>
-		viewmodel.studentsViewModel().currentStudent @
 	validate: =>
 		socket.emit "validate", @_id(), (success) =>
 			@validated true if success
@@ -43,25 +41,19 @@ class StudentsViewModel
 		@students = ko.observableArray (new StudentViewModel student for student in students)
 		@sort = ko.observable "studentId"
 		@filteredStudents = ko.computed => _.chain(@students()).filter((x) -> x.visible()).sortBy((x) => x[@sort()]()).value()
-		@currentStudent = ko.observable @filteredStudents()[0]
-	filter: =>
-		query = $(arguments[1].currentTarget).val().toLowerCase()
-		for student in @students()
-			student.visible false
-			if student.studentId().toLowerCase().indexOf(query) >= 0
-				student.visible true
-			if student.name().toLowerCase().indexOf(query) >= 0
-				student.visible true
+	queryEnter: (elem, event) =>
+		keyCode = event.which ? event.keyCode
+		if keyCode is 13
+			@fetchStudents arguments...
 	sortStudentId: =>
 		@sort "studentId"
 	sortName: =>
 		@sort "name"
 	fetchStudents: =>
 		viewmodel.pleaseWaitStatus "Fetching Students..."
-		socket.emit "getStudents", (students) =>
+		socket.emit "getStudents", $(arguments[1].currentTarget).val().toLowerCase(), (students) =>
 			viewmodel.pleaseWaitStatus undefined
 			@students (new StudentViewModel student for student in students)
-			@currentStudent @filteredStudents()[0]
 
 class BodyViewModel
 	constructor: ->
@@ -75,7 +67,7 @@ class BodyViewModel
 		@loginAlertStatus = ko.observable undefined
 	gotoStudents: =>
 		@pleaseWaitStatus "Fetching Students..."
-		socket.emit "getStudents", (students) =>
+		socket.emit "getStudents", "", (students) =>
 			@pleaseWaitStatus undefined
 			@studentsViewModel new StudentsViewModel students: students
 			@activeView "studentsView"

@@ -26,10 +26,10 @@ io = socket_io.listen server
 io.set "log level", 0
 io.sockets.on "connection", (socket) ->
 
-	socket.on "getStudents", (callback) ->
+	socket.on "getStudents", (query, callback) ->
 		return callback false unless socket.auth?
-		console.log "Fetching Students for #{socket.auth.username}."
-		db.Student.find({}).lean().exec (err, students) -> callback students
+		return callback [] if query in ["", null, undefined]
+		db.Student.find($or: [{studentId: $regex: new RegExp(query, "i")}, {name: $regex: new RegExp(query, "i")}]).limit(30).lean().exec (err, students) -> callback students
 
 	socket.on "login", (username, password, callback) ->
 		db.Validator.findOne username: username, password: password, (err, authInfo) ->

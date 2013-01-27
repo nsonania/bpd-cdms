@@ -99,7 +99,7 @@
 									<li class="navbar-form">
 										<div class="input-prepend">
 											<span class="add-on"><i class="icon-search"></i></span>
-											<input type="text" data-bind="event: {keyup: filter}" placeholder="Search">
+											<input type="text" data-bind="event: {keyup: queryEnter}" placeholder="Search">
 										</div>
 									</li>
 								</ul>
@@ -120,11 +120,21 @@
 				</div>
 				<div id="studentlist">
 					<table class="table table-hover container table-visibleStriped">
+						<thead data-bind="visible: filteredStudents().length == 0">
+							<tr>
+								<td style="text-align: center; pointer-events: none">
+									Enter a query above to search through Student Ids and Student Names. You can also enter a regex string.
+								</td>
+							</tr>
+						</thead>
 						<tbody data-bind="foreach: filteredStudents">
-							<tr data-bind="css: {info: $parent.currentStudent() == $data}, click: selectStudent">
+							<tr>
 								<td data-bind="text: typeof studentId() !== 'undefined' && studentId() !== null && studentId() !== '' ? studentId() : '---'"></td>
 								<td data-bind="text: typeof name() !== 'undefined' && name() !== null && name() !== '' ? name() : '-----'"></td>
-								<td><button class="btn span4" data-bind="css: {'btn-success': validated, 'btn-primary': !validated() && registered()}, click: validate, enable: registered() && !validated(), text: validateMessage"></button></td>
+								<td>
+									<a target="_blank" class="btn btn-primary" data-bind="visible: !validated() && registered(), attr: {href: 'rc_' + studentId() + '.pdf'}"><i class="icon-print icon-white"></i> Registration Card</a>
+									<button class="btn span4" data-bind="css: {'btn-success': validated, 'btn-primary': !validated() && registered()}, click: validate, enable: registered() && !validated(), text: validateMessage"></button>
+								</td>
 							</tr>
 						</tbody>
 					</table>

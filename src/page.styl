@@ -36,8 +36,6 @@
 
 	.table
 		tr
-			cursor pointer
-
 			td
 				vertical-align middle
 
@@ -74,7 +72,7 @@
 			border-bottom-right-radius 0
 			border-bottom none
 
-#courseheader, #studentheader
+#studentheader
 	z-index 1
 	height 0px
 
@@ -84,11 +82,12 @@
 	&.affix
 		top 60px
 
-	#courseheader-inner, #studentheader-inner
+	#studentheader-inner
 		position relative
 		height 0px
 
-		#courseheader-back, #studentheader-inner
+		#studentheader-back
+			width 100%
 			position absolute
 			left 0
 			top -20px
