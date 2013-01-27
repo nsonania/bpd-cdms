@@ -33,13 +33,13 @@ exports.generateRC = (data, callback) ->
 	doc.text "Name: #{data.studentName}\nID No.: #{data.studentId}\n"
 
 	columns = [
-		{px: 76, width: 40, name: "Code"}
-		{px: 116, width: 69, name: "Course No."}
-		{px: 279.28, width: 33, name: "LS"}
-		{px: 312.28, width: 33, name: "PS"}
-		{px: 345.28, width: 40, name: "Type"}
-		{px: 291, width: 208, name: "Course Name"}
-		{px: 491.28, width: 36, name: "A/R"}
+		{px: 76, width: 50, name: "Code"}
+		{px: 232, width: 74, name: "Course No."}
+		{px: 306, width: 185.28, name: "Course Name"}
+		{px: 126, width: 33, name: "LS"}
+		{px: 159, width: 33, name: "PS"}
+		{px: 192, width: 40, name: "Type"}
+		{px: 490.28, width: 37, name: "A/R"}
 	]
 
 	doc.font "pdfGen/Avenir Next Condensed.ttc", "AvenirNextCondensed-Medium"
@@ -83,4 +83,4 @@ exports.generateRC = (data, callback) ->
 	doc.moveTo(start.x + 165, doc.y - 18).lineTo(start.x + 285, doc.y - 18).dash(1, space: 2).stroke()
 	doc.moveTo(start.x + 330, doc.y - 18).lineTo(start.x + 450, doc.y - 18).dash(1, space: 2).stroke()
 
-	doc.write "pdfGen/rc_#{data.studentId}.pdf", callback
+	doc.write "lib/rc_#{data.sid}.pdf", callback

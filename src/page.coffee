@@ -25,6 +25,7 @@ class LoginViewModel
 					viewmodel.gotoCoursesView()
 				else
 					viewmodel.gotoSectionsView()
+			viewmodel.sectionsViewModel.sid = data.sid
 		@studentId undefined
 		@password undefined
 	dismissAlert: =>
@@ -37,6 +38,7 @@ class LoginViewModel
 			viewmodel.studentStatus undefined
 			viewmodel.authenticated false
 			viewmodel.activeView "loginView"
+			delete viewmodel.sectionsViewModel.sid
 			viewmodel.pleaseWaitVisible false
 
 class TestDateViewModel
@@ -80,6 +82,12 @@ class CoursesViewModel
 		@nextStepWarning = ko.computed => _(@el()).filter((x) -> x.selected()).length < @reqEl() or _(@psc()).any (x) -> not x.selected()
 		@allSelectedCourses = ko.computed => _.chain([@bc(), @psc(), @el()]).flatten(1).filter((x) -> x.selected()).value()
 		@clashingOtherDates = ko.computed => _(@allSelectedCourses()).any (x) -> _(x.otherDates()).any (y) -> y.clashing()
+		@numberOfSections = ko.computed =>
+			ret = 0
+			ret++ if @bc().length > 0
+			ret++ if @psc().length > 0
+			ret++ if @el().length > 0
+			ret
 	electiveQueryKeyDown: =>
 		event = arguments[1]
 		if event.which is 38 and @electiveChoices().indexOf(@selectedValueDropdown()) > 0
@@ -177,10 +185,8 @@ class SectionsViewModel
 			return unless result
 			socket.emit "difficultTimetable", -> viewmodel.studentStatus "difficultTimetable"
 	printRC: =>
-		win = window.open()
-		console.log win
-		socket.emit "setup_sid", (sid) ->
-			win.location = "registrationCard?sid=#{sid}"
+		return bootbox.alert "Please try again. If you are still unable to print, try refreshing your browser." unless @sid?
+		window.open("registrationCard?sid=#{@sid}")
 
 class BodyViewModel
 	constructor: ->

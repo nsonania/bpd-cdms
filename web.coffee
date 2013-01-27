@@ -17,11 +17,17 @@ expressServer.configure ->
 	expressServer.use (req, res, next) ->
 		req.url = "/page.html" if req.url is "/"
 		next()
-	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 	expressServer.use expressServer.router
+	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 
 expressServer.get "/registrationCard", (req, res, next) ->
-	socket = io.sockets.clients()._find((x) -> x.sid is req.query.sid)
+	req.url = "/rc_#{req.query.sid}.pdf"
+	next()
+
+server = http.createServer expressServer
+
+pdfRC = (sid) ->
+	socket = io.sockets.clients()._find((x) -> x.sid is sid)
 	return res.send 404, "Invalid sid. This could happen if you tried to refresh the page." unless socket?
 	db.Misc.findOne desc: "Semester Details", (err, semester) ->
 		return res.send 404, "Registrations not open yet." unless semester?
@@ -46,12 +52,8 @@ expressServer.get "/registrationCard", (req, res, next) ->
 								"PSC"
 							else
 								"EL"
+					sid: socket.sid
 				pdfExport.generateRC data, ->
-					res.sendfile "pdfGen/rc_#{student.get "studentId"}.pdf", ->
-						fs.unlink "pdfGen/rc_#{student.get "studentId"}.pdf"
-						delete socket.sid
-
-server = http.createServer expressServer
 
 io = socket_io.listen server
 io.set "log level", 0
@@ -66,12 +68,16 @@ io.sockets.on "connection", (socket) ->
 			return callback success: false, reason: "authFailure" unless student?
 			io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.equals(student._id) and x isnt socket)._each (x) -> x.emit "destroySession"
 			socket.student_id = student.get "_id"
+			(sid = md5(student.get("_id").toString() + Date())) until sid? and io.sockets.clients()._all((x) -> x.sid isnt sid)
 			callback
 				success: true
 				student:
 					studentId: student.get "studentId"
 					name: student.get "name"
 					status: if student.get("validated") then "validated" else if student.get("registered") then "registered" else if student.get("difficultTimetable") then "difficultTimetable" else "not registered"
+				sid: socket.sid = sid
+			pdfRC sid
+
 
 	socket.on "getCourses", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
@@ -213,6 +219,7 @@ io.sockets.on "connection", (socket) ->
 						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
 							stds = students._filter((x) -> x.selectedcourses._any((y) -> y.compcode is course.compcode and y.selectedLabSection is course.selectedLabSection)).map (x) -> x._id.toString()
 							io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
+		pdfRC socket.sid
 
 	socket.on "getSemesterDetails", (callback) ->
 		db.Misc.findOne desc: "Semester Details", (err, semester) ->
@@ -230,12 +237,6 @@ io.sockets.on "connection", (socket) ->
 		student.save ->
 			callback true
 
-	socket.on "setup_sid", (callback) ->
-		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student?
-		(sid = md5(student.get("_id").toString() + Date())) until sid? and io.sockets.clients()._all((x) -> x.sid isnt sid)
-		callback socket.sid = sid
-
 	socket.on "logout", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
 		return callback success: false unless student?
@@ -248,6 +249,7 @@ io.sockets.on "connection", (socket) ->
 		else
 			callback true
 		delete socket.student_id
+		fs.unlink "lib/rc_#{socket.sid}.pdf"
 		delete socket.sid
 
 	socket.on "disconnect", ->
@@ -259,6 +261,8 @@ io.sockets.on "connection", (socket) ->
 					delete x.selectedLabSection
 				student.markModified "selectedcourses"
 				student.save()
+			fs.unlink "lib/rc_#{socket.sid}.pdf"
+			delete socket.sid
 
 ipc = socket_io_client.connect "http://localhost:#{process.env.IPC_PORT}"
 ipc.on "connect", ->
