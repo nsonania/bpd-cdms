@@ -25,12 +25,8 @@ exports.generateRC = (data, callback) ->
 	doc.text data.semesterTitle, align: "center"
 	doc.text "Registration Card", align: "center"
 	doc.moveDown()
-	doc.moveDown()
 	doc.fontSize 12
-	doc.text (data.registeredDate ? new Date).toDateString(), align: "right"
-	doc.moveUp()
-	doc.moveUp()
-	doc.text "Name: #{data.studentName}\nID No.: #{data.studentId}\n"
+	doc.text "Status: #{data.status ? "NORMAL"}\nName: #{data.studentName}\nID No.: #{data.studentId}\n"
 
 	columns = [
 		{px: 76, width: 50, name: "Code"}
@@ -75,12 +71,16 @@ exports.generateRC = (data, callback) ->
 	doc.fontSize 8
 	doc.text "LS: Lecture Section,    PS: Lab / Practicals Section,    A/R: Amendment / Revision", start.x, doc.y + 34
 	doc.fontSize 12
+	doc.font "pdfGen/Avenir Next Condensed.ttc", "AvenirNextCondensed-Medium"
+	doc.text (data.registeredDate ? new Date).toDateString(), start.x + 1, 730, width: 90, align: "center"
 	doc.font "pdfGen/Avenir Next Condensed.ttc", "AvenirNextCondensed-MediumItalic"
-	doc.text "Student", start.x, 750, width: 120, align: "center"
-	doc.text "Validator", start.x + 165, 750, width: 120, align: "center"
-	doc.text "Dean", start.x + 330, 750, width: 120, align: "center"
-	doc.moveTo(start.x, doc.y - 18).lineTo(start.x + 120, doc.y - 18).dash(1, space: 2).stroke()
-	doc.moveTo(start.x + 165, doc.y - 18).lineTo(start.x + 285, doc.y - 18).dash(1, space: 2).stroke()
-	doc.moveTo(start.x + 330, doc.y - 18).lineTo(start.x + 450, doc.y - 18).dash(1, space: 2).stroke()
+	doc.text "Date", start.x + 1, 750, width: 90, align: "center"
+	doc.text "Student", start.x + 121, 750, width: 90, align: "center"
+	doc.text "Validator", start.x + 241, 750, width: 90, align: "center"
+	doc.text "Dean", start.x + 361, 750, width: 90, align: "center"
+	doc.moveTo(start.x + 1, doc.y - 18).lineTo(start.x + 91, doc.y - 18).dash(1, space: 2).stroke()
+	doc.moveTo(start.x + 121, doc.y - 18).lineTo(start.x + 211, doc.y - 18).dash(1, space: 2).stroke()
+	doc.moveTo(start.x + 241, doc.y - 18).lineTo(start.x + 331, doc.y - 18).dash(1, space: 2).stroke()
+	doc.moveTo(start.x + 361, doc.y - 18).lineTo(start.x + 451, doc.y - 18).dash(1, space: 2).stroke()
 
 	doc.write "lib/rc_#{data.sid}.pdf", callback

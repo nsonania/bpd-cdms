@@ -20,40 +20,7 @@ expressServer.configure ->
 	expressServer.use expressServer.router
 	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 
-expressServer.get "/registrationCard", (req, res, next) ->
-	req.url = "/rc_#{req.query.sid}.pdf"
-	next()
-
 server = http.createServer expressServer
-
-pdfRC = (sid) ->
-	socket = io.sockets.clients()._find((x) -> x.sid is sid)
-	return res.send 404, "Invalid sid. This could happen if you tried to refresh the page." unless socket?
-	db.Misc.findOne desc: "Semester Details", (err, semester) ->
-		return res.send 404, "Registrations not open yet." unless semester?
-		db.Student.findById socket.student_id, (err, student) ->
-			return res.send 500, "Student missing from database." unless student?
-			db.Course.find titles: $elemMatch: compcode: $in: (student.get("selectedcourses") ? [])._map((x) -> x.compcode), (err, courses) ->
-				data =
-					studentId: student.get "studentId"
-					studentName: student.get "name"
-					semesterTitle: semester.get "title"
-					registeredDate: student.get "registeredOn"
-					courses: (student.get("selectedcourses") ? [])._map (selcourse) ->
-						compcode: selcourse.compcode
-						number: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.number
-						name: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.name
-						lecture: selcourse.selectedLectureSection
-						lab: selcourse.selectedLabSection
-						type:
-							if student.get("bc")?.indexOf(selcourse.compcode) >= 0
-								"BC"
-							else if student.get("psc")?.indexOf(selcourse.compcode) >= 0
-								"PSC"
-							else
-								"EL"
-					sid: socket.sid
-				pdfExport.generateRC data, ->
 
 io = socket_io.listen server
 io.set "log level", 0
@@ -68,16 +35,12 @@ io.sockets.on "connection", (socket) ->
 			return callback success: false, reason: "authFailure" unless student?
 			io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.equals(student._id) and x isnt socket)._each (x) -> x.emit "destroySession"
 			socket.student_id = student.get "_id"
-			(sid = md5(student.get("_id").toString() + Date())) until sid? and io.sockets.clients()._all((x) -> x.sid isnt sid)
 			callback
 				success: true
 				student:
 					studentId: student.get "studentId"
 					name: student.get "name"
 					status: if student.get("validated") then "validated" else if student.get("registered") then "registered" else if student.get("difficultTimetable") then "difficultTimetable" else "not registered"
-				sid: socket.sid = sid
-			pdfRC sid
-
 
 	socket.on "getCourses", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
@@ -161,6 +124,7 @@ io.sockets.on "connection", (socket) ->
 							selectedLabSection: selcourse.selectedLabSection
 							otherDates: course.otherDates
 					schedule: scheduleconflicts.schedule
+					registeredOn: student.get("registeredOn")?.toString()
 
 	socket.on "chooseSection", (sectionInfo, callback) ->
 		await db.Student.findById socket.student_id, defer err, student
@@ -249,8 +213,6 @@ io.sockets.on "connection", (socket) ->
 		else
 			callback true
 		delete socket.student_id
-		fs.unlink "lib/rc_#{socket.sid}.pdf"
-		delete socket.sid
 
 	socket.on "disconnect", ->
 		if socket.student_id?
@@ -261,8 +223,6 @@ io.sockets.on "connection", (socket) ->
 					delete x.selectedLabSection
 				student.markModified "selectedcourses"
 				student.save()
-			fs.unlink "lib/rc_#{socket.sid}.pdf"
-			delete socket.sid
 
 ipc = socket_io_client.connect "http://localhost:#{process.env.IPC_PORT}"
 ipc.on "connect", ->

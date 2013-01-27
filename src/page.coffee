@@ -25,7 +25,6 @@ class LoginViewModel
 					viewmodel.gotoCoursesView()
 				else
 					viewmodel.gotoSectionsView()
-			viewmodel.sectionsViewModel.sid = data.sid
 		@studentId undefined
 		@password undefined
 	dismissAlert: =>
@@ -38,7 +37,6 @@ class LoginViewModel
 			viewmodel.studentStatus undefined
 			viewmodel.authenticated false
 			viewmodel.activeView "loginView"
-			delete viewmodel.sectionsViewModel.sid
 			viewmodel.pleaseWaitVisible false
 
 class TestDateViewModel
@@ -159,7 +157,10 @@ class SectionsViewModel
 					_(@courses()).all (x) -> (x.lectureSections().length is 0 or x.selectedLectureSection()?) and (x.labSections().length is 0 or x.selectedLabSection()?)
 			return false unless c1
 			not _([0..6]).any (j) => _([4..6]).all (i) => @schedule[i][j]().length is 1
+		@lunchHourProblem = ko.computed =>
+			_([0..6]).any (j) => _([4..6]).all (i) => @schedule[i][j]().length is 1
 		@dtcEnabled = ko.computed => _(@schedule).any (x) -> _(x).any (y) -> y().length > 1
+		@registeredOn = ""
 	gotoCoursesView: =>
 		viewmodel.gotoCoursesView()
 	setSchedule: (schedule) =>
@@ -171,11 +172,12 @@ class SectionsViewModel
 				for course_number in hour
 					@schedule[k2 - 1][k1 - 1].push course_number
 	register: =>
-		socket.emit "confirmRegistration", (result) ->
+		socket.emit "confirmRegistration", (result) =>
 			return bootbox.alert "Invalid Registration. Please refresh your browser and register again." if not result.success and result.invalidRegistration?
 			bootbox.alert "You have registered for your courses. Print, sign and submit your Registration Card for validation."
 			$('input[rel=tooltip]').tooltip()
 			viewmodel.studentStatus "registered"
+			@registeredOn = Date()
 	needHelp: =>
 		bootbox.confirm """
 			Continue only if you have tried all combinations and are not able to build a valid timetable.
@@ -184,9 +186,6 @@ class SectionsViewModel
 		""", (result) ->
 			return unless result
 			socket.emit "difficultTimetable", -> viewmodel.studentStatus "difficultTimetable"
-	printRC: =>
-		return bootbox.alert "Please try again. If you are still unable to print, try refreshing your browser." unless @sid?
-		window.open("registrationCard?sid=#{@sid}")
 
 class BodyViewModel
 	constructor: ->
@@ -218,9 +217,10 @@ class BodyViewModel
 	gotoSectionsView: =>
 		@activeView "sectionsView"
 		@pleaseWaitVisible true
-		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts}) =>
+		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts, registeredOn}) =>
 			@sectionsViewModel.courses (new CourseSectionsViewModel course for course in selectedcourses ? [])
 			@sectionsViewModel.setSchedule schedule
+			@sectionsViewModel.registeredOn = registeredOn
 			@pleaseWaitVisible false
 
 $ ->
