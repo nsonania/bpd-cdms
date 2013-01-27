@@ -83,4 +83,4 @@ exports.generateRC = (data, callback) ->
 	doc.moveTo(start.x + 241, doc.y - 18).lineTo(start.x + 331, doc.y - 18).dash(1, space: 2).stroke()
 	doc.moveTo(start.x + 361, doc.y - 18).lineTo(start.x + 451, doc.y - 18).dash(1, space: 2).stroke()
 
-	doc.write "lib/rc_#{data.sid}.pdf", callback
+	doc.write "lib/rc_#{data.studentId}.pdf", callback

@@ -160,7 +160,7 @@ class SectionsViewModel
 		@lunchHourProblem = ko.computed =>
 			_([0..6]).any (j) => _([4..6]).all (i) => @schedule[i][j]().length is 1
 		@dtcEnabled = ko.computed => _(@schedule).any (x) -> _(x).any (y) -> y().length > 1
-		@registeredOn = ""
+		@registeredOn = ko.observable ""
 	gotoCoursesView: =>
 		viewmodel.gotoCoursesView()
 	setSchedule: (schedule) =>
@@ -177,7 +177,7 @@ class SectionsViewModel
 			bootbox.alert "You have registered for your courses. Print, sign and submit your Registration Card for validation."
 			$('input[rel=tooltip]').tooltip()
 			viewmodel.studentStatus "registered"
-			@registeredOn = Date()
+			@registeredOn Date()
 	needHelp: =>
 		bootbox.confirm """
 			Continue only if you have tried all combinations and are not able to build a valid timetable.
@@ -220,7 +220,7 @@ class BodyViewModel
 		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts, registeredOn}) =>
 			@sectionsViewModel.courses (new CourseSectionsViewModel course for course in selectedcourses ? [])
 			@sectionsViewModel.setSchedule schedule
-			@sectionsViewModel.registeredOn = registeredOn
+			@sectionsViewModel.registeredOn registeredOn
 			@pleaseWaitVisible false
 
 $ ->

@@ -269,12 +269,12 @@
 				<h1>Difficult Timetable</h1>
 				<p>You have activated <em>Difficult Timetable</em>. Approach the <em>Registration Incharge</em> to resolve your situation.</p>
 			</div>
-			<div class="row" data-bind="visible: registeredOn != ''">
+			<div class="row" data-bind="visible: registeredOn() != ''">
 				<div class="span10 offset1" style="text-align: right">
 					Registered: <span data-bind="text: registeredOn"></span>
 				</div>
 			</div>
-			<hr data-bind="visible: registeredOn != ''">
+			<hr data-bind="visible: registeredOn() != ''">
 			<div class="row">
 				<div id="courses-sections" class="span10 offset1">
 					<p class="lead center">Courses</p>
