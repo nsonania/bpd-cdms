@@ -33,16 +33,16 @@ pdfRC = (sid) ->
 		return res.send 404, "Registrations not open yet." unless semester?
 		db.Student.findById socket.student_id, (err, student) ->
 			return res.send 500, "Student missing from database." unless student?
-			db.Course.find titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode), (err, courses) ->
+			db.Course.find titles: $elemMatch: compcode: $in: (student.get("selectedcourses") ? [])._map((x) -> x.compcode), (err, courses) ->
 				data =
 					studentId: student.get "studentId"
 					studentName: student.get "name"
 					semesterTitle: semester.get "title"
 					registeredDate: student.get "registeredOn"
-					courses: student.get("selectedcourses")._map (selcourse) ->
+					courses: (student.get("selectedcourses") ? [])._map (selcourse) ->
 						compcode: selcourse.compcode
-						number: courses._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.number
-						name: courses._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.name
+						number: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.number
+						name: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.name
 						lecture: selcourse.selectedLectureSection
 						lab: selcourse.selectedLabSection
 						type:
