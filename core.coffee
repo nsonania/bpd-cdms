@@ -54,7 +54,7 @@ exports.importCourses = (data, callback) ->
 								compcode: Number ccode
 								number: line[1].split(/\ *[;,\/]\ */)._map((x) -> x)[i]
 								name: line[2]
-						otherDates: od for od in line[9..] when od not in [null, undefined, "*", "-"]
+						otherDates: od for od in line[9..13] when od not in [null, undefined, "*", "-"]
 					lectureSections = []
 					labSections = []
 					currentSections = if line[3].indexOf("0") is 0 then labSections else lectureSections
@@ -75,7 +75,7 @@ exports.importCourses = (data, callback) ->
 									day: dii + 1
 									hour: Number hour
 						ts._flatten()
-					capacity: 20
+					capacity: Number line[14] ? 40
 			if course?
 				if lectureSections.length > 0
 					course.set "hasLectureSections", true

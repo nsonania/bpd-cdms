@@ -59,8 +59,8 @@ class SectionViewModel
 class CourseViewModel
 	constructor: ({compcode, number, name, @lectureSections, @labSections, @otherDates}) ->
 		@compcode = ko.observable compcode ? ""
-		@number = ko.observable number ? "null"
-		@name = ko.observable name ? "null"
+		@number = ko.observable number ? ""
+		@name = ko.observable name ? ""
 		@visible = ko.observable true
 		@sharedSections = ko.computed
 			read: =>
@@ -86,6 +86,9 @@ class CourseViewModel
 					x.lectureSections newLectureSections()
 					x.labSections newLabSections()
 					x.otherDates newOtherDates()
+		@lectureSections ?= ko.observableArray []
+		@labSections ?= ko.observableArray []
+		@otherDates ?= ko.observableArray []
 		@otherDatesNI = ko.computed
 			read: =>
 				@otherDates().join ", "
@@ -164,11 +167,11 @@ class CoursesViewModel
 	newCourse: =>
 		@courses.push course = new CourseViewModel {}
 		course.selectCourse()
-		scrollTo 0, document.height
 	fetchCourses: =>
 		viewmodel.pleaseWaitStatus "Fetching Courses..."
 		socket.emit "getCourses", (courses) =>
 			viewmodel.pleaseWaitStatus undefined
+			@courses.removeAll()
 			@courses _.chain(courses).map((x) ->
 				lectureSections =  ko.observableArray (new SectionViewModel section for section in x.lectureSections ? [])
 				labSections = ko.observableArray (new SectionViewModel section for section in x.labSections ? [])
@@ -183,6 +186,7 @@ class CoursesViewModel
 						otherDates: otherDates
 			).flatten().value()
 			@currentCourse @filteredCourses()[0]
+			@currentSection = ko.observable undefined
 	commitCourses: =>
 		viewmodel.pleaseWaitStatus "Saving changes..."
 		courses = @toData()
@@ -400,7 +404,6 @@ class StudentsViewModel
 	newStudent: =>
 		@students.push student = new StudentViewModel newPassword: (np = md5(Date())[0...8]), password: md5 np
 		student.selectStudent()
-		scrollTo 0, document.height
 	selectFile: =>
 		$fup = $("<input type='file' accept='text/csv'>")
 		$fup.one "change", =>
@@ -428,6 +431,7 @@ class StudentsViewModel
 		viewmodel.pleaseWaitStatus "Fetching Students..."
 		socket.emit "getStudents", (students) =>
 			viewmodel.pleaseWaitStatus undefined
+			@students.removeAll()
 			@students (new StudentViewModel student for student in students)
 			@currentStudent @filteredStudents()[0]
 	commitStudents: =>
@@ -478,7 +482,6 @@ class ValidatorsViewModel
 	newValidator: =>
 		@validators.push validator = new ValidatorViewModel newPassword: (np = md5(Date())[0...8]), password: md5 np
 		validator.selectValidator()
-		scrollTo 0, document.height
 	selectFile: =>
 		$fup = $("<input type='file' accept='text/csv'>")
 		$fup.one "change", =>
@@ -498,6 +501,7 @@ class ValidatorsViewModel
 		viewmodel.pleaseWaitStatus "Fetching Validators..."
 		socket.emit "getValidators", (validators) =>
 			viewmodel.pleaseWaitStatus undefined
+			@validators.removeAll()
 			@validators (new ValidatorViewModel validator for validator in validators)
 			@currentValidator @filteredValidators()[0]
 	commitValidators: =>
@@ -567,36 +571,53 @@ class BodyViewModel
 		@authenticated = ko.observable false
 		@semester = new SemesterViewModel()
 		@loginAlertStatus = ko.observable undefined
-	gotoCourses: =>
+	gotoCourses: (callback) =>
 		viewmodel.pleaseWaitStatus "Fetching Courses..."
 		socket.emit "getCourses", (courses) ->
-			viewmodel.pleaseWaitStatus undefined
-			viewmodel.coursesViewModel new CoursesViewModel courses: courses
-			viewmodel.activeView "coursesView"
+			unless viewmodel.coursesViewModel()?
+				viewmodel.coursesViewModel new CoursesViewModel courses: courses
+			else
+				viewmodel.coursesViewModel().fetchCourses()
+			viewmodel.pleaseWaitStatus undefined unless typeof callback is "function"
+			viewmodel.activeView "coursesView" unless typeof callback is "function"
 			$("#courseheader, #coursedetails").affix offset: top: 290
 			$('button[rel=tooltip]').tooltip()
+			callback?()
 	gotoStudents: =>
 		viewmodel.pleaseWaitStatus "Fetching Courses..."
 		socket.emit "getCourses", (courses) ->
+			unless viewmodel.coursesViewModel()?
+				viewmodel.coursesViewModel new CoursesViewModel courses: courses
+			else
+				viewmodel.coursesViewModel().fetchCourses()
 			viewmodel.pleaseWaitStatus "Fetching Validators..."
-			viewmodel.coursesViewModel new CoursesViewModel courses: courses
 			socket.emit "getValidators", (validators) ->
+				unless viewmodel.validatorsViewModel()?
+					viewmodel.validatorsViewModel new ValidatorsViewModel validators: validators
+				else
+					viewmodel.validatorsViewModel().fetchValidators()
 				viewmodel.pleaseWaitStatus "Fetching Students..."
-				viewmodel.validatorsViewModel new ValidatorsViewModel validators: validators
 				socket.emit "getStudents", (students) ->
+					unless viewmodel.studentsViewModel()?
+						viewmodel.studentsViewModel new StudentsViewModel students: students
+					else
+						viewmodel.studentsViewModel().fetchStudents()
 					viewmodel.pleaseWaitStatus undefined
-					viewmodel.studentsViewModel new StudentsViewModel students: students
 					viewmodel.activeView "studentsView"
 					$("#studentheader, #studentdetails").affix offset: top: 290
 					$('button[rel=tooltip]').tooltip()
-	gotoValidators: =>
+	gotoValidators: (callback) =>
 		viewmodel.pleaseWaitStatus "Fetching Validators..."
 		socket.emit "getValidators", (validators) ->
-			viewmodel.pleaseWaitStatus undefined
-			viewmodel.validatorsViewModel new ValidatorsViewModel validators: validators
-			viewmodel.activeView "validatorsView"
+			unless viewmodel.validatorsViewModel()?
+				viewmodel.validatorsViewModel new ValidatorsViewModel validators: validators
+			else
+				viewmodel.validatorsViewModel().fetchValidators()
+			viewmodel.pleaseWaitStatus undefined unless typeof callback is "function"
+			viewmodel.activeView "validatorsView" unless typeof callback is "function"
 			$("#validatorheader, #validatordetails").affix offset: top: 290
 			$('button[rel=tooltip]').tooltip()
+			callback?()
 	gotoHome: =>
 		@activeView "homeView"
 		@semester.fetchSemester()
