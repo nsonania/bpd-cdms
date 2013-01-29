@@ -169,7 +169,7 @@ io.sockets.on "connection", (socket) ->
 		student.markModified "registeredOn"
 		student.save ->
 			callback success: true
-		ipc?.emit "broadcast", "studentStatusChanged", [socket.student_id, "registered", true]
+		ipc?.emit? "broadcast", "studentStatusChanged", [socket.student_id, "registered", true]
 		db.Course.find({titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)}, "compcode").lean().exec (err, courses) ->
 			for course in student.get("selectedcourses") then do (course) ->
 				if course.selectedLectureSection?
