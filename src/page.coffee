@@ -227,12 +227,14 @@ class BodyViewModel
 			@sectionsViewModel.courses (new CourseSectionsViewModel course for course in selectedcourses ? [])
 			@sectionsViewModel.setSchedule schedule
 			@sectionsViewModel.registeredOn registeredOn
+			toSet = []
 			for course in @sectionsViewModel.courses
-				if course.lectureSections().length is 1
-					await course.lectureSections()[0].chooseLectureSection defer res
-				if course.labSections().length is 1
-					await course.labSections()[0].chooseLabSection defer res
-			@pleaseWaitVisible false
+				toSet.push course.lectureSections()[0].chooseLectureSection if course.lectureSections().length is 1
+				toSet.push course.labSections()[0].chooseLabSection if course.labSections().length is 1
+			recSet = =>
+				return @pleaseWaitVisible false if toSet.length is 0
+				toSet.pop() -> recSet()
+			recSet()
 
 $ ->
 	window.viewmodel = viewmodel = new BodyViewModel()
