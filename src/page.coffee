@@ -174,7 +174,7 @@ class SectionsViewModel
 	register: =>
 		socket.emit "confirmRegistration", (result) =>
 			return bootbox.alert "Invalid Registration. Please refresh your browser and register again." if not result.success and result.invalidRegistration?
-			bootbox.alert "You have registered for your courses. Print, sign and submit your Registration Card for validation."
+			bootbox.alert "You have registered for your courses. Make sure that you get your registration validated."
 			$('input[rel=tooltip]').tooltip()
 			viewmodel.studentStatus "registered"
 			@registeredOn Date()
