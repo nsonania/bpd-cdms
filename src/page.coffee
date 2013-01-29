@@ -228,7 +228,7 @@ class BodyViewModel
 			@sectionsViewModel.setSchedule schedule
 			@sectionsViewModel.registeredOn registeredOn
 			toSet = []
-			for course in @sectionsViewModel.courses
+			for course in @sectionsViewModel.courses()
 				toSet.push course.lectureSections()[0].chooseLectureSection if course.lectureSections().length is 1
 				toSet.push course.labSections()[0].chooseLabSection if course.labSections().length is 1
 			recSet = =>
