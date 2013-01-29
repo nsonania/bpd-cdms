@@ -103,7 +103,7 @@ io.sockets.on "connection", (socket) ->
 			student.save()
 			callback true
 			io.sockets.clients()._filter((x) -> x isnt socket).emit "studentStatusChanged", student_id, "validated", true
-			ipc?.emit "broadcast", "studentStatusChanged", [student_id, "validated", true]
+			ipc?.emit? "broadcast", "studentStatusChanged", [student_id, "validated", true]
 
 ipc = socket_io_client.connect "http://localhost:#{process.env.IPC_PORT}"
 ipc.on "connect", ->
