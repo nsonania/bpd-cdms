@@ -285,17 +285,19 @@
 					<span data-bind="visible: $root.studentStatus() == 'validated'">You have successfully enrolled into your courses and have validated your registration.</span>
 					You can view your timetable and test dates below.
 				</p>
+				<ul>
+					<li data-bind="visible: registeredOn() !== '' && registeredOn() !== null && registeredOn() !== (void 0)">
+						Registered: <span data-bind="text: registeredOn"></span>
+					</li>
+					<li data-bind="visible: validatedOn() !== '' && validatedOn() !== null && validatedOn() !== (void 0)">
+						Registered: <span data-bind="text: validatedOn"></span>
+					</li>
+				</ul>
 			</div>
 			<div class="hero-unit" data-bind="visible: $root.studentStatus() == 'difficultTimetable'">
 				<h1>Difficult Timetable</h1>
 				<p>You have activated <em>Difficult Timetable</em>. Approach the <em>Registration Incharge</em> to resolve your situation.</p>
 			</div>
-			<div class="row" data-bind="visible: registeredOn() !== '' && registeredOn() !== null && registeredOn() !== (void 0)">
-				<div class="span10 offset1" style="text-align: right">
-					Registered: <span data-bind="text: registeredOn"></span>
-				</div>
-			</div>
-			<hr data-bind="visible: registeredOn() !== '' && registeredOn() !== null && registeredOn() !== (void 0)">
 			<div class="row">
 				<div id="courses-sections" class="span10 offset1">
 					<p class="lead center">Courses</p>

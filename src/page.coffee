@@ -167,6 +167,7 @@ class SectionsViewModel
 			_([0..6]).any (j) => _([4..6]).all (i) => @schedule[i][j]().length is 1
 		@dtcEnabled = ko.computed => _(@schedule).any (x) -> _(x).any (y) -> y().length > 1
 		@registeredOn = ko.observable ""
+		@validatedOn = ko.observable ""
 	gotoCoursesView: =>
 		viewmodel.gotoCoursesView()
 	setSchedule: (schedule) =>
@@ -223,10 +224,11 @@ class BodyViewModel
 	gotoSectionsView: =>
 		@activeView "sectionsView"
 		@pleaseWaitVisible true
-		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts, registeredOn}) =>
+		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts, registeredOn, validatedOn}) =>
 			@sectionsViewModel.courses (new CourseSectionsViewModel course for course in selectedcourses ? [])
 			@sectionsViewModel.setSchedule schedule
 			@sectionsViewModel.registeredOn registeredOn
+			@sectionsViewModel.validatedOn validatedOn
 			toSet = []
 			for course in @sectionsViewModel.courses()
 				toSet.push course.lectureSections()[0].chooseLectureSection if course.lectureSections().length is 1
