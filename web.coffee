@@ -7,7 +7,6 @@ md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
 core = require "./core"
-pdfExport = require "./pdfExport"
 fs = require "fs"
 
 expressServer = express()
@@ -21,32 +20,6 @@ expressServer.configure ->
 	expressServer.use expressServer.router
 
 server = http.createServer expressServer
-
-pdfRC = (student_id) ->
-	db.Misc.findOne desc: "Semester Details", (err, semester) ->
-		return res.send 404, "Registrations not open yet." unless semester?
-		db.Student.findById student_id, (err, student) ->
-			return res.send 500, "Student missing from database." unless student?
-			db.Course.find titles: $elemMatch: compcode: $in: (student.get("selectedcourses") ? [])._map((x) -> x.compcode), (err, courses) ->
-				data =
-					studentId: student.get "studentId"
-					studentName: student.get "name"
-					semesterTitle: semester.get "title"
-					registeredDate: student.get "registeredOn"
-					courses: (student.get("selectedcourses") ? [])._map (selcourse) ->
-						compcode: selcourse.compcode
-						number: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.number
-						name: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.name
-						lecture: selcourse.selectedLectureSection
-						lab: selcourse.selectedLabSection
-						type:
-							if student.get("bc")?.indexOf(selcourse.compcode) >= 0
-								"BC"
-							else if student.get("psc")?.indexOf(selcourse.compcode) >= 0
-								"PSC"
-							else
-								"EL"
-				pdfExport.generateRC data, ->
 
 io = socket_io.listen server
 io.set "log level", 0
@@ -209,7 +182,6 @@ io.sockets.on "connection", (socket) ->
 						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
 							stds = students._filter((x) -> x.selectedcourses._any((y) -> y.compcode is course.compcode and y.selectedLabSection is course.selectedLabSection)).map (x) -> x._id.toString()
 							io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
-		pdfRC socket.student_id
 
 	socket.on "getSemesterDetails", (callback) ->
 		db.Misc.findOne desc: "Semester Details", (err, semester) ->
