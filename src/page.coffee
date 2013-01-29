@@ -63,6 +63,8 @@ class BodyViewModel
 		@activeView = ko.observable undefined
 		@authenticated = ko.observable false
 		@username = ko.observable undefined
+		@name = ko.observable undefined
+		@nameNI = ko.computed => "#{@name()} (@username())"
 		@password = ko.observable undefined
 		@loginAlertStatus = ko.observable undefined
 	gotoStudents: =>
@@ -76,11 +78,13 @@ class BodyViewModel
 	login: =>
 		@loginAlertStatus undefined
 		@pleaseWaitStatus "Authenticating..."
-		socket.emit "login", @username(), md5(@password()), (success) =>
+		socket.emit "login", @username(), md5(@password()), (data) =>
 			@pleaseWaitStatus undefined
-			if success
+			if data isnt false
 				@authenticated true
 				@password undefined
+				@username data.username
+				@name data.name
 				@gotoStudents()
 			else
 				@loginAlertStatus "authFailure"
@@ -89,6 +93,7 @@ class BodyViewModel
 	logout: =>
 		socket.emit "logout", =>
 			@username undefined
+			@name undefined
 			@authenticated false
 
 $ ->

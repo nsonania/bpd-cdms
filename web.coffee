@@ -42,7 +42,9 @@ io.sockets.on "connection", (socket) ->
 				_id: authInfo.get "_id"
 				username: authInfo.get "username"
 			console.log "#{socket.auth.username} logged in."
-			callback true
+			callback
+				username: authInfo.get "username"
+				name: authInfo.get "name"
 
 	socket.on "logout", (callback) ->
 		return callback false unless socket.auth?
