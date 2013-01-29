@@ -175,12 +175,12 @@ io.sockets.on "connection", (socket) ->
 				if course.selectedLectureSection?
 					core.sectionStatus compcode: course.compcode, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
 						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
-							stds = students._filter((x) -> x.selectedcourses._any((y) -> y.compcode is course.compcode and y.selectedLectureSection is course.selectedLectureSection)).map (x) -> x._id.toString()
+							stds = students._filter((x) -> x.selectedcourses?._any((y) -> y.compcode is course.compcode and y.selectedLectureSection is course.selectedLectureSection)).map (x) -> x._id.toString()
 							io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
 				if course.selectedLabSection?
 					core.sectionStatus compcode: course.compcode, section_number: course.selectedLabSection, isLabSection: true, (data) ->
 						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
-							stds = students._filter((x) -> x.selectedcourses._any((y) -> y.compcode is course.compcode and y.selectedLabSection is course.selectedLabSection)).map (x) -> x._id.toString()
+							stds = students._filter((x) -> x.selectedcourses?._any((y) -> y.compcode is course.compcode and y.selectedLabSection is course.selectedLabSection)).map (x) -> x._id.toString()
 							io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
 
 	socket.on "getSemesterDetails", (callback) ->
