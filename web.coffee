@@ -9,6 +9,7 @@ socket_io_client = require "socket.io-client"
 md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
+pdfExport = require "./pdfExport"
 
 expressServer = express()
 expressServer.configure ->
@@ -21,17 +22,23 @@ expressServer.configure ->
 	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 
 expressServer.get "/rc/:studentId", (req, res, next) ->
-	nxt => req.url = "/rc_#{req.params.studentId}.pdf"
+	nxt = =>
+		req.url = "/rc_#{req.params.studentId}.pdf"
+		next()
 	return nxt() if req.headers.range?
-	pdfRC req.params.studentId => nxt()
+	pdfRC req.params.studentId, (err) =>
+		if err?
+			res.send "404", err
+		else
+			nxt()
 
 server = http.createServer expressServer
 
-pdfRC = (student_id, callback) ->
+pdfRC = (studentId, callback) ->
 	db.Misc.findOne desc: "Semester Details", (err, semester) ->
-		return res.send 404, "Registrations not open yet." unless semester?
-		db.Student.findById student_id, (err, student) ->
-			return res.send 500, "Student missing from database." unless student?
+		return callback("Semester Not Open") unless semester?
+		db.Student.findOne studentId: studentId, (err, student) ->
+			return callback("Student not found or student not registered yet") unless student?
 			db.Course.find titles: $elemMatch: compcode: $in: (student.get("selectedcourses") ? [])._map((x) -> x.compcode), (err, courses) ->
 				data =
 					studentId: student.get "studentId"

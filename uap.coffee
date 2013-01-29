@@ -12,6 +12,7 @@ methods = [
 	"uniq"
 	"flatten", "groupBy"
 	"each"
+	"first"
 ]
 
 for method in methods then do (method) ->
