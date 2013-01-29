@@ -64,7 +64,7 @@ class BodyViewModel
 		@authenticated = ko.observable false
 		@username = ko.observable undefined
 		@name = ko.observable undefined
-		@nameNI = ko.computed => "#{@name()} (@username())"
+		@nameNI = ko.computed => "#{@name()} (#{@username()})"
 		@password = ko.observable undefined
 		@loginAlertStatus = ko.observable undefined
 	gotoStudents: =>
