@@ -143,8 +143,8 @@ class CourseSectionsViewModel
 	constructor: ({@compcode, @number, @name, @hasLectures, @hasLab, lectureSections, labSections, selectedLectureSection, selectedLabSection, @otherDates}) ->
 		@lectureSections = ko.observableArray (new SectionViewModel section, @ for section in lectureSections ? [])
 		@labSections = ko.observableArray (new SectionViewModel section, @ for section in labSections ? [])
-		@selectedLectureSection = ko.observable selectedLectureSection
-		@selectedLabSection = ko.observable selectedLabSection
+		@selectedLectureSection = ko.observable selectedLectureSection ? (1 if @lectureSections().length is 1)
+		@selectedLabSection = ko.observable selectedLabSection ? (1 if @labSections().length is 1)
 		@selectedLectureSectionText = ko.computed => "Lecture" + if @selectedLectureSection()? then ": " + @selectedLectureSection() else ""
 		@selectedLabSectionText = ko.computed => "Lab" + if @selectedLabSection()? then ": " + @selectedLabSection() else ""
 		@selectedLectureSectionStatus = ko.computed => _(@lectureSections()).find((x) => x.number is @selectedLectureSection()).status() ? "success" if @selectedLectureSection()?
