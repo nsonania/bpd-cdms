@@ -39,7 +39,7 @@ exports.importCourses = (data, callback) ->
 							compcode: Number ccode
 							number: line[1].split(/\ *[;,\/]\ */)._map((x) -> x)[i]
 							name: line[2]
-					otherDates: od for od in line[10..] when od not in [null, undefined, "*", "-"]
+					otherDates: od for od in line[10..] when od not in [null, undefined, "*", "-", "**", "--"]
 				lectureSections = []
 				labSections = []
 				currentSections = if line[3].indexOf("0") is 0 then labSections else lectureSections
