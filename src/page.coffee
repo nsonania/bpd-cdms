@@ -108,6 +108,8 @@ class CoursesViewModel
 				saveCourses() if result
 		else
 			saveCourses()
+	showOptions: =>
+		$("#options-box").modal "show"
 	toData: =>
 		bc: _(@bc()).map (x) -> compcode: x.compcode, selected: x.selected()
 		psc: _(@psc()).map (x) -> compcode: x.compcode, selected: x.selected()

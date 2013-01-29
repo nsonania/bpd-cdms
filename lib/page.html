@@ -23,6 +23,23 @@
 		<script src="page.js" type="text/javascript" charset="utf-8"></script>
 	</head>
 	<body>
+		<div id="options-box" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="options-box-label" aria-hidden="true">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h3 id="options-box-label">Options</h3>
+			</div>
+			<div class="modal-body">
+				<label class="checkbox">
+					<input type="checkbox"> Allow me to register for overload courses.
+				</label>
+				<label class="checkbox">
+					<input type="checkbox"> Allow me to register for less than required courses.
+				</label>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-primary pull-right" data-dismiss="modal" aria-hidden="true">Close</button>
+			</div>
+		</div>
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">
@@ -95,6 +112,7 @@
 			<div class="breadcrumb">
 				<li><span>Courses</span><span class="divider">&nbsp;&gt;</span></li>
 				<li><span class="muted">Timetable</span></li>
+				<li class="pull-left" data-bind="click: showOptions"><a href="#">Options</a></li>
 			</div>
 			<div class="hero-unit">
 				<h1>Choose your Courses</h1>
