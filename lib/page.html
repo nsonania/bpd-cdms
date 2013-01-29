@@ -225,7 +225,7 @@
 								<td data-bind="text: compcode"></td>
 								<td data-bind="text: number"></td>
 								<td data-bind="text: name"></td>
-								<td><button class="btn" data-bind="click: toggleSelection, css: {'btn-success': selected}"><i data-bind="css: {'icon-ok icon-white': selected, 'icon-plus': !selected()}, enable: $parent.elsEnabled() || selected()"></i></button></td>
+								<td><button class="btn" data-bind="click: toggleSelection, css: {'btn-success': selected}"><i data-bind="css: {'icon-ok icon-white': selected, 'icon-plus': !selected()}, enable: $parent.elsEnabled()"></i></button></td>
 							</tr>
 						</tbody>
 					</table>
@@ -258,7 +258,7 @@
 			</div>
 			<hr>
 			<div class="center">
-				<button class="btn" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep, disable: clashingOtherDates() || (enableUnderRegister() && nextStepWarning())"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
+				<button class="btn" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep, disable: clashingOtherDates() || (!enableUnderRegister() && nextStepWarning())"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
 			</div>
 		</div>
 		<div id="sections-container" class="container" data-bind="with: sectionsViewModel, visible: activeViewNZ() == 'sectionsView'">
