@@ -256,7 +256,7 @@ class StudentViewModel
 		@validatedBy = ko.observable validatedBy ? undefined
 		@validatedByNI = ko.computed =>
 			if @validated()
-				if @validatedBy()? and (vuser = _(viewmodel.validatorsViewModel().validators()).find((x) => x._id() is @validatedBy())?.username())?
+				if @validatedBy()? and (vuser = _(viewmodel.validatorsViewModel().validators()).find((x) => x._id() is @validatedBy())?.name())?
 					"Validated by #{vuser}"
 				else
 					"Validated"
@@ -461,13 +461,15 @@ class StudentsViewModel
 		student.toData() for student in @students() when student.modified()
 
 class ValidatorViewModel
-	constructor: ({username, newPassword, password, _id}) ->
+	constructor: ({username, name, newPassword, password, _id}) ->
 		@_id = ko.observable _id ? undefined
 		@username = ko.observable username ? undefined
+		@name = ko.observable name ? undefined
 		@password = ko.observable password ? undefined
 		@newPassword = ko.observable newPassword ? undefined
 		@modified = ko.observable false
 		@username.subscribe => @modified true
+		@name.subscribe => @modified true
 		@password.subscribe => @modified true
 	selectValidator: =>
 		viewmodel.validatorsViewModel().currentValidator @
@@ -480,6 +482,7 @@ class ValidatorViewModel
 	toData: =>
 		_id: @_id()
 		username: @username()
+		name: @name()
 		password: @password()
 
 class ValidatorsViewModel

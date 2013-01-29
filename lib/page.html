@@ -498,7 +498,8 @@
 						<div class="row">
 							<table class="table span6">
 								<tr>
-									<th>Validator</th>
+									<th width="20%">Staff Id</th>
+									<th>Name</th>
 								</tr>
 								<tr>
 									<td colspan="6" style="padding: 0;"></td>
@@ -518,9 +519,15 @@
 							<div class="box-bordered">
 								<br>
 								<div class="control-group">
-									<label class="control-label">Username</label>
+									<label class="control-label">Staff Id</label>
 									<div class="controls">
-										<input type="text" placeholder="Username" data-bind="value: username" readOnly>
+										<input type="text" placeholder="Staff Id" data-bind="value: username" readOnly>
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label">Name</label>
+									<div class="controls">
+										<input type="text" placeholder="Name" data-bind="value: name" readOnly>
 									</div>
 								</div>
 								<div class="control-group">
@@ -544,6 +551,7 @@
 						<tbody data-bind="foreach: filteredValidators">
 							<tr data-bind="css: {info: $parent.currentValidator() == $data}, click: selectValidator">
 								<td data-bind="text: typeof username() !== 'undefined' && username() !== null && username() !== '' ? username() : '-----'"></td>
+								<td data-bind="text: typeof name() !== 'undefined' && name() !== null && name() !== '' ? name() : '-----'"></td>
 							</tr>
 						</tbody>
 					</table>

@@ -156,7 +156,8 @@ exports.importValidators = (data, callback) ->
 				validator = new db.Validator
 					_id: _oic
 					username: line[0]
-					password: md5 line[1]
+					name: line[1]
+					password: md5 line[2]
 				await validator.save defer err, robj
 			db.Validator.remove username: $in: ["", null], ->
 				console.log "Import Validators Done."

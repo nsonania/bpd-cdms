@@ -122,7 +122,7 @@ io.sockets.on "connection", (socket) ->
 	socket.on "getValidators", (query, callback) ->
 		return callback false unless socket.auth?
 		return callback [] if query in ["", null, undefined]
-		db.Validator.find(username: $regex: new RegExp(query, "i")).sort("username").limit(20).lean().exec (err, validators) -> callback validators
+		db.Validator.find($or: [{username: $regex: new RegExp(query, "i")}, {name: $regex: new RegExp(query, "i")}]).sort("username").limit(20).lean().exec (err, validators) -> callback validators
 
 	socket.on "commitValidators", (validators, callback) ->
 		return callback false unless socket.auth?
