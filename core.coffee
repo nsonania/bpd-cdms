@@ -19,7 +19,7 @@ dumpError = (err) ->
 exports.importCourses = (data, callback) ->
 	return console.log err if err?
 	course = null
-	lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
+	lines = data.split(/(\r\n|\n|\r)(?=(?:[^"\\]*(?:\\.|"(?:[^"\\]*\\.)*[^"\\]*"))*[^"]*$)/g)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
 	try
 		for line in lines[6..]
 			if line[0] not in [null, undefined]
@@ -100,7 +100,7 @@ exports.importStudents = (data, callback) ->
 		return console.log err if err?
 		db.Student.find {}, (err, oldStudents) ->
 			return console.log err if err?
-			lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(/,(?=(?:[^"\\]*(?:\\.|"(?:[^"\\]*\\.)*[^"\\]*"))*[^"]*$)/g)._map((y) -> y.replace /(^\")|(\"$)/g, "")._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
+			lines = data.split(/(\r\n|\n|\r)(?=(?:[^"\\]*(?:\\.|"(?:[^"\\]*\\.)*[^"\\]*"))*[^"]*$)/g)._map((x) -> x.split(/(\ *[,;]\ *)(?=(?:[^"\\]*(?:\\.|"(?:[^"\\]*\\.)*[^"\\]*"))*[^"]*$)/g)._map((y) -> y.replace /(^\")|(\"$)/g, "")._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
 			try
 				for line in lines[5..]
 					_oic = undefined
@@ -112,10 +112,12 @@ exports.importStudents = (data, callback) ->
 						studentId: line[0]
 						name: line[1]
 						password: md5 line[3] if line[3]?
-						bc: line[4].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[4]?
-						psc: line[5].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[5]?
-						el: line[6].toLowerCase().split(/\ *[;,]\ */)._map((x) -> Number x)._uniq() if line[6]?
+						bc: line[4].toLowerCase().split(/[\ \)]*[,;][\ \(]*/)._map((x) -> Number x)._uniq() if line[4]?
+						psc: line[5].toLowerCase().split(/[\ \)]*[,;][\ \(]*/)._map((x) -> Number x)._uniq() if line[5]?
+						el: line[6].toLowerCase().split(/[\ \)]*[,;][\ \(]*/)._map((x) -> Number x)._uniq() if line[6]?
 						reqEl: Number line[7] ? 0
+						groups: line[4..6].join(", ").match(/\([^\(\)]*\)/g)._map (x) -> x.match(/\d+/g)._map (y) -> Number y
+						# groups: /(\ *[,;]\ *)(?=(?:[^\(\\]*(?:\\.|\((?:[^\(\\]*\\.)*[^\)\\]*\)))*[^\)]*$)/g
 					await student.save defer err, robj
 				db.Student.remove studentId: $in: ["", null], ->
 					console.log "Import Students Done."
