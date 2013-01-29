@@ -2,7 +2,6 @@ envimport = require "./envimport"
 express = require "express"
 http = require "http"
 socket_io = require "socket.io"
-socket_io_client = require "socket.io-client"
 md5 = require "MD5"
 {spawn} = require "child_process"
 db = require "./db"
@@ -25,7 +24,7 @@ io = socket_io.listen server
 io.set "log level", 0
 io.sockets.on "connection", (socket) ->
 
-	socket.on "login", ({studentId, password}, callback) ->
+	socket.on "login", ([{studentId, password}]..., callback) ->
 		await db.Misc.findOne desc: "Semester Details", defer err, semester
 		return callback success: false, reason: "notOpen" unless semester?
 		startTime = new Date semester.get "startTime"
@@ -80,9 +79,9 @@ io.sockets.on "connection", (socket) ->
 				el: el
 				reqEl: student.get("reqEl") ? 0
 
-	socket.on "saveCourses", (data, callback) ->
+	socket.on "saveCourses", ([data]..., callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student?
+		return callback success: false unless student? and data?
 		selectedcourses = student.get("selectedcourses") ? []
 		allC = [data.bc, data.psc, data.el]._flatten()
 		selectedcourses = selectedcourses._filter (x) -> x.compcode in allC._filter((y) -> y.selected)._map (y) -> y.compcode
@@ -125,9 +124,9 @@ io.sockets.on "connection", (socket) ->
 					schedule: scheduleconflicts.schedule
 					registeredOn: student.get("registeredOn")?.toString()
 
-	socket.on "chooseSection", (sectionInfo, callback) ->
+	socket.on "chooseSection", ([sectionInfo]..., callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student?
+		return callback success: false unless student? and sectionInfo?
 		db.Course.find(titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)).lean().exec (err, courses) ->
 			thisCourse = courses._find (x) -> x.titles._any (y) -> y.compcode is sectionInfo.compcode
 			thisCourse.sections = if sectionInfo.isLectureSection then thisCourse.lectureSections else if sectionInfo.isLabSection then thisCourse.labSections
@@ -169,7 +168,6 @@ io.sockets.on "connection", (socket) ->
 		student.markModified "registeredOn"
 		student.save ->
 			callback success: true
-		ipc?.emit? "broadcast", "studentStatusChanged", [socket.student_id, "registered", true]
 		db.Course.find({titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)}, "compcode").lean().exec (err, courses) ->
 			for course in student.get("selectedcourses") then do (course) ->
 				if course.selectedLectureSection?
@@ -221,18 +219,6 @@ io.sockets.on "connection", (socket) ->
 					delete x.selectedLabSection
 				student.markModified "selectedcourses"
 				student.save()
-
-ipc = socket_io_client.connect "http://localhost:#{process.env.IPC_PORT}"
-ipc.on "connect", ->
-
-	ipc.on "broadcast", (message, data) ->
-		if message is "studentStatusChanged"
-			[student_id, what, that] = data
-			if (socket = io.sockets.clients()._find (x) -> x.student_id? and x.student_id.toString() is student_id)?
-				if what is "registered" and not that
-					socket.emit "statusChanged", "not registered"
-				else if that
-					socket.emit "statusChanged", what
 
 server.listen (port = process.env.PORT ? 5000), -> console.log "worker #{process.pid}: Listening on port #{port}"
 
