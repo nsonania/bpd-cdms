@@ -28,7 +28,7 @@
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 				<h3 id="options-box-label">Options</h3>
 			</div>
-			<div class="modal-body" data-bind="$root.coursesViewModel">
+			<div class="modal-body" data-bind="with: $root.coursesViewModel">
 				<label class="checkbox">
 					<input type="checkbox" data-bind="checked: enableOverloads"> Allow me to register for overload courses.
 				</label>
