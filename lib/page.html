@@ -132,7 +132,7 @@
 								<td data-bind="text: typeof studentId() !== 'undefined' && studentId() !== null && studentId() !== '' ? studentId() : '---'"></td>
 								<td data-bind="text: typeof name() !== 'undefined' && name() !== null && name() !== '' ? name() : '-----'"></td>
 								<td>
-									<a target="_blank" class="btn btn-primary" data-bind="visible: !validated() && registered(), attr: {href: 'rc_' + studentId() + '.pdf'}"><i class="icon-print icon-white"></i> Registration Card</a>
+									<a target="_blank" class="btn btn-primary" data-bind="visible: !validated() && registered(), attr: {href: 'rc/' + studentId()}"><i class="icon-print icon-white"></i> Registration Card</a>
 									<button class="btn span4" data-bind="css: {'btn-success': validated, 'btn-primary': !validated() && registered()}, click: validate, enable: registered() && !validated(), text: validateMessage"></button>
 								</td>
 							</tr>

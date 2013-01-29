@@ -17,10 +17,41 @@ expressServer.configure ->
 	expressServer.use (req, res, next) ->
 		req.url = "/page.html" if req.url is "/"
 		next()
-	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
 	expressServer.use expressServer.router
+	expressServer.use express.static "#{__dirname}/lib", maxAge: 31557600000, (err) -> console.log "Static: #{err}"
+
+expressServer.get "/rc/:studentId", (req, res, next) ->
+	nxt => req.url = "/rc_#{req.params.studentId}.pdf"
+	return nxt() if req.headers.range?
+	pdfRC req.params.studentId => nxt()
 
 server = http.createServer expressServer
+
+pdfRC = (student_id, callback) ->
+	db.Misc.findOne desc: "Semester Details", (err, semester) ->
+		return res.send 404, "Registrations not open yet." unless semester?
+		db.Student.findById student_id, (err, student) ->
+			return res.send 500, "Student missing from database." unless student?
+			db.Course.find titles: $elemMatch: compcode: $in: (student.get("selectedcourses") ? [])._map((x) -> x.compcode), (err, courses) ->
+				data =
+					studentId: student.get "studentId"
+					studentName: student.get "name"
+					semesterTitle: semester.get "title"
+					registeredDate: student.get "registeredOn"
+					courses: (student.get("selectedcourses") ? [])._map (selcourse) ->
+						compcode: selcourse.compcode
+						number: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.number
+						name: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.name
+						lecture: selcourse.selectedLectureSection
+						lab: selcourse.selectedLabSection
+						type:
+							if student.get("bc")?.indexOf(selcourse.compcode) >= 0
+								"BC"
+							else if student.get("psc")?.indexOf(selcourse.compcode) >= 0
+								"PSC"
+							else
+								"EL"
+				pdfExport.generateRC data, callback
 
 io = socket_io.listen server
 io.set "log level", 0
