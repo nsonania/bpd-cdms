@@ -225,7 +225,7 @@
 								<td data-bind="text: compcode"></td>
 								<td data-bind="text: number"></td>
 								<td data-bind="text: name"></td>
-								<td><button class="btn" data-bind="click: toggleSelection, css: {'btn-success': selected}"><i data-bind="css: {'icon-ok icon-white': selected, 'icon-plus': !selected()}, enable: $parent.elsEnabled()"></i></button></td>
+								<td><button class="btn" data-bind="click: toggleSelection, css: {'btn-success': selected}, enable: $parent.elsEnabled() || selected()"><i data-bind="css: {'icon-ok icon-white': selected, 'icon-plus': !selected()}"></i></button></td>
 							</tr>
 						</tbody>
 					</table>
