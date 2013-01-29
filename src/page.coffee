@@ -268,3 +268,4 @@ $ ->
 		viewmodel.loginViewModel.alertStatus "remoteLogout"
 
 	$('input[rel=tooltip]').tooltip()
+	$('body').on "touchstart.dropdown", ".dropdown-menu", (e) -> e.stopPropagation()
