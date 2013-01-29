@@ -52,16 +52,25 @@ io.sockets.on "connection", (socket) ->
 		else
 			callback false
 
-	socket.on "getCourses", (callback) ->
+	socket.on "getCourses", (query, callback) ->
 		return callback false unless socket.auth?
-		console.log "Fetching Courses"
-		db.Course.find({}).lean().exec (err, courses) -> callback courses
+		return callback [] if query in ["", null, undefined]
+		db.Course.find(titles: $elemMatch: $or: [{compcode: Number query}, {number: $regex: new RegExp(query, "i")}, {name: $regex: new RegExp(query, "i")}]).limit(20).lean().exec (err, courses) -> callback courses
 
-	socket.on "commitCourses", (courses, callback) ->
+	socket.on "getCoursesAll", (studentId, cat, query, callback) ->
 		return callback false unless socket.auth?
-		console.log "Committing Courses"
-		core.commitCourses courses, callback
-		ipc?.emit "broadcast", "updatedCourses"
+		q1 = []
+		switch cat
+			when 0
+				q1 = []
+			when 1
+				await db.Student.findOne studentId: studentId, defer err, student
+				q1 = [student.get("bc") ? [], student.get("psc") ? [], student.get("el") ? []]._flatten(1)
+			when 2
+				await db.Student.findOne studentId: studentId, defer err, student
+				q1 = (student.get("selectedcourses") ? [])._map (x) -> x.compcode
+		db.Course.find(titles: $elemMatch: $or: [{compcode: Number query}, {number: $regex: new RegExp(query, "i")}, {name: $regex: new RegExp(query, "i")}]).lean().exec (err, courses) ->
+			callback courses._filter((x) -> x.titles._any (y) -> y.compcode in q1 or cat is 0)._take(20)
 
 	socket.on "importCourses", (courses, callback) ->
 		return callback false unless socket.auth?
@@ -75,10 +84,22 @@ io.sockets.on "connection", (socket) ->
 		core.deleteAllCourses callback
 		ipc?.emit "broadcast", "updatedCourses"
 
-	socket.on "getStudents", (callback) ->
+	socket.on "getStudents", (filter, query, callback) ->
 		return callback false unless socket.auth?
-		console.log "Fetching Students"
-		db.Student.find({}).lean().exec (err, students) -> callback students
+		return callback [] if query in ["", null, undefined] and filter is 0
+		query = ".*" if query in ["", null, undefined]
+		$or = [
+			{studentId: $regex: new RegExp(query, "i")}
+			{name: $regex: new RegExp(query, "i")}
+		]
+		mq = 
+			switch filter
+				when 0 then db.Student.find $or: $or
+				when 1 then db.Student.find $or: $or, registered: $ne: true
+				when 2 then db.Student.find $or: $or, registered: true, validated: $ne: true
+				when 3 then db.Student.find $or: $or, validated: true
+				when 4 then db.Student.find $or: $or, difficultTimetable: true
+		mq.sort("studentId").limit(20).lean().exec (err, students) -> callback students
 
 	socket.on "commitStudents", (students, callback) ->
 		return callback false unless socket.auth?
@@ -98,10 +119,10 @@ io.sockets.on "connection", (socket) ->
 		core.deleteAllStudents callback
 		ipc?.emit "broadcast", "updatedStudents"
 
-	socket.on "getValidators", (callback) ->
+	socket.on "getValidators", (query, callback) ->
 		return callback false unless socket.auth?
-		console.log "Fetching Validators"
-		db.Validator.find({}).lean().exec (err, validators) -> callback validators
+		return callback [] if query in ["", null, undefined]
+		db.Validator.find(username: $regex: new RegExp(query, "i")).sort("username").limit(20).lean().exec (err, validators) -> callback validators
 
 	socket.on "commitValidators", (validators, callback) ->
 		return callback false unless socket.auth?
@@ -134,7 +155,6 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "getStats", (callback) ->
 		return callback false unless socket.auth?
-		console.log "Fetching Stats"
 		core.getStats callback
 
 	socket.on "logout", (callback) ->

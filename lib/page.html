@@ -18,6 +18,7 @@
 		<script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 		<script src="moment.min.js" type="text/javascript"></script>
 		<script src="bootstrap/js/bootstrap-datetimepicker.js" type="text/javascript"></script>
+		<script src="bootstrap/js/bootbox.min.js" type="text/javascript"></script>
 		<script src="socket.io/socket.io.js"></script>
 		<script src="knockout-2.2.0.js" type="text/javascript"></script>
 		<script src="page.js" type="text/javascript" charset="utf-8"></script>
@@ -28,7 +29,7 @@
 				<div class="container">
 					<a class="brand" href="#" data-bind="click: gotoHome">BPDC - Registration System</a>
 					<ul class="nav">
-						<li data-bind="visible: authenticated, click: gotoHome, css: {active: activeView() == 'homeView'}"><a href="#">Home</a></li>
+						<li data-bind="visible: authenticated, click: gotoSettings, css: {active: activeView() == 'settingsView'}"><a href="#">Settings</a></li>
 						<li data-bind="visible: authenticated, click: gotoCourses, css: {active: activeView() == 'coursesView'}"><a href="#">Courses</a></li>
 						<li data-bind="visible: authenticated, click: gotoStudents, css: {active: activeView() == 'studentsView'}"><a href="#">Students</a></li>
 						<li data-bind="visible: authenticated, click: gotoValidators, css: {active: activeView() == 'validatorsView'}"><a href="#">Validators</a></li>
@@ -53,7 +54,7 @@
 			<div id="main-container" class="container" data-bind="ifnot: authenticated">
 				<div class="hero-unit">
 					<h1>Admin Portal</h1>
-					<p>Use this portal to modify courses' and students' details.</p>
+					<p>Use this portal to modify the database and setup this semester.</p>
 				</div>
 				<div class="row">
 					<div id="loginbox" class="well span6 offset3">
@@ -82,30 +83,32 @@
 					</div>
 				</div>
 			</div>
-			<div id="home-container" data-bind="with: semester, visible: activeView() == 'homeView' && authenticated()"class=" container">
+			<div id="home-container" data-bind="visible: activeView() == 'homeView' && authenticated()" class="container">
 				<div class="hero-unit">
 					<h1>Admin Portal</h1>
-					<p>Setup a Semester. To modify <em>Courses</em> and <em>Students</em> click on the appropiate links above.</p>
+					<p>Use this portal to modify the database and setup this semester. Click on a link in the navigation bar above to get started.</p>
+				</div>
+			</div>
+			<div id="settings-container" data-bind="with: semester, visible: activeView() == 'settingsView' && authenticated()" class="container">
+				<div class="hero-unit">
+					<h1>Settings</h1>
+					<p>Warning! This section contains vital options that can cause irrevertible damage to the database. Proceed with Caution.</p>
 				</div>
 				<div class="form-horizontal">
-					<div class="navbar">
-						<div class="navbar-inner">
-							<div class="brand">Course Information</div>
-						</div>
-					</div>
+					<legend style="text-align: center">Semester Information</legend>
 					<div class="row">
-						<div class="span6 offset3">
+						<div class="span6 offset3 well">
 							<br>
 							<div class="control-group">
 								<label class="control-label">Semester Title</label>
 								<div class="controls">
-									<input type="text" placeholder="Semester Title" data-bind="value: title">
+									<input class="span3" type="text" placeholder="Semester Title" data-bind="value: title">
 								</div>
 							</div>
 							<div class="control-group">
 								<label class="control-label">Start Date/Time</label>
 								<div class="controls">
-									<input type="text" placeholder="Start Date/Time" data-bind="value: startTime" data-date-format="dd/mm/yyyy hh:ii" rel="datetime">
+									<input class="span3" type="text" placeholder="Start Date/Time" data-bind="value: startTime" data-date-format="dd/mm/yyyy hh:ii" rel="datetime">
 								</div>
 							</div>
 							<div class="control-group">
@@ -113,6 +116,23 @@
 									<button class="btn" data-bind="click: fetchSemester">Revert Changes</button>
 									<button class="btn btn-primary" data-bind="click: commitSemester">Commit Changes</button>
 								</div>
+							</div>
+						</div>
+					</div>
+					<br>
+					<legend style="text-align: center">Erase Database</legend>
+					<div class="row">
+						<div class="span6 offset3 well">
+							<div class="row">
+								<button class="btn btn-danger span2 offset2" data-bind="click: deleteCourses"><i class="icon-trash icon-white"></i> Erase Courses</button>
+							</div>
+							<br>
+							<div class="row">
+								<button class="btn btn-danger span2 offset2" data-bind="click: deleteStudents"><i class="icon-trash icon-white"></i> Erase Students</button>
+							</div>
+							<br>
+							<div class="row">
+								<button class="btn btn-danger span2 offset2" data-bind="click: deleteValidators"><i class="icon-trash icon-white"></i> Erase Validators</button>
 							</div>
 						</div>
 					</div>
@@ -128,34 +148,33 @@
 						<div class="form-inline">
 							<div class="input-prepend">
 								<div class="add-on">#</div>
-								<input type="text" class="span1" data-bind="value: number">
+								<input type="text" class="span1" data-bind="value: number" readOnly>
 							</div>
 							<div class="input-prepend">
 								<div class="add-on">Instructor</div>
-								<input type="text" class="span2" data-bind="value: instructor">
+								<input type="text" class="span2" data-bind="value: instructor" readOnly>
 							</div>
 							<div class="input-prepend">
 								<div class="add-on">Capacity</div>
-								<input type="text" class="span1" data-bind="value: capacity">
+								<input type="text" class="span1" data-bind="value: capacity" readOnly>
 							</div>
 						</div>
 						<br>
 						<table id="makeschedule" class="table table-bordered">
 							<tbody data-bind="foreach: timetable">
 								<tr data-bind="foreach: $data">
-									<td data-bind="text: slot, css: {selected: busy}, click: toggleSlot"></td>
+									<td data-bind="text: slot, css: {selected: busy}"></td>
 								</tr>
 							</tbody>
 						</table>
 					</div>
 					<div class="modal-footer">
-						<button class="btn btn-danger" data-dismiss="modal" aria-hidden="true" data-bind="click: deleteSection"><i class="icon-white icon-trash"></i></button>
 						<button class="btn btn-primary pull-right" data-dismiss="modal" aria-hidden="true">Close</button>
 					</div>
 				</div>
 				<div class="hero-unit">
 					<h1>Courses</h1>
-					<p>Add new courses and modify existing ones. Delete all sections from the previous semester and add new ones. If no sections are present, the course would be unavailable.</p>
+					<p>Import Courses from a .csv file. Export course-wise validated students. Enter a query in the search box to fetch courses.</p>
 				</div>
 				<div style="height: 1px"></div>
 				<div id="courseheader" data-spy="affix" class="container" data-offset-top="290">
@@ -173,9 +192,7 @@
 									</li>
 									<li class="divider-vertical"></li>
 									<li class="btn-group">
-										<button class="btn" data-bind="click: newCourse" title="New Course" rel="tooltip"><i class="icon-plus"></i></button>
 										<button class="btn" data-bind="click: selectFile" title="Import from .csv" rel="tooltip"><i class="icon-file"></i></button>
-										<button class="btn" data-bind="click: deleteAll" title="Delete All Courses" rel="tooltip"><i class="icon-trash"></i></button>
 									</li>
 								</ul>
 							</div>
@@ -202,7 +219,6 @@
 									<div class="brand">Course Information</div>
 									<div class="btn-group pull-right">
 										<button class="btn" data-bind="click: exportCSV" title="Export Enrolled Students as .csv" rel="tooltip"><i class="icon-download-alt"></i></button>
-										<button class="btn" data-bind="click: deleteCourse" title="Remove Course" rel="tooltip"><i class="icon-trash"></i></button>
 									</div>
 								</div>
 							</div>
@@ -211,40 +227,31 @@
 								<div class="control-group">
 									<label class="control-label">Compcode</label>
 									<div class="controls">
-										<input type="text" placeholder="Compcode" data-bind="value: compcode">
+										<input type="text" placeholder="Compcode" data-bind="value: compcode" readOnly>
 									</div>
 								</div>
 								<div class="control-group">
 									<label class="control-label">Course Number</label>
 									<div class="controls">
-										<input type="text" placeholder="Course Number" data-bind="value: number">
+										<input type="text" placeholder="Course Number" data-bind="value: number" readOnly>
 									</div>
 								</div>
 								<div class="control-group">
 									<label class="control-label">Course Name</label>
 									<div class="controls">
-										<input type="text" placeholder="Course Name" data-bind="value: name">
-									</div>
-								</div>
-								<div class="control-group">
-									<label class="control-label">Set Capacity</label>
-									<div class="controls">
-										<div class="input-append">
-											<input type="text" placeholder="Set Capacity">
-											<button class="btn" data-bind="click: distributeCapacity"><i class="icon-edit"></i></button>
-										</div>
+										<input type="text" placeholder="Course Name" data-bind="value: name" readOnly>
 									</div>
 								</div>
 								<div class="control-group">
 									<label class="control-label">Sections shared with</label>
 									<div class="controls">
-										<input type="text" placeholder="None" data-bind="value: sharedSections">
+										<input type="text" placeholder="None" data-bind="value: sharedSections" readOnly>
 									</div>
 								</div>
 								<div class="control-group">
 									<label class="control-label">Test Dates</label>
 									<div class="controls">
-										<input type="text" placeholder="Test Dates" data-bind="value: otherDatesNI">
+										<input type="text" placeholder="Test Dates" data-bind="value: otherDatesNI" readOnly>
 									</div>
 								</div>
 							</div>
@@ -255,9 +262,6 @@
 								<div class="navbar">
 									<div class="navbar-inner">
 										<div class="brand">Lecture Sections</div>
-										<div class="navbar-form pull-right">
-											<button class="btn" data-bind="click: addLectureSection" title="New Section" rel="tooltip"><i class="icon-plus"></i></button>
-										</div>
 									</div>
 								</div>
 								<div class="box-bordered ht300">
@@ -266,7 +270,7 @@
 											<tr>
 												<td data-bind="text: typeof number() !== 'undefined' && number() !== null && number() !== '' ? number() : '-'"></td>
 												<td data-bind="text: typeof instructor() !== 'undefined' && instructor() !== null && instructor() !== '' ? instructor() : '-----'"></td>
-												<td><button class="btn btn-small" data-bind="click: editSection"><i class="icon-pencil"></i></button></td>
+												<td><button class="btn btn-small" data-bind="click: editSection"><i class="icon-th"></i></button></td>
 											</tr>
 										</tbody>
 									</table>
@@ -276,9 +280,6 @@
 								<div class="navbar">
 									<div class="navbar-inner">
 										<div class="brand">Lab Sections</div>
-										<div class="navbar-form pull-right">
-											<button class="btn" data-bind="click: addLabSection"title="New Section" rel="tooltip"><i class="icon-plus"></i></button>
-										</div>
 									</div>
 								</div>
 								<div class="box-bordered ht300">
@@ -287,17 +288,12 @@
 											<tr>
 												<td data-bind="text: typeof number() !== 'undefined' && number() !== null && number() !== '' ? number() : '-'"></td>
 												<td data-bind="text: typeof instructor() !== 'undefined' && instructor() !== null && instructor() !== '' ? instructor() : '-----'"></td>
-												<td><button class="btn btn-small" data-bind="click: editSection"><i class="icon-pencil"></i></button></td>
+												<td><button class="btn btn-small" data-bind="click: editSection"><i class="icon-th"></i></button></td>
 											</tr>
 										</tbody>
 									</table>
 								</div>
 							</div>
-						</div>
-						<br>
-						<div class="pull-right commitBar">
-							<button class="btn" data-bind="click: $parent.fetchCourses">Revert Changes</button>
-							<button class="btn btn-primary" data-bind="click: $parent.commitCourses">Commit Changes</button>
 						</div>
 					</div>
 				</div>
@@ -316,7 +312,7 @@
 			<div id="students-container" data-bind="with: studentsViewModel, visible: activeView() == 'studentsView' && authenticated()" class="container">
 				<div class="hero-unit">
 					<h1>Students</h1>
-					<p>Import Students from a <em>.csv</em> file. Assign courses/sections due to difficult timetables. Check students' registration and validation statuses.</p>
+					<p>Import Students from a <em>.csv</em> file. Reset their password if required. Check and/or toggle students' registration and validation statuses. Export a filtered list of students. Enter a query in the search box to fetch students.</p>
 				</div>
 				<div style="height: 1px"></div>
 				<div id="studentheader" data-spy="affix" class="container" data-offset-top="290">
@@ -329,7 +325,7 @@
 									<li class="navbar-form">
 										<div class="input-prepend btn-group">
 											<button class="btn dropdown-toggle btn-narrow" data-bind="css: {'btn-info': filterCategory() > 0}" data-toggle="dropdown" title="Filter Students" rel="tooltip"><i class="icon-search" data-bind="css: {'icon-white': filterCategory() > 0}"></i><span class="carret"></span></button>
-											<input type="text" data-bind="value: query, valueUpdate: 'afterkeydown'" placeholder="Search">
+											<input type="text" data-bind="event: {keyup: filter}" placeholder="Search">
 											<ul class="dropdown-menu">
 												<li data-bind="css: {active: filterCategory() == 0}, click: filterCat(0)"><a href="#">All Students</a></li>
 												<li data-bind="css: {active: filterCategory() == 1}, click: filterCat(1)"><a href="#">Not Registered</a></li>
@@ -341,10 +337,8 @@
 									</li>
 									<li class="divider-vertical"></li>
 									<li class="btn-group">
-										<button class="btn" data-bind="click: newStudent" title="Add Student" rel="tooltip"><i class="icon-plus"></i></button>
 										<button class="btn" data-bind="click: selectFile" title="Import from .csv" rel="tooltip"><i class="icon-file"></i></button>
 										<button class="btn" data-bind="click: exportCSV" title="Export Students as .csv" rel="tooltip"><i class="icon-download-alt"></i></button>
-										<button class="btn" data-bind="click: deleteAll" title="Delete All Students" rel="tooltip"><i class="icon-trash"></i></button>
 									</li>
 								</ul>
 							</div>
@@ -368,9 +362,6 @@
 							<div class="navbar">
 								<div class="navbar-inner">
 									<div class="brand">Student Information</div>
-									<div class="btn-group pull-right">
-										<button class="btn" data-bind="click: deleteStudent" title="Remove Student" rel="tooltip"><i class="icon-trash"></i></button>
-									</div>
 								</div>
 							</div>
 							<div class="box-bordered">
@@ -378,13 +369,13 @@
 								<div class="control-group">
 									<label class="control-label">Student Id</label>
 									<div class="controls">
-										<input type="text" placeholder="Student Id" data-bind="value: studentId">
+										<input type="text" placeholder="Student Id" data-bind="value: studentId" readOnly>
 									</div>
 								</div>
 								<div class="control-group">
 									<label class="control-label">Student Name</label>
 									<div class="controls">
-										<input type="text" placeholder="Student Name" data-bind="value: name">
+										<input type="text" placeholder="Student Name" data-bind="value: name" readOnly>
 									</div>
 								</div>
 								<div class="control-group">
@@ -419,7 +410,7 @@
 										<div class="navbar-form pull-right">
 											<div class="input-prepend btn-group">
 												<button class="btn dropdown-toggle btn-narrow" data-bind="css: {'btn-info': filterCategory() > 0}" data-toggle="dropdown" title="Filter Courses" rel="tooltip"><i class="icon-search" data-bind="css: {'icon-white': filterCategory() > 0}"></i><span class="caret"></span></button>
-												<input type="text" data-bind="value: query, valueUpdate: 'afterkeydown'" placeholder="Search">
+												<input type="text" data-bind="event: {keyup: filter}" placeholder="Search">
 												<ul class="dropdown-menu">
 													<li data-bind="css: {active: filterCategory() == 0}, click: filterCat0"><a href="#">All Courses</a></li>
 													<li data-bind="css: {active: filterCategory() == 1}, click: filterCat1"><a href="#">BCs, PSCs &amp; ELs</a></li>
@@ -431,26 +422,26 @@
 								</div>
 								<div class="box-bordered ht300">
 									<table class="table table-striped table-hover">
-										<tbody data-bind="foreach: filteredCourses">
+										<tbody data-bind="foreach: courses">
 											<tr>
-												<td data-bind="text: course.number"></td>
+												<td data-bind="text: number"></td>
 												<td>
 													<div class="btn-group">
-														<button class="btn btn-small" data-bind="css: {'btn-info': bc}, click: $parent.toggleBc, disable: $parent.registered">BC</button>
-														<button class="btn btn-small" data-bind="css: {'btn-info': psc}, click: $parent.togglePsc, disable: $parent.registered">PSC</button>
-														<button class="btn btn-small" data-bind="css: {'btn-info': el}, click: $parent.toggleEl, disable: $parent.registered">EL</button>
+														<button class="btn btn-small" data-bind="css: {'btn-info': bc()}, click: $parent.toggleBc, disable: $parent.dreg">BC</button>
+														<button class="btn btn-small" data-bind="css: {'btn-info': psc()}, click: $parent.togglePsc, disable: $parent.dreg">PSC</button>
+														<button class="btn btn-small" data-bind="css: {'btn-info': el()}, click: $parent.toggleEl, disable: $parent.dreg">EL</button>
 													</div>
-													<button class="btn btn-small" data-bind="css: {'btn-info': selected}, click: $parent.toggleSelected, disable: $parent.registered">Selected</button>
-													<div class="btn-group" data-bind="visible: selected && course.lectureSections().length > 0">
-														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lecture Section' + (typeof selectedLectureSection !== 'undefined' && selectedLectureSection !== null ? ': ' + selectedLectureSection : ''), disable: $parent.registered"></button>
-														<ul class="dropdown-menu" data-bind="foreach: course.lectureSections">
-															<li data-bind="css: {active: $parent.selectedLectureSection == number()}, click: $parents[1].selectLectureSection.bind($data, $parents)"><a href="#" data-bind="text: number() + ': ' + instructor()"></a></li>
+													<button class="btn btn-small" data-bind="css: {'btn-info': selected}, click: $parent.toggleSelected, disable: $parent.dreg">Selected</button>
+													<div class="btn-group" data-bind="visible: selected() && lectureSections.length > 0">
+														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lecture Section' + (typeof selectedLectureSection() !== 'undefined' && selectedLectureSection() !== null ? ': ' + selectedLectureSection() : ''), disable: $parent.dreg, css: {'btn-info': selectedLectureSection()}"></button>
+														<ul class="dropdown-menu" data-bind="foreach: lectureSections">
+															<li data-bind="css: {active: $parent.selectedLectureSection() == number()}, click: $parents[1].selectLectureSection.bind($data, $parents)"><a href="#" data-bind="text: number() + ': ' + instructor()"></a></li>
 														</ul>
 													</div>
-													<div class="btn-group" data-bind="visible: selected && course.labSections().length > 0">
-														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lab Section' + (typeof selectedLabSection !== 'undefined' && selectedLabSection !== null ? ': ' + selectedLabSection : ''), disable: $parent.registered"></button>
-														<ul class="dropdown-menu" data-bind="foreach: course.labSections">
-															<li data-bind="css: {active: $parent.selectedLabSection == number()}, click: $parents[1].selectLabSection.bind($data, $parents)"><a href="#" data-bind="text: number() + ': ' + instructor()"></a></li>
+													<div class="btn-group" data-bind="visible: selected() && labSections.length > 0">
+														<button class="btn btn-small dropdown-toggle" data-toggle="dropdown" data-bind="text: 'Lab Section' + (typeof selectedLabSection() !== 'undefined' && selectedLabSection() !== null ? ': ' + selectedLabSection() : ''), disable: $parent.dreg, css: {'btn-info': selectedLabSection()}"></button>
+														<ul class="dropdown-menu" data-bind="foreach: labSections">
+															<li data-bind="css: {active: $parent.selectedLabSection() == number()}, click: $parents[1].selectLabSection.bind($data, $parents)"><a href="#" data-bind="text: number() + ': ' + instructor()"></a></li>
 														</ul>
 													</div>
 												</td>
@@ -461,7 +452,7 @@
 							</div>
 						</div>
 						<br>
-						<div class="pull-right commitBar">
+						<div class="pull-right commitBar" data-bind="visible: $parent.anyModified">
 							<button class="btn" data-bind="click: $parent.fetchStudents">Revert Changes</button>
 							<button class="btn btn-primary" data-bind="click: $parent.commitStudents">Commit Changes</button>
 						</div>
@@ -481,7 +472,7 @@
 			<div id="validators-container" data-bind="with: validatorsViewModel, visible: activeView() == 'validatorsView' && authenticated()" class="container">
 				<div class="hero-unit">
 					<h1>Validators</h1>
-					<p>Add, remove, and modify validators.</p>
+					<p>Import Validators from a .csv file. Reset password for a validator if required. Enter a query in the search box to fetch validators.</p>
 				</div>
 				<div style="height: 1px"></div>
 				<div id="validatorheader" data-spy="affix" class="container" data-offset-top="290">
@@ -499,9 +490,7 @@
 									</li>
 									<li class="divider-vertical"></li>
 									<li class="btn-group">
-										<button class="btn" data-bind="click: newValidator" title="Add Validator" rel="tooltip"><i class="icon-plus"></i></button>
 										<button class="btn" data-bind="click: selectFile" title="Import from .csv" rel="tooltip"><i class="icon-file"></i></button>
-										<button class="btn" data-bind="click: deleteAll" title="Delete All Validators" rel="tooltip"><i class="icon-trash"></i></button>
 									</li>
 								</ul>
 							</div>
@@ -524,9 +513,6 @@
 							<div class="navbar">
 								<div class="navbar-inner">
 									<div class="brand">Validator Information</div>
-									<div class="btn-group pull-right">
-										<button class="btn" data-bind="click: deleteValidator" title="Remove Validator" rel="tooltip"><i class="icon-trash"></i></button>
-									</div>
 								</div>
 							</div>
 							<div class="box-bordered">
@@ -534,7 +520,7 @@
 								<div class="control-group">
 									<label class="control-label">Username</label>
 									<div class="controls">
-										<input type="text" placeholder="Username" data-bind="value: username">
+										<input type="text" placeholder="Username" data-bind="value: username" readOnly>
 									</div>
 								</div>
 								<div class="control-group">
@@ -547,7 +533,7 @@
 							</div>
 						</div>
 						<br>
-						<div class="pull-right commitBar">
+						<div class="pull-right commitBar" data-bind="visible: $parent.anyModified">
 							<button class="btn" data-bind="click: $parent.fetchValidators">Revert Changes</button>
 							<button class="btn btn-primary" data-bind="click: $parent.commitValidators">Commit Changes</button>
 						</div>
@@ -572,25 +558,25 @@
 					<div class="span3">
 						<div class="stat-box">
 							<p>Logged in Students</p>
-							<div data-bind="text: currentStudents">8888</div>
+							<div data-bind="text: currentStudents"></div>
 						</div>
 					</div>
 					<div class="span3">
 						<div class="stat-box">
 							<p>Unregistered Students</p>
-							<div data-bind="text: currentNotRegistered">8888</div>
+							<div data-bind="text: currentNotRegistered"></div>
 						</div>
 					</div>
 					<div class="span3">
 						<div class="stat-box">
 							<p>Unvalidated Students</p>
-							<div data-bind="text: currentNotValidated">8888</div>
+							<div data-bind="text: currentNotValidated"></div>
 						</div>
 					</div>
 					<div class="span3">
 						<div class="stat-box">
 							<p>Validated Students</p>
-							<div data-bind="text: currentValidated">8888</div>
+							<div data-bind="text: currentValidated"></div>
 						</div>
 					</div>
 				</div>
@@ -599,13 +585,13 @@
 					<div class="span3">
 						<div class="stat-box">
 							<p>Difficult Timetable Students</p>
-							<div data-bind="text: currentDifficultTimetable">8888</div>
+							<div data-bind="text: currentDifficultTimetable"></div>
 						</div>
 					</div>
 					<div class="span3">
 						<div class="stat-box">
 							<p>Logged in Validators</p>
-							<div data-bind="text: currentValidators">8888</div>
+							<div data-bind="text: currentValidators"></div>
 						</div>
 					</div>
 				</div>

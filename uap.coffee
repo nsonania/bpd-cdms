@@ -13,6 +13,7 @@ methods = [
 	"flatten", "groupBy"
 	"each"
 	"sortBy"
+	"take", "rest"
 ]
 
 for method in methods then do (method) ->

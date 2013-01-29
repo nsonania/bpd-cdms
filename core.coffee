@@ -16,81 +16,66 @@ dumpError = (err) ->
 		else
 			console.log "dumpError :: argument is not an object"
 
-exports.commitCourses = (new_courses, callback) ->
-	db.Course.find {}, (err, oldCourses) ->
-		for course in oldCourses
-			await course.remove defer err, robj
-			await course.save defer err, robj
-		for obj in new_courses
-			course = new db.Course obj
-			await course.save defer err, robj
-		callback true
-
 exports.importCourses = (data, callback) ->
-	db.Course.find {}, (err, oldCourses) ->
-		return console.log err if err?
-		course = null
-		lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
-		try
-			for line in lines[6..]
-				if line[0] not in [null, undefined]
-					if course?
-						if lectureSections.length > 0
-							course.set "hasLectureSections", true
-							course.set "lectureSections", lectureSections
-						if labSections.length > 0
-							course.set "hasLabSections", true
-							course.set "labSections", labSections
-						await course.save defer err, robj
-					_oic = undefined
-					for ccode in line[0].split(/\ *[;,\/]\ */)._map((x) -> Number x)
-						for oc in oldCourses when (oc?.get("titles")._any (x) -> x.compcode is ccode)
-							_oic = oc?.get("_id")
-							await db.Course.findOneAndRemove _id: _oic, defer err, robj
-					course = new db.Course
-						_id: _oic
-						titles:
-							line[0].split(/\ *[;,\/]\ */)._map((x) -> Number x)._map (ccode, i) ->
-								compcode: Number ccode
-								number: line[1].split(/\ *[;,\/]\ */)._map((x) -> x)[i]
-								name: line[2]
-						otherDates: od for od in line[9..13] when od not in [null, undefined, "*", "-"]
-					lectureSections = []
-					labSections = []
-					currentSections = if line[3].indexOf("0") is 0 then labSections else lectureSections
-				else
-					if line[4] is "1" then currentSections = labSections
-				currentSections.push
-					number: currentSections.length + 1
-					instructor: line[5]
-					timeslots: do ->
-						ts =
-							for day in "#{line[7] ? ""} #{line[8] ? ""}".split(" ")._filter((x) -> x? and x.length > 0)
-								for di, dii in ["Su", "M", "T", "W", "Th", "F", "S"]
-									if day[0...di.length] is di and not isNaN day[di.length..]
-										hours = day[di.length..]
-										break
-								for hour in hours
-									throw "Invalid Timeslot" if isNaN hour
-									day: dii + 1
-									hour: Number hour
-						ts._flatten()
-					capacity: Number line[14] ? 40
-			if course?
-				if lectureSections.length > 0
-					course.set "hasLectureSections", true
-					course.set "lectureSections", lectureSections
-				if labSections.length > 0
-					course.set "hasLabSections", true
-					course.set "labSections", labSections
-				await course.save defer err, robj
-			db.Course.remove titles: $elemMatch: compcode: $in: ["", null], ->
-				console.log "Import Courses Done."
-				callback true
-		catch error
-			console.log "Import Courses: Error Parsing CSV file."
-			dumpError error
-			callback false
+	return console.log err if err?
+	course = null
+	lines = data.split(/\r\n|\r|\n/)._map((x) -> x.split(',')._map (y) -> if y is "" then null else y)._filter (x) -> x? and x.length > 0
+	try
+		for line in lines[6..]
+			if line[0] not in [null, undefined]
+				console.log "Parsing #{line[0]}"
+				if course?
+					if lectureSections.length > 0
+						course.set "hasLectureSections", true
+						course.set "lectureSections", lectureSections
+					if labSections.length > 0
+						course.set "hasLabSections", true
+						course.set "labSections", labSections
+					await course.save defer err, robj
+				await db.Course.remove {titles: $elemMatch: compcode: $in: line[0].split(/\ *[;,\/]\ */)._map((x) -> Number x)}, defer err, robj
+				course = new db.Course
+					titles:
+						line[0].split(/\ *[;,\/]\ */)._map((x) -> Number x)._map (ccode, i) ->
+							compcode: Number ccode
+							number: line[1].split(/\ *[;,\/]\ */)._map((x) -> x)[i]
+							name: line[2]
+					otherDates: od for od in line[10..] when od not in [null, undefined, "*", "-"]
+				lectureSections = []
+				labSections = []
+				currentSections = if line[3].indexOf("0") is 0 then labSections else lectureSections
+			else
+				if line[4] is "1" then currentSections = labSections
+			currentSections.push
+				number: currentSections.length + 1
+				instructor: line[5]
+				timeslots: do ->
+					ts =
+						for day in ("#{line[8] ? ""} #{line[9] ? ""}".match(/[a-zA-Z]+\s*\d+/g) ? [])._map((x) => x.split(" ").join(""))
+							for di, dii in ["Su", "M", "T", "W", "Th", "F", "S"]
+								if day[0...di.length] is di and not isNaN day[di.length..]
+									hours = day[di.length..]
+									break
+							for hour in hours
+								throw "Invalid Timeslot" if isNaN hour
+								day: dii + 1
+								hour: Number hour
+					ts._flatten()
+				capacity: Number line[6] ? 40
+		if course?
+			if lectureSections.length > 0
+				course.set "hasLectureSections", true
+				course.set "lectureSections", lectureSections
+			if labSections.length > 0
+				course.set "hasLabSections", true
+				course.set "labSections", labSections
+			await course.save defer err, robj
+		db.Course.remove titles: $elemMatch: compcode: $in: ["", null], ->
+			console.log "Import Courses Done."
+			callback true
+	catch error
+		console.log "Import Courses: Error Parsing CSV file."
+		dumpError error
+		callback false
 
 exports.deleteAllCourses = (callback) ->
 	db.Course.find {}, (err, courses) ->
@@ -149,7 +134,7 @@ exports.deleteAllStudents = (callback) ->
 		callback true
 
 exports.commitValidators = (new_validators, callback) ->
-	db.Validator.find {}, (err, oldValidators) ->
+	db.Validator.find {username: $in: new_validators._map (x) -> x.username}, (err, oldValidators) ->
 		for validator in oldValidators
 			await validator.remove defer err, robj
 			await validator.save defer err, robj
