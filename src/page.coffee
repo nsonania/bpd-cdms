@@ -120,7 +120,7 @@ class CoursesViewModel
 class SectionViewModel
 	constructor: ({@number, @instructor, status}, @parent) ->
 		@status = ko.observable if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
-	chooseLectureSection: =>
+	chooseLectureSection: (callback) =>
 		sectionInfo =
 			compcode: @parent.compcode
 			section_number: @number
@@ -129,7 +129,8 @@ class SectionViewModel
 			@parent.selectedLectureSection @number
 			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
 			viewmodel.sectionsViewModel.setSchedule schedule
-	chooseLabSection: =>
+			callback?()
+	chooseLabSection: (callback) =>
 		sectionInfo =
 			compcode: @parent.compcode
 			section_number: @number
@@ -138,6 +139,7 @@ class SectionViewModel
 			@parent.selectedLabSection @number
 			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
 			viewmodel.sectionsViewModel.setSchedule schedule
+			callback?()
 
 class CourseSectionsViewModel
 	constructor: ({@compcode, @number, @name, @hasLectures, @hasLab, lectureSections, labSections, selectedLectureSection, selectedLabSection, @otherDates}) ->
@@ -151,8 +153,6 @@ class CourseSectionsViewModel
 		@selectedLabSectionStatus = ko.computed => _(@labSections()).find((x) => x.number is @selectedLabSection()).status() ? "success" if @selectedLabSection()?
 		@selectedLectureSectionTextFull = ko.computed => (@selectedLectureSectionText() + " (#{_(@lectureSections()).find((x) => x.number is @selectedLectureSection()).instructor})") if @selectedLectureSection()?
 		@selectedLabSectionTextFull = ko.computed => (@selectedLabSectionText() + " (#{_(@labSections()).find((x) => x.number is @selectedLabSection()).instructor})") if @selectedLabSection()?
-		@lectureSections()[0].chooseLectureSection() if @lectureSections().length is 1
-		@labSections()[0].chooseLabSection() if @labSections().length is 1
 
 class SectionsViewModel
 	constructor: ->
@@ -227,6 +227,11 @@ class BodyViewModel
 			@sectionsViewModel.courses (new CourseSectionsViewModel course for course in selectedcourses ? [])
 			@sectionsViewModel.setSchedule schedule
 			@sectionsViewModel.registeredOn registeredOn
+			for course in @sectionsViewModel.courses
+				if course.lectureSections().length is 1
+					await course.lectureSections()[0].chooseLectureSection defer res
+				if course.labSections().length is 1
+					await course.labSections()[0].chooseLabSection defer res
 			@pleaseWaitVisible false
 
 $ ->
