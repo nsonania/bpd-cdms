@@ -28,13 +28,16 @@
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 				<h3 id="options-box-label">Options</h3>
 			</div>
-			<div class="modal-body">
+			<div class="modal-body" data-bind="$root.coursesViewModel">
 				<label class="checkbox">
-					<input type="checkbox"> Allow me to register for overload courses.
+					<input type="checkbox" data-bind="checked: enableOverloads"> Allow me to register for overload courses.
 				</label>
 				<label class="checkbox">
-					<input type="checkbox"> Allow me to register for less than required courses.
+					<input type="checkbox" data-bind="checked: enableUnderRegister"> Allow me to register for less than required courses.
 				</label>
+				<small>
+					<strong>Note:</strong> Enabling the second option might result in you doing an additional semester.
+				</small>
 			</div>
 			<div class="modal-footer">
 				<button class="btn btn-primary pull-right" data-dismiss="modal" aria-hidden="true">Close</button>
@@ -112,7 +115,7 @@
 			<div class="breadcrumb">
 				<li><span>Courses</span><span class="divider">&nbsp;&gt;</span></li>
 				<li><span class="muted">Timetable</span></li>
-				<li class="pull-left" data-bind="click: showOptions"><a href="#">Options</a></li>
+				<li class="pull-right" data-bind="click: showOptions"><a href="#">Options</a></li>
 			</div>
 			<div class="hero-unit">
 				<h1>Choose your Courses</h1>
@@ -255,7 +258,7 @@
 			</div>
 			<hr>
 			<div class="center">
-				<button class="btn" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep, disable: clashingOtherDates"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
+				<button class="btn" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep, disable: clashingOtherDates() || (enableUnderRegister() && nextStepWarning())"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
 			</div>
 		</div>
 		<div id="sections-container" class="container" data-bind="with: sectionsViewModel, visible: activeViewNZ() == 'sectionsView'">
