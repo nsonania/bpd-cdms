@@ -258,7 +258,7 @@
 			</div>
 			<hr>
 			<div class="center">
-				<button class="btn" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep, disable: clashingOtherDates() || (!enableUnderRegister() && nextStepWarning())"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
+				<button class="btn commitBtn" data-bind="css: {'btn-success': !nextStepWarning(), 'btn-warning': nextStepWarning}, click: nextStep, disable: clashingOtherDates() || (!enableUnderRegister() && nextStepWarning())"><small>Proceed to</small> <strong>Build Your Timetable</strong></button>
 			</div>
 		</div>
 		<div id="sections-container" class="container" data-bind="with: sectionsViewModel, visible: activeViewNZ() == 'sectionsView'">
@@ -274,7 +274,7 @@
 			<div class="hero-unit" data-bind="visible: $root.studentStatus() == 'not registered'">
 				<h1>Build Your Timetable</h1>
 				<p>
-					Choose your sections to fill in your Timetable Schedule. Your sections are not reserved until you complete the registration process by clicking on the <em>Register</em> button. <em>Green</em> denotes that more than 5 seats are available, <em>Yellow</em> denotes that 5 or less seats are left and <em>Red</em> denotes that either the section has reached its capacity or that it is clashing with another selected section. Please make sure that you have at least one free hour dedicated for lunch between 5th and 7th hour everyday. Click on <em>Courses</em> above to modify your course selections. If you face difficulties in building a valid timetable, click on <em>Difficult Timetable</em> above and approach the Registration Incharge.
+					Choose your sections to fill in your Timetable Schedule. Your sections are not reserved until you complete the registration process by clicking on the <em>Confirm &amp; Register</em> button. <em>Green</em> denotes that more than 5 seats are available, <em>Yellow</em> denotes that 5 or less seats are left and <em>Red</em> denotes that either the section has reached its capacity or that it is clashing with another selected section. Please make sure that you have at least one free hour dedicated for lunch between 5th and 7th hour everyday. Click on <em>Courses</em> above to modify your course selections. If you face difficulties in building a valid timetable, click on <em>Difficult Timetable</em> above and approach the Registration Incharge.
 				</p>
 			</div>
 			<div class="hero-unit" data-bind="visible: $root.studentStatus() == 'registered' || $root.studentStatus() == 'validated'">
@@ -494,7 +494,7 @@
 			</div>
 			<hr data-bind="visible: $root.studentStatus() == 'not registered'">
 			<div class="center" data-bind="visible: $root.studentStatus() == 'not registered'">
-				<button class="btn btn-primary" data-bind="click: register, enable: registerEnabled">Confirm &amp; Register</button>
+				<button class="btn btn-primary commitBtn" data-bind="click: register, enable: registerEnabled">Confirm &amp; Register</button>
 			</div>
 		</div>
 	</body>
