@@ -245,28 +245,24 @@ class SelectedCourseViewModel
 		selectedLabSection: @selectedLabSection()
 
 class StudentViewModel
-	constructor: ({studentId, name, newPassword, password, registered, validated, validatedBy, difficultTimetable, bc, psc, el, reqEl, selectedcourses, _id}) ->
+	constructor: ({studentId, name, newPassword, password, registered, registeredOn, validated, validatedOn, validatedBy, difficultTimetable, bc, psc, el, reqEl, groups, selectedcourses, _id}) ->
 		@_id = ko.observable _id ? undefined
 		@studentId = ko.observable studentId ? ""
 		@name = ko.observable name ? ""
 		@password = ko.observable password ? ""
 		@newPassword = ko.observable newPassword ? undefined
 		@registered = ko.observable registered ? undefined
+		@registeredOn = ko.observable new Date registeredOn ? Date()
 		@validated = ko.observable validated ? undefined
+		@validatedOn = ko.observable new Date validatedOn ? Date()
 		@validatedBy = ko.observable validatedBy ? undefined
-		@validatedByNI = ko.computed =>
-			if @validated()
-				if @validatedBy()? and (vuser = _(viewmodel.validatorsViewModel().validators()).find((x) => x._id() is @validatedBy())?.name())?
-					"Validated by #{vuser}"
-				else
-					"Validated"
-			else
-				"Not Validated"
+		@validatedByNI = ko.observable ""
 		@difficultTimetable = ko.observable difficultTimetable ? undefined
 		@bc = ko.observableArray bc ? []
 		@psc = ko.observableArray psc ? []
 		@el = ko.observableArray el ? []
 		@reqEl = ko.observable reqEl ? 0
+		@groups = ko.observableArray _(groups ? []).map (x) -> ko.observableArray x
 		@selectedcourses = ko.observableArray (new SelectedCourseViewModel sc for sc in selectedcourses ? [])
 		@courses = ko.observableArray []
 		@filterCategory = ko.observable 1
@@ -283,6 +279,14 @@ class StudentViewModel
 		@reqEl.subscribe => @modified true
 		@selectedcourses.subscribe => @modified true
 		@query = ""
+		@aqBc = ko.observable ""
+		@aqPsc = ko.observable ""
+		@aqEl = ko.observable ""
+		@bcCI = ko.computed => _(@courses()).filter (x) => x.compcode in @bc()
+		@pscCI = ko.computed => _(@courses()).filter (x) => x.compcode in @psc()
+		@elCI = ko.computed => _(@courses()).filter (x) => x.compcode in @el()
+		@pscCI.subscribe => setTimeout (-> $('button[rel=tooltip]').tooltip()), 100
+		setTimeout (-> $('button[rel=tooltip]').tooltip()), 100
 	selectStudent: =>
 		viewmodel.studentsViewModel().currentStudent @
 		@fetchCourses("")
@@ -296,66 +300,95 @@ class StudentViewModel
 		return unless keyCode is 13
 		@query = $(arguments[1].currentTarget).val().toLowerCase()
 		@fetchCourses @query
-	fetchCourses: (query) =>
-		viewmodel.pleaseWaitStatus "Fetching Student Information..."
-		socket.emit "getCoursesAll", @studentId(), @filterCategory(), query, (courses) =>
+	fetchCourses: =>
+		socket.emit "getCoursesFor", {titles: $elemMatch: compcode: $in: _([@bc(), @psc(), @el()]).flatten(1)}, (courses) =>
 			viewmodel.pleaseWaitStatus undefined
 			@courses.removeAll()
-			c = _.chain(courses).map((x) =>
-				lectureSections = (new SectionViewModel section for section in x.lectureSections ? [])
-				labSections = (new SectionViewModel section for section in x.labSections ? [])
-				_.chain(x.titles).filter (y) =>
-					switch @filterCategory()
-						when 0 then true
-						when 1 then @bc().indexOf(y.compcode) >= 0 or @psc().indexOf(y.compcode) >= 0 or @el().indexOf(y.compcode) >= 0
-						when 2 then @selectedcourses()._any (z) => z.compcode() is y.compcode
-				.map (y) =>
-					compcode: y.compcode
-					number: y.number
-					lectureSections: lectureSections
-					labSections: labSections
-					bc: ko.computed => @bc().indexOf(y.compcode) >= 0
-					psc: ko.computed => @psc().indexOf(y.compcode) >= 0
-					el: ko.computed => @el().indexOf(y.compcode) >= 0
-					selected: ko.computed => _(@selectedcourses()).any (z) => z.compcode() is y.compcode
-					selectedLectureSection: ko.computed => _(@selectedcourses()).find((z) => z.compcode() is y.compcode).selectedLectureSection() if x.lectureSections?.length > 0 and _(@selectedcourses()).any (z) => z.compcode() is y.compcode
-					selectedLabSection: ko.computed => _(@selectedcourses()).find((z) => z.compcode() is y.compcode).selectedLabSection() if x.labSections?.length > 0 and _(@selectedcourses()).any (z) => z.compcode() is y.compcode
+			@courses do =>
+				_.chain(courses).map((x) -> x.titles).flatten(1).map (x) =>
+					compcode: x.compcode
+					number: x.number
+					name: x.name
+					group: ko.observable if (r1 = (@groups().indexOf _(@groups()).find (y) -> y?().indexOf(x.compcode) >= 0) + 1) is 0 then "-" else r1
 				.value()
-			).flatten().value()
-			@courses c
-	filterCat0: =>
-		@filterCategory 0
-		@fetchCourses @query
-	filterCat1: =>
-		@filterCategory 1
-		@fetchCourses @query
-	filterCat2: =>
-		@filterCategory 2
-		@fetchCourses @query
-	toggleBc: =>
+	removeBc: =>
 		$data = arguments[0]
-		if @bc().indexOf($data.compcode) >= 0
-			@bc.remove $data.compcode
-		else
-			@bc.push $data.compcode
-		@psc.remove $data.compcode
-		@el.remove $data.compcode
-	togglePsc: =>
-		$data = arguments[0]
-		if @psc().indexOf($data.compcode) >= 0
-			@psc.remove $data.compcode
-		else
-			@psc.push $data.compcode
 		@bc.remove $data.compcode
-		@el.remove $data.compcode
-	toggleEl: =>
+	removePsc: =>
 		$data = arguments[0]
-		if @el().indexOf($data.compcode) >= 0
-			@el.remove $data.compcode
-		else
-			@el.push $data.compcode
-		@bc.remove $data.compcode
+		_.chain(@groups()).filter((x) -> x?).each (x) -> x.remove $data.compcode
 		@psc.remove $data.compcode
+	removeEl: =>
+		$data = arguments[0]
+		@el.remove $data.compcode
+	toggleGroup: =>
+		$data = arguments[0]
+		cg = @groups().indexOf _(@groups()).find (x) -> x?().indexOf($data.compcode) >= 0
+		if cg is -1
+			ng = 0
+		else
+			if _(@groups()[cg]()).filter((x) -> x?).length > 1
+				ng = cg + 1
+			else
+				ng = -1
+		@groups()[cg].remove $data.compcode if cg isnt -1
+		if ng isnt -1
+			@groups()[ng] = ko.observableArray [] unless @groups()[ng]?
+			@groups()[ng].push $data.compcode
+		$data.group if (r1 = ng + 1) is 0 then "-" else r1
+		@modified true
+	addBc: =>
+		keyCode = event.which ? event.keyCode
+		return unless keyCode in [13, 1]
+		socket.emit "getCoursesFor", {titles: $elemMatch: compcode: Number @aqBc()}, (courses) =>
+			if courses.length isnt 1
+				bootbox.alert "Course not found."
+			else
+				c = _(courses[0].titles).find (x) => x.compcode is Number @aqBc()
+				_.chain(@groups()).filter((x) -> x?).each (x) -> x.remove c.compcode
+				@courses.remove (x) => x.compcode is Number @aqBc()
+				@courses.push c
+				@bc.remove c.compcode
+				@psc.remove c.compcode
+				@el.remove c.compcode
+				@bc.push c.compcode
+				@aqBc ""
+	addPsc: =>
+		keyCode = event.which ? event.keyCode
+		return unless keyCode in [13, 1]
+		socket.emit "getCoursesFor", {titles: $elemMatch: compcode: Number @aqPsc()}, (courses) =>
+			if courses.length isnt 1
+				bootbox.alert "Course not found."
+			else
+				c = _(courses[0].titles).find (x) => x.compcode is Number @aqPsc()
+				c = 
+					compcode: c.compcode
+					number: c.number
+					name: c.name
+					group: ko.observable "-"
+				@courses.remove (x) => x.compcode is Number @aqPsc()
+				@courses.push c
+				@bc.remove c.compcode
+				@psc.remove c.compcode
+				@el.remove c.compcode
+				@psc.push c.compcode
+				@aqPsc ""
+	addEl: =>
+		keyCode = event.which ? event.keyCode
+		return unless keyCode in [13, 1]
+		socket.emit "getCoursesFor", {titles: $elemMatch: compcode: Number @aqEl()}, (courses) =>
+			if courses.length isnt 1
+				bootbox.alert "Course not found."
+			else
+				c = _(courses[0].titles).find (x) => x.compcode is Number @aqEl()
+				_.chain(@groups()).filter((x) -> x?).each (x) -> x.remove c.compcode
+				@courses.remove (x) => x.compcode is Number @aqEl()
+				@courses.push
+				@bc.remove c.compcode
+				@psc.remove c.compcode
+				@el.remove c.compcode
+				@el.push c.compcode
+				@aqEl ""
 	toggleSelected: =>
 		$data = arguments[0]
 		if _(@selectedcourses()).any((x) -> x.compcode() is $data.compcode)
@@ -373,6 +406,7 @@ class StudentViewModel
 	toggleRegistered: =>
 		@registered not @registered()
 		@dreg true if @registered()
+		@selectedcourses [] unless @registered()
 		@difficultTimetable false
 	toggleValidated: =>
 		@validated not @validated()
@@ -387,78 +421,37 @@ class StudentViewModel
 		name: @name()
 		password: @password()
 		registered: @registered()
+		registeredOn: @registeredOn()
 		validated: @validated()
+		validatedOn: @validatedOn()
 		validatedBy: @validatedBy()
 		difficultTimetable: @difficultTimetable()
 		bc: @bc() if @bc().length > 0
 		psc: @psc() if @psc().length > 0
 		el: @el() if @el().length > 0
 		reqEl: @reqEl()
+		groups: _.chain(@groups()).filter((x) -> x?).map((x) -> x()).filter((x) -> x.length > 1).value()
 		selectedcourses: course.toData() for course in @selectedcourses()
 
-class StudentsViewModel
-	constructor: ({students}) ->
-		@students = ko.observableArray (new StudentViewModel student for student in students)
-		@sort = ko.observable "studentId"
-		@filterCategory = ko.observable 0
-		@filteredStudents = ko.computed => _(@students()).sortBy (x) => x[@sort()]()
-		@currentStudent = ko.observable undefined
-		@anyModified = ko.computed => _(@students()).any (x) -> x.modified()
-	newStudent: =>
-		@students.push student = new StudentViewModel newPassword: (np = md5(Date())[0...8]), password: md5 np
-		student.selectStudent()
-	selectFile: =>
-		$fup = $("<input type='file' accept='text/csv'>")
-		$fup.one "change", =>
-			return if $fup[0].files.length is 0
-			fs = new FileReader()
-			fs.onload = (e) =>
-				viewmodel.pleaseWaitStatus "Importing Students..."
-				socket.emit "importStudents", e.target.result, (success) =>
-					viewmodel.pleaseWaitStatus undefined
-					if success
-						@fetchStudents()
-					else
-						alert "Parsing Error. Please recheck .csv file for errors."
-			fs.readAsText $fup[0].files[0]
-		$fup.trigger "click"
-	filterCat: (cat) => =>
-		@filterCategory cat
-		@fetchStudents @query
-	filter: (elem, event) =>
-		keyCode = event.which ? event.keyCode
-		return unless keyCode is 13
-		@query = $(arguments[1].currentTarget).val().toLowerCase()
-		if _(viewmodel.studentsViewModel().students()).any((x) -> x.modified())
-			bootbox.confirm "You have uncommited changes. If you proceed, you'll loose all your changes.", (result) => @fetchStudents @query if result
-		else
-			@fetchStudents @query
-	exportCSV: =>
-		window.open "students.csv?cat=#{@filterCategory()}"
-	sortStudentId: =>
-		@sort "studentId"
-	sortName: =>
-		@sort "name"
-	fetchStudents: (query) =>
-		viewmodel.pleaseWaitStatus "Fetching Students..."
-		socket.emit "getStudents", @filterCategory(), @query, (students) =>
+class StudentsPackagesViewModel
+	constructor: ->
+		@student = ko.observable undefined
+		@query = ko.observable ""
+	fetchStudent: (elem, event) =>
+		keyCode = event?.which ? event?.keyCode
+		return unless keyCode in [13, 1, null, undefined]
+		socket.emit "getStudent", studentId: @query(), (student) =>
+			@student if student? then new StudentViewModel student else undefined
+			@student().fetchCourses() if @student()?
+			if @student()?.validated()
+				socket.emit "getValidatorById", @student().validatedBy(), (validator) =>
+					@student().validatedByNI validator.name
+	commitStudent: =>
+		student = @student().toData()
+		delete student._id
+		socket.emit "commitStudent", student, (result) =>
 			viewmodel.pleaseWaitStatus undefined
-			@students.removeAll()
-			@students (new StudentViewModel student for student in students)
-			@currentStudent undefined
-	commitStudents: =>
-		viewmodel.pleaseWaitStatus "Saving changes..."
-		students = @toData()
-		socket.emit "commitStudents", students, (result) =>
-			viewmodel.pleaseWaitStatus undefined
-			@fetchStudents()
-	deleteAll: =>
-		viewmodel.pleaseWaitStatus "Deleting all Students..."
-		socket.emit "deleteAllStudents", (success) =>
-			viewmodel.pleaseWaitStatus undefined
-			@fetchStudents()
-	toData: =>
-		student.toData() for student in @students() when student.modified()
+			@fetchStudent()
 
 class ValidatorViewModel
 	constructor: ({username, name, newPassword, password, _id}) ->
@@ -491,14 +484,15 @@ class ValidatorsViewModel
 		@filteredValidators = ko.computed => _(@validators()).sortBy((x) => x.username())
 		@currentValidator = ko.observable undefined
 		@anyModified = ko.computed => _(@validators()).any (x) -> x.modified()
+		@query = ""
 	filter: (elem, event) =>
 		keyCode = event.which ? event.keyCode
 		return unless keyCode is 13
-		query = $(arguments[1].currentTarget).val().toLowerCase()
+		@query = $(arguments[1].currentTarget).val().toLowerCase()
 		if _(viewmodel.validatorsViewModel().validators()).any((x) -> x.modified())
-			bootbox.confirm "You have uncommited changes. If you proceed, you'll loose all your changes.", (result) => @fetchValidators query if result
+			bootbox.confirm "You have uncommited changes. If you proceed, you'll loose all your changes.", (result) => @fetchValidators @query if result
 		else
-			@fetchValidators query
+			@fetchValidators()
 	newValidator: =>
 		@validators.push validator = new ValidatorViewModel newPassword: (np = md5(Date())[0...8]), password: md5 np
 		validator.selectValidator()
@@ -517,9 +511,9 @@ class ValidatorsViewModel
 						alert "Parsing Error. Please recheck .csv file for errors."
 			fs.readAsText $fup[0].files[0]
 		$fup.trigger "click"
-	fetchValidators: (query) =>
+	fetchValidators: =>
 		viewmodel.pleaseWaitStatus "Fetching Validators..."
-		socket.emit "getValidators", query, (validators) =>
+		socket.emit "getValidators", @query, (validators) =>
 			viewmodel.pleaseWaitStatus undefined
 			@validators.removeAll()
 			@validators (new ValidatorViewModel validator for validator in validators)
@@ -553,18 +547,54 @@ class SemesterViewModel
 			@title semester.title
 			@startTime moment(semester.startTime).format "DD/MM/YYYY HH:mm"
 			$('input[rel=datetime]').datetimepicker("update")
+	importCourses: =>
+		$fup = $("<input type='file' accept='text/csv'>")
+		$fup.one "change", =>
+			return if $fup[0].files.length is 0
+			fs = new FileReader()
+			fs.onload = (e) =>
+				viewmodel.pleaseWaitStatus "Importing Courses..."
+				socket.emit "importCourses", e.target.result, (success) =>
+					viewmodel.pleaseWaitStatus undefined
+					bootbox.alert "Parsing Error. Please recheck .csv file for errors." unless success
+			fs.readAsText $fup[0].files[0]
+		$fup.trigger "click"
 	deleteCourses: =>
 		bootbox.confirm "This will erase all courses from the database.", (result) ->
 			return unless result
 			viewmodel.pleaseWaitStatus "Erasing Courses..."
 			socket.emit "deleteAllCourses", (success) =>
 				viewmodel.pleaseWaitStatus undefined
+	importStudents: =>
+		$fup = $("<input type='file' accept='text/csv'>")
+		$fup.one "change", =>
+			return if $fup[0].files.length is 0
+			fs = new FileReader()
+			fs.onload = (e) =>
+				viewmodel.pleaseWaitStatus "Importing Students..."
+				socket.emit "importStudents", e.target.result, (success) =>
+					viewmodel.pleaseWaitStatus undefined
+					bootbox.alert "Parsing Error. Please recheck .csv file for errors." unless success
+			fs.readAsText $fup[0].files[0]
+		$fup.trigger "click"
 	deleteStudents: =>
 		bootbox.confirm "This will erase all students from the database.", (result) ->
 			return unless result
 			viewmodel.pleaseWaitStatus "Erasing Students..."
 			socket.emit "deleteAllStudents", (success) =>
 				viewmodel.pleaseWaitStatus undefined
+	importValidators: =>
+		$fup = $("<input type='file' accept='text/csv'>")
+		$fup.one "change", =>
+			return if $fup[0].files.length is 0
+			fs = new FileReader()
+			fs.onload = (e) =>
+				viewmodel.pleaseWaitStatus "Importing Validators..."
+				socket.emit "importValidators", e.target.result, (success) =>
+					viewmodel.pleaseWaitStatus undefined
+					bootbox.alert "Parsing Error. Please recheck .csv file for errors." unless success
+			fs.readAsText $fup[0].files[0]
+		$fup.trigger "click"
 	deleteValidators: =>
 		bootbox.confirm "This will erase all validators from the database.", (result) ->
 			return unless result
@@ -601,6 +631,7 @@ class BodyViewModel
 	constructor: ->
 		@coursesViewModel = ko.observable undefined
 		@studentsViewModel = ko.observable undefined
+		@studentsPackagesViewModel = ko.observable undefined
 		@validatorsViewModel = ko.observable undefined
 		@statsViewModel = new StatsViewModel()
 		@pleaseWaitStatus = ko.observable undefined
@@ -621,17 +652,9 @@ class BodyViewModel
 			$("#courseheader, #coursedetails").affix offset: top: 290
 			$('button[rel=tooltip]').tooltip()
 			callback?()
-	gotoStudents: =>
-		viewmodel.pleaseWaitStatus "Fetching Students..."
-		socket.emit "getStudents", 0, "", (students) ->
-			unless viewmodel.studentsViewModel()?
-				viewmodel.studentsViewModel new StudentsViewModel students: students
-			else
-				viewmodel.studentsViewModel().fetchStudents()
-			viewmodel.pleaseWaitStatus undefined
-			viewmodel.activeView "studentsView"
-			$("#studentheader, #studentdetails").affix offset: top: 290
-			$('button[rel=tooltip]').tooltip()
+	gotoStudentsPackages: =>
+		@studentsPackagesViewModel new StudentsPackagesViewModel
+		@activeView "studentsPackagesView"
 	gotoValidators: (callback) =>
 		viewmodel.pleaseWaitStatus "Fetching Validators..."
 		socket.emit "getValidators", "", (validators) ->

@@ -78,6 +78,36 @@
 			border-bottom-right-radius 0
 			border-bottom none
 
+.boxees
+	margin-top inherit
+	
+	.navbar
+		margin-bottom 0
+
+		.navbar-inner
+			border-bottom-left-radius 0
+			border-bottom-right-radius 0
+			border-bottom none
+
+	.box-bordered.ht300
+		height auto
+		tbody
+			display block
+			overflow scroll
+			height 300px
+			&.el
+				height 254px
+				tr:first-of-type
+					td
+						border-top none
+			
+			&.pscT
+				td:nth-last-of-type(2)
+					padding-top 5px
+					padding-bottom 5px
+					width 10%
+					text-align right
+
 #courseheader, #studentheader, #validatorheader
 	z-index 1
 	height 0px
@@ -207,7 +237,7 @@ table.table
 #departmentsToggles
 	margin 2px 0
 
-#coursesbox
+#coursesbox, .boxees
 	.box-bordered
 		.table
 			tr
@@ -265,3 +295,7 @@ input[readOnly]
 	.controls
 		.btn.span3
 			margin 0
+
+.well
+	.wellBtn
+		margin -5px
