@@ -304,6 +304,9 @@
 								<th>Course Name</th>
 								<th style="width: 300px">Section / Faculty</th>
 							</tr>
+							<tr data-bind="visible: courses().length == 0">
+								<td colspan="4" style="text-align: center">No Courses Selected</td>
+							</tr>
 						</thead>
 						<tbody data-bind="foreach: courses">
 							<tr>
@@ -477,11 +480,20 @@
 				<div id="testDates-grid" class="span10 offset1">
 					<p class="lead center">Evaluation Components Dates</p>
 					<table class="table table-bordered small">
-						<tbody data-bind="foreach: courses">
+						<tbody data-bind="foreach: courses" data-bind="visible: allSelectedCourses().length > 0">
 							<tr>
 								<td width="100px" data-bind="text: number"></td>
 								<td data-bind="foreach: otherDates">
 									<span class="otherDate" data-bind="text: $data"></span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<table class="table table-bordered small" data-bind="visible: allSelectedCourses().length == 0">
+						<tbody>
+							<tr>
+								<td class="placeholder" colspan="4" style="text-align: center">
+									No Courses Selected
 								</td>
 							</tr>
 						</tbody>
