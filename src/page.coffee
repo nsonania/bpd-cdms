@@ -49,6 +49,7 @@ class CourseViewModel
 		@otherDates = ko.observableArray (new TestDateViewModel date for date in otherDates)
 	toggleSelection: =>
 		@selected not @selected()
+		_(_(viewmodel.coursesViewModel.groups()).find((x) -> x.indexOf(@compcode) >= 0) ? []).each (x) -> x.selected false
 	electiveMouseOver: =>
 		window.viewmodel.coursesViewModel.selectedValueDropdown @
 	electiveSelect: =>
