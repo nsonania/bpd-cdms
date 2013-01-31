@@ -50,6 +50,7 @@ class CourseViewModel
 	toggleSelection: =>
 		@selected not @selected()
 		dslt = _(viewmodel.coursesViewModel.groups()).find((x) => x.indexOf(@compcode) >= 0) ? []
+		dslt = _(dslt).filter (x) => x isnt @compcode
 		_.chain(viewmodel.coursesViewModel.psc()).filter((x) -> x.compcode in dslt).each (x) -> x.selected false
 	electiveMouseOver: =>
 		window.viewmodel.coursesViewModel.selectedValueDropdown @
