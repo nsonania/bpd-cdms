@@ -11,6 +11,7 @@ lib-cov
 
 lib/page.css
 lib/page.js
+lib/*.pdf
 
 pids
 logs

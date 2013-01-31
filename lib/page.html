@@ -282,10 +282,10 @@
 				</p>
 				<ul>
 					<li data-bind="visible: registeredOn() !== '' && registeredOn() !== null && registeredOn() !== (void 0)">
-						Registered: <em data-bind="text: registeredOn"></em>
+						Registered on <span data-bind="text: registeredOn"></span>
 					</li>
 					<li data-bind="visible: validatedOn() !== '' && validatedOn() !== null && validatedOn() !== (void 0)">
-						Validated: <em data-bind="text: validatedOn"></em>
+						Validated on <span data-bind="text: validatedOn"></span> by <span data-bind="text: validatedBy"></span>
 					</li>
 				</ul>
 			</div>
@@ -302,7 +302,7 @@
 								<th style="width: 15%">Comp. Code</th>
 								<th style="width: 15%">Course No.</th>
 								<th>Course Name</th>
-								<th style="width: 220px">Section / Faculty</th>
+								<th style="width: 300px">Section / Faculty</th>
 							</tr>
 						</thead>
 						<tbody data-bind="foreach: courses">

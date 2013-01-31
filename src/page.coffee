@@ -174,12 +174,15 @@ class SectionsViewModel
 			c1 = _.chain(@schedule).flatten(true).all((x) -> x().length <= 1).value() and 
 					_(@courses()).all (x) -> (x.lectureSections().length is 0 or x.selectedLectureSection()?) and (x.labSections().length is 0 or x.selectedLabSection()?)
 			return false unless c1
+			c2 = _(@courses()).all (x) -> (!x.selectedLectureSection()? or x.selectedLectureSectionStatus() isnt "isFull") and (!x.selectedLabSection()? or x.selectedLabSectionStatus() isnt "isFull")
+			return false unless c2
 			not _([0..6]).any (j) => _([4..6]).all (i) => @schedule[i][j]().length is 1
 		@lunchHourProblem = ko.computed =>
 			_([0..6]).any (j) => _([4..6]).all (i) => @schedule[i][j]().length is 1
 		@dtcEnabled = ko.computed => _(@schedule).any (x) -> _(x).any (y) -> y().length > 1
 		@registeredOn = ko.observable ""
 		@validatedOn = ko.observable ""
+		@validatedBy = ko.observable ""
 	gotoCoursesView: =>
 		viewmodel.gotoCoursesView()
 	setSchedule: (schedule) =>
@@ -237,11 +240,12 @@ class BodyViewModel
 	gotoSectionsView: =>
 		@activeView "sectionsView"
 		@pleaseWaitVisible true
-		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts, registeredOn, validatedOn}) =>
+		socket.emit "initializeSectionsScreen", ({success, selectedcourses, schedule, conflicts, registeredOn, validatedOn, validatedBy}) =>
 			@sectionsViewModel.courses (new CourseSectionsViewModel course for course in selectedcourses ? [])
 			@sectionsViewModel.setSchedule schedule
 			@sectionsViewModel.registeredOn registeredOn
 			@sectionsViewModel.validatedOn validatedOn
+			@sectionsViewModel.validatedBy validatedBy
 			toSet = []
 			for course in @sectionsViewModel.courses()
 				toSet.push course.lectureSections()[0].chooseLectureSection if course.lectureSections().length is 1
@@ -267,7 +271,9 @@ $ ->
 				viewmodel.loginViewModel.alertStatus reason
 
 	socket.on "sectionUpdate", (compcode, data) ->
+		return unless viewmodel.activeView is "sectionsView"
 		d = _(viewmodel.sectionsViewModel.courses()).find((x) -> x.compcode is compcode)
+		return unless d?
 		if data.sectionType is "lecture"
 			_(d.lectureSections()).find((x) -> x.number is data.sectionNumber).status if data.status.isFull then "isFull" else if data.status.lessThan5 then "lessThan5" else undefined
 		else if data.sectionType is "lab"
