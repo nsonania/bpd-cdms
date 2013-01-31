@@ -102,7 +102,7 @@ exports.importStudents = (data, callback) ->
 						reqEl: Number line[7] ? 0
 						groups: line[4..6].join(", ").match(/\([^\(\)]*\)/g)?._map (x) -> x.match(/\d+/g)?._map (y) -> Number y
 						status: line[8] ? "NORMAL"
-					await db.Student.findOneAndUpdate {studentId: line[0], registered: $ne: true}, {$set: student}, {upsert: true}, defer err
+					await db.Student.findOneAndUpdate {studentId: line[0]}, {$set: student}, {upsert: true}, defer err
 					throw err if err?
 				db.Student.remove studentId: $in: ["", null], ->
 					console.log "Import Students Done."
@@ -192,7 +192,7 @@ exports.exportCourse = (compcode, callback) ->
 			return callback? false unless course?
 			str = "By Course\n"
 			for title in course.get "titles"
-				str += "Compcode: #{compcode}, Course No: #{title.number}, Course Name: #{title.name}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any (y) -> y.compcode is title.compcode).length}\n"
+				str += "Compcode: #{title.compcode}, Course No: #{title.number}, Course Name: #{title.name}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any (y) -> y.compcode is title.compcode).length}\n"
 				str += "Student Id, Student Name\n"
 				for student in students._filter((x) -> x.get("selectedcourses")._any (y) -> y.compcode is title.compcode)
 					str += "#{student.get "studentId"}, #{student.get "name"}\n"
