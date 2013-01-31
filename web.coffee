@@ -27,7 +27,7 @@ expressServer.get "/students.csv", (req, res, next) ->
 		res.setHeader "Content-Length", body.length
 		res.setHeader "Content-Disposition", "attachment;filename=students.csv"
 		res.setHeader "Cache-Control", "no-cache"
-		res.end body
+		res.end body ? 400
 
 expressServer.get "/course.csv", (req, res, next) ->
 	core.exportCourse req.query.compcode, (body) ->

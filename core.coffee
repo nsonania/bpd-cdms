@@ -179,13 +179,23 @@ exports.exportStudentsSelections = (cat, callback) ->
 			when 3 then validated: true
 			when 4 then difficultTimetable: true
 	db.Student.find query, (err, students) ->
-		students = students._sortBy (x) -> x.get "studentId"
-		str += "Student Id, Comp. Code, Lecture Section, Lab Section\n"
-		for student in students
-			str += student.get("studentId") + "\n"
-			for course in student.get "selectedcourses"
-				str += "," + course.compcode + "," + (if course.selectedLectureSection? then course.selectedLectureSection else "") + "," + (if course.selectedLabSection? then course.selectedLabSection else "") + "\n"
-		callback? str
+		try
+			students = students._sortBy (x) -> x.get "studentId"
+			str += "Student Id, Student Name, Status, Comp. Code, Lecture Section, Lab Section\n"
+			for student in students
+				status =
+					if student.get "validated" then "Validated"
+					else if student.get "registered" then "Not Validated"
+					else if student.get "difficultTimetable" then "Difficult Timetable"
+					else "Not Registered"
+				str += student.get("studentId") + "," + student.get("name") + "," + status + "\n"
+				for course in student.get("selectedcourses") ? []
+					str += ",,," + course.compcode + "," + (if course.selectedLectureSection? then course.selectedLectureSection else "") + "," + (if course.selectedLabSection? then course.selectedLabSection else "") + "\n"
+			callback? str
+		catch error
+			console.log  "Error exporting students."
+			dumpError error
+			callback? false
 
 exports.exportCourse = (compcode, callback) ->
 	db.Course.findOne titles: $elemMatch: compcode: Number compcode, (err, course) ->

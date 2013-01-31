@@ -33,7 +33,7 @@
 						<li data-bind="visible: authenticated, click: gotoCourses, css: {active: activeView() == 'coursesView'}"><a href="#">Courses</a></li>
 						<li data-bind="visible: authenticated, click: gotoStudentsPackages, css: {active: activeView() == 'studentsPackagesView'}"><a href="#">Students' Packages</a></li>
 						<li data-bind="visible: authenticated, click: gotoValidators, css: {active: activeView() == 'validatorsView'}"><a href="#">Validators</a></li>
-						<li data-bind="visible: authenticated, click: gotoStats, css: {active: activeView() == 'statsView'}"><a href="#">Stats</a></li>
+						<li data-bind="visible: authenticated, click: gotoStats, css: {active: activeView() == 'statsView'}"><a href="#">Stats &amp; Reports</a></li>
 					</ul>
 					<ul class="nav pull-right">
 						<li data-bind="visible: authenticated, click: logout"><a href="#">Logout</a></li>
@@ -537,30 +537,31 @@
 			</div>
 			<div id="stats-container" data-bind="with: statsViewModel, visible: activeView() == 'statsView' && authenticated()" class="container">
 				<div class="hero-unit">
-					<h1>Stats</h1>
-					<p>View current statistics. Updates every second.</p>
+					<h1>Stats &amp; Reports</h1>
+					<p>View current statistics. Updates every second. Download reports Student-wise as well as Course-wise.</p>
 				</div>
+				<legend style="text-align: center">Stats</legend>
 				<div class="row">
 					<div class="span3">
-						<div class="stat-box">
+						<div class="well stat-box">
 							<p>Logged in Students</p>
 							<div data-bind="text: currentStudents"></div>
 						</div>
 					</div>
 					<div class="span3">
-						<div class="stat-box">
+						<div class="well stat-box">
 							<p>Unregistered Students</p>
 							<div data-bind="text: currentNotRegistered"></div>
 						</div>
 					</div>
 					<div class="span3">
-						<div class="stat-box">
+						<div class="well stat-box">
 							<p>Unvalidated Students</p>
 							<div data-bind="text: currentNotValidated"></div>
 						</div>
 					</div>
 					<div class="span3">
-						<div class="stat-box">
+						<div class="well stat-box">
 							<p>Validated Students</p>
 							<div data-bind="text: currentValidated"></div>
 						</div>
@@ -569,15 +570,32 @@
 				<br>
 				<div class="row">
 					<div class="span3">
-						<div class="stat-box">
+						<div class="well stat-box">
 							<p>Difficult Timetable Students</p>
 							<div data-bind="text: currentDifficultTimetable"></div>
 						</div>
 					</div>
 					<div class="span3">
-						<div class="stat-box">
+						<div class="well stat-box">
 							<p>Logged in Validators</p>
 							<div data-bind="text: currentValidators"></div>
+						</div>
+					</div>
+				</div>
+				<legend style="text-align: center">Reports</legend>
+				<div class="row">
+					<div class="span8 offset2 well">
+						<div class="row">
+							<button class="btn btn-primary span3 offset1" onclick="javascript: window.location = 'students.csv?cat=0'">All Students</button>
+							<button class="btn btn-primary span3" onclick="javascript: window.location = 'students.csv?cat=4'">Difficult Timetable Students</button>
+						</div><br>
+						<div class="row">
+							<button class="btn btn-primary span3 offset1" onclick="javascript: window.location = 'students.csv?cat=1'">Unregistered Students</button>
+							<button class="btn btn-primary span3" onclick="javascript: window.location = 'students.csv?cat=2'">Unvalidated Students</button>
+						</div><br>
+						<div class="row">
+							<button class="btn btn-primary span3 offset1" onclick="javascript: window.location = 'students.csv?cat=3'">Validated Students</button>
+							<button class="btn btn-primary span3" onclick="javascript: window.location = 'courses.zip'">Export All Courses</button>
 						</div>
 					</div>
 				</div>
