@@ -479,8 +479,8 @@
 			<div class="row" data-bind="visible: $root.studentStatus() != 'not registered'">
 				<div id="testDates-grid" class="span10 offset1">
 					<p class="lead center">Evaluation Components Dates</p>
-					<table class="table table-bordered small">
-						<tbody data-bind="foreach: courses" data-bind="visible: otherDates().length > 0">
+					<table class="table table-bordered small" data-bind="visible: courses().length > 0">
+						<tbody data-bind="foreach: courses">
 							<tr>
 								<td width="100px" data-bind="text: number"></td>
 								<td data-bind="foreach: otherDates">
@@ -489,7 +489,7 @@
 							</tr>
 						</tbody>
 					</table>
-					<table class="table table-bordered small" data-bind="visible: otherDates().length == 0">
+					<table class="table table-bordered small" data-bind="visible: courses().length == 0">
 						<tbody>
 							<tr>
 								<td class="placeholder" colspan="4" style="text-align: center">
