@@ -63,8 +63,12 @@ class CoursesViewModel
 		@psc = ko.observableArray []
 		@allEl = ko.observableArray []
 		@el = ko.computed => _(@allEl()).sortBy (x) -> x.compcode
-		@groups = ko.observableArray []
 		@reqEl = ko.observable 0
+		@groups = ko.observableArray []
+		@groupsNI = ko.computed =>
+			for group in @groups()
+				g = group[0...group.length - 1].join ", "
+				g + " and " + group[group.length - 1]
 		@electiveQuery = ko.observable ""
 		@selectedValueDropdown = ko.observable undefined
 		@enableOverloads = ko.observable false
