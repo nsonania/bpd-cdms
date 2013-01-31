@@ -347,8 +347,10 @@
 							<strong data-bind="visible: registered() && !validated()">Registered on <span data-bind="text: registeredOn"></span></strong>
 							<strong data-bind="visible: validated()">Validated on <span data-bind="text: validatedOn"></span> by <span data-bind="text: validatedByNI"></span></strong>
 							<strong data-bind="visible: difficultTimetable()">Difficult Timetable</strong>
-							<button class="btn wellBtn pull-right" data-bind="click: toggleRegistered, visible: registered() && !validated()">Unregister</button>
-							<button class="btn wellBtn pull-right" data-bind="click: toggleValidated, visible: validated()">Unvalidate</button>
+							<div class="wellBtn pull-right">
+								<button class="btn" data-bind="click: toggleRegistered, visible: registered, disable: validated">Unregister</button>
+								<button class="btn" data-bind="click: toggleValidated, visible: registered, enable: validated">Unvalidate</button>
+							</div>
 						</div>
 					</div>
 					<div class="row boxees">

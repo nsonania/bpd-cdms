@@ -22,7 +22,7 @@ expressServer.configure ->
 	expressServer.use expressServer.router
 
 expressServer.get "/students.csv", (req, res, next) ->
-	return res.send 400 unless req.query.cat in [0..4]
+	return res.send 400 unless Number(req.query.cat) in [0..4]
 	core.exportStudentsSelections req.query.cat, (body) ->
 		res.setHeader "Content-Type", "text/csv"
 		res.setHeader "Content-Length", body.length

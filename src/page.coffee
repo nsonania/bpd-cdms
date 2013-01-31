@@ -165,7 +165,7 @@ class CoursesViewModel
 		@currentSection = ko.observable undefined
 	filter: (elem, event) =>
 		keyCode = event.which ? event.keyCode
-		return unless keyCode is 13
+		return unless keyCode in [13, 1, undefined, null]
 		@query = $(arguments[1].currentTarget).val().toLowerCase()
 		@fetchCourses @query
 	newCourse: =>
@@ -298,7 +298,7 @@ class StudentViewModel
 		viewmodel.studentsViewModel().filteredStudents()[0].selectStudent()
 	filter: (elem, event) =>
 		keyCode = event.which ? event.keyCode
-		return unless keyCode is 13
+		return unless keyCode in [13, 1, undefined, null]
 		@query = $(arguments[1].currentTarget).val().toLowerCase()
 		@fetchCourses @query
 	fetchCourses: =>
@@ -488,7 +488,7 @@ class ValidatorsViewModel
 		@query = ""
 	filter: (elem, event) =>
 		keyCode = event.which ? event.keyCode
-		return unless keyCode is 13
+		return unless keyCode in [13, 1, undefined, null]
 		@query = $(arguments[1].currentTarget).val().toLowerCase()
 		if _(viewmodel.validatorsViewModel().validators()).any((x) -> x.modified())
 			bootbox.confirm "You have uncommited changes. If you proceed, you'll loose all your changes.", (result) => @fetchValidators @query if result
