@@ -76,7 +76,13 @@ class CoursesViewModel
 			@selectedValueDropdown els[0]
 			_(els).take 5
 		@blEnabled = ko.computed => _(@psc()).all((x) -> not x.selected()) and _(@el()).filter((x) -> x.selected()).length is 0
-		@pscEnabled = ko.computed => _(@bc()).all((x) -> x.selected()) and _(@el()).filter((x) -> x.selected()).length <= @reqEl()
+		@pscEnabled = ko.computed =>
+			p1 = _(@bc()).all((x) -> x.selected())
+
+			# p1 = _(@bc()).filter((x) -> )
+
+			p2 = _(@el()).filter((x) -> x.selected()).length <= @reqEl()
+			p1 and p2
 		@elEnabled = ko.computed => _(@bc()).all (x) -> x.selected()
 		@elsEnabled = ko.computed => _(@el()).filter((x) -> x.selected()).length < @reqEl() or (_(@psc()).all((x) -> x.selected()) and @enableOverloads()) or not @elEnabled()
 		@nextStepWarning = ko.computed => _(@el()).filter((x) -> x.selected()).length < @reqEl() or _(@psc()).any (x) -> not x.selected()
