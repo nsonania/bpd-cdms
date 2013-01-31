@@ -687,11 +687,11 @@ class BodyViewModel
 				@gotoHome()
 			else
 				@loginAlertStatus "authFailure"
+			$("#input-accesscode").val("")
 	dismissLoginAlert: =>
 		@loginAlertStatus undefined
 	logout: =>
 		socket.emit "logout", =>
-			$("#input-accesscode").val("")
 			@authenticated false
 
 $ ->
@@ -702,6 +702,10 @@ $ ->
 	socket = io.connect()
 	socket.on "connect", ->
 		viewmodel.pleaseWaitStatus undefined
+
+	socket.on "disconnect", ->
+		viewmodel.authenticated false
+		viewmodel.pleaseWaitStatus "Session Terminated. Trying to reconnect..."
 
 	socket.on "destroySession", ->
 		viewmodel.logout()

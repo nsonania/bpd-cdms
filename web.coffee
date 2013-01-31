@@ -22,20 +22,23 @@ expressServer.configure ->
 	expressServer.use expressServer.router
 
 expressServer.get "/students.csv", (req, res, next) ->
+	return res.send 400 unless req.query.cat in [0..4]
 	core.exportStudentsSelections req.query.cat, (body) ->
 		res.setHeader "Content-Type", "text/csv"
 		res.setHeader "Content-Length", body.length
 		res.setHeader "Content-Disposition", "attachment;filename=students.csv"
 		res.setHeader "Cache-Control", "no-cache"
-		res.end body ? 400
+		res.end body
 
 expressServer.get "/course.csv", (req, res, next) ->
-	core.exportCourse req.query.compcode, (body) ->
-		res.setHeader "Content-Type", "text/csv"
-		res.setHeader "Content-Length", body.length
-		res.setHeader "Content-Disposition", "attachment;filename=course.csv"
-		res.setHeader "Cache-Control", "no-cache"
-		res.end body
+	db.Course.findOne titles: $elemMatch: compcode: req.query.compcode, (err, course) ->
+		return res.send 400 unless course?
+		core.exportCourse req.query.compcode, (body) ->
+			res.setHeader "Content-Type", "text/csv"
+			res.setHeader "Content-Length", body.length
+			res.setHeader "Content-Disposition", "attachment;filename=course.csv"
+			res.setHeader "Cache-Control", "no-cache"
+			res.end body
 
 expressServer.get "/courses.zip", (req, res, next) ->
 	core.exportAllCourses (data) ->

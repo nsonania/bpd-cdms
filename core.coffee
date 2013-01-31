@@ -168,7 +168,7 @@ exports.commitSemester = (semester, callback) ->
 		await obj.save defer er, robj
 		callback? true
 
-exports.exportStudentsSelections = (cat, callback) ->
+exports.exportStudentsSelections = (cat = 0, callback) ->
 	cats = ["All Students", "Not Registered", "Not Validated", "Validated", "Difficult Timetable"]
 	str = "Students, #{cats[cat]}\n"
 	query =
