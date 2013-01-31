@@ -78,6 +78,7 @@ io.sockets.on "connection", (socket) ->
 						otherDates: c.get "otherDates"
 				el: el
 				reqEl: student.get("reqEl") ? 0
+				groups: student.get("groups") ? []
 
 	socket.on "saveCourses", ([data]..., callback) ->
 		await db.Student.findById socket.student_id, defer err, student
