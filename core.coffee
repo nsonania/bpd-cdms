@@ -200,15 +200,15 @@ exports.exportCourse = (compcode, callback) ->
 			str += "\n"
 			str += "By Section\n"
 			for section in course.get("lectureSections") ? []
-				str += "Lecture Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLectureSection is section.number) and y.compcode in course.get("titles")._any((z) -> y.compcode is z.compcode)).length}\n"
+				str += "Lecture Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLectureSection is section.number and y.compcode in course.get("titles")._any((z) -> y.compcode is z.compcode))).length}\n"
 				str += "Student Id, Student Name\n"
-				for student in students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLectureSection is section.number) and y.compcode in course.get("titles")._any((z) -> y.compcode is z.compcode))
+				for student in students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLectureSection is section.number and y.compcode in course.get("titles")._any((z) -> y.compcode is z.compcode)))
 					str += "#{student.get "studentId"}, #{student.get "name"}\n"
 				str += "\n"
 			for section in course.get("labSections") ? []
-				str += "Lab Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLabSection is section.number) and y.compcode in course.get("titles")._any((z) -> y.compcode is z.compcode)).length}\n"
+				str += "Lab Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLabSection is section.number and y.compcode in course.get("titles")._any((z) -> y.compcode is z.compcode))).length}\n"
 				str += "Student Id, Student Name\n"
-				for student in students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLabSection is section.number) and y.compcode in course.get("titles")._any((z) -> y.compcode is z.compcode))
+				for student in students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLabSection is section.number and y.compcode in course.get("titles")._any((z) -> y.compcode is z.compcode)))
 					str += "#{student.get "studentId"}, #{student.get "name"}\n"
 				str += "\n"
 			callback? str
