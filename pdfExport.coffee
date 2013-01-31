@@ -72,7 +72,7 @@ exports.generateRC = (data, callback) ->
 	doc.text "LS: Lecture Section,    PS: Lab / Practicals Section,    A/R: Amendment / Revision", start.x, doc.y + 34
 	doc.fontSize 12
 	doc.font "pdfGen/Avenir Next Condensed.ttc", "AvenirNextCondensed-Medium"
-	doc.text (data.registeredDate ? new Date).toDateString(), start.x + 1, 730, width: 90, align: "center"
+	doc.text (new Date(data.validatedOn ? Date())).toDateString(), start.x + 1, 730, width: 90, align: "center"
 	doc.font "pdfGen/Avenir Next Condensed.ttc", "AvenirNextCondensed-MediumItalic"
 	doc.text "Date", start.x + 1, 750, width: 90, align: "center"
 	doc.text "Student", start.x + 121, 750, width: 90, align: "center"

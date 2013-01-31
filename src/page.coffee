@@ -17,24 +17,69 @@ arrayGroup = (array, lambda) ->
 	group
 
 class StudentViewModel
-	constructor: ({studentId, name, registered, validated, difficultTimetable, _id}) ->
+	constructor: ({studentId, name, registered, registeredOn, validated, validatedOn, validatedBy, difficultTimetable, bc, psc, el, reqEl, selectedcourses, _id}) ->
 		@_id = ko.observable _id ? undefined
-		@studentId = ko.observable studentId ? undefined
-		@name = ko.observable name ? undefined
+		@studentId = ko.observable studentId ? ""
+		@name = ko.observable name ? ""
 		@registered = ko.observable registered ? undefined
+		@registeredOn = ko.observable new Date registeredOn ? Date()
 		@validated = ko.observable validated ? undefined
+		@validatedOn = ko.observable new Date validatedOn ? Date()
+		@validatedBy = ko.observable validatedBy ? undefined
+		@validatedByNI = ko.observable ""
 		@difficultTimetable = ko.observable difficultTimetable ? undefined
-		@visible = ko.observable true
-		@validateMessage = ko.computed =>
-			unless @registered()
-				"Registration Not Complete"
-			else if @validated()
-				"Registration Validated"
-			else
-				"Validate"
+		@bc = ko.observableArray bc ? []
+		@psc = ko.observableArray psc ? []
+		@el = ko.observableArray el ? []
+		@reqEl = ko.observable reqEl ? 0
+		@groups = ko.observableArray _(groups ? []).map (x) -> ko.observableArray x
+		@selectedcourses = ko.observableArray selectedcourses ? []
+		@courses = ko.observableArray []
+		@coursesCI = ko.computed =>
+			_(@courses()).map (x) =>
+				compcode: x.compcode
+				number: x.number
+				name: x.name
+				lectureSection: _(@selectedcourses()).find((z) => z.compcode is x.compcode)?.selectedLectureSection
+				lectureSectionInstructor: _(x.lectureSections).find((y) => y.number is _(@selectedcourses()).find((z) => z.compcode is x.compcode)?.selectedLectureSection)?.instructor
+				labSection: _(@selectedcourses()).find((z) => z.compcode is x.compcode)?.selectedLabSection
+				labSectionInstructor: _(x.labSections).find((y) => y.number is _(@selectedcourses()).find((z) => z.compcode is x.compcode)?.selectedLabSection)?.instructor
+				lectureSections: x.lectureSections
+				labSections: x.labSections
+	fetchCourses: =>
+		socket.emit "getCoursesFor", {titles: $elemMatch: compcode: $in: _(@selectedcourses()).map((x) -> x.compcode)}, (courses) =>
+			viewmodel.pleaseWaitStatus undefined
+			@courses.removeAll()
+			@courses do =>
+				_.chain(courses).map((x) => _(x.titles).map (y) =>
+					compcode: y.compcode
+					number: y.number
+					name: y.name
+					lectureSections: x.lectureSections ? []
+					labSections: x.labSections ? []
+				).flatten(1).filter((x) => x.compcode in _(@selectedcourses()).map((y) -> y.compcode)).value()
+	toggleRegistered: =>
+		bootbox.confirm "Are you sure that you would like to unregister this student?", (result) ->
+			if result
+				@registered not @registered()
+				@selectedcourses [] unless @registered()
+				@difficultTimetable false
 	validate: =>
-		socket.emit "validate", @_id(), (success) =>
-			@validated true if success
+		socket.emit "validate", @_id(), => viewmodel.studentsPackagesViewModel().fetchStudent()
+
+class StudentsPackagesViewModel
+	constructor: ->
+		@student = ko.observable undefined
+		@query = ko.observable ""
+	fetchStudent: (elem, event) =>
+		keyCode = event?.which ? event?.keyCode
+		return unless keyCode in [13, 1, null, undefined]
+		socket.emit "getStudent", studentId: @query(), (student) =>
+			@student if student? then new StudentViewModel student else undefined
+			@student().fetchCourses() if @student()?
+			if @student()?.validated()
+				socket.emit "getValidatorById", @student().validatedBy(), (validator) =>
+					@student().validatedByNI validator.name
 
 class StudentsViewModel
 	constructor: ({students}) ->
@@ -58,6 +103,7 @@ class StudentsViewModel
 class BodyViewModel
 	constructor: ->
 		@studentsViewModel = ko.observable undefined
+		@studentsPackagesViewModel = ko.observable undefined
 		@pleaseWaitStatus = ko.observable undefined
 		@pleaseWaitVisible = ko.computed => @pleaseWaitStatus()?
 		@activeView = ko.observable undefined
@@ -68,13 +114,8 @@ class BodyViewModel
 		@password = ko.observable undefined
 		@loginAlertStatus = ko.observable undefined
 	gotoStudents: =>
-		@pleaseWaitStatus "Fetching Students..."
-		socket.emit "getStudents", "", (students) =>
-			@pleaseWaitStatus undefined
-			@studentsViewModel new StudentsViewModel students: students
-			@activeView "studentsView"
-			$("#studentheader, #studentdetails").affix offset: top: 290
-			$('button[rel=tooltip]').tooltip()
+		@studentsPackagesViewModel new StudentsPackagesViewModel
+		@activeView "studentsPackagesView"
 	login: =>
 		@loginAlertStatus undefined
 		@pleaseWaitStatus "Authenticating..."

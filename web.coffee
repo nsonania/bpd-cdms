@@ -37,14 +37,14 @@ server = http.createServer expressServer
 pdfRC = (studentId, callback) ->
 	db.Misc.findOne desc: "Semester Details", (err, semester) ->
 		return callback("Semester Not Open") unless semester?
-		db.Student.findOne studentId: studentId, (err, student) ->
+		db.Student.findOne studentId: studentId, registered: true, (err, student) ->
 			return callback("Student not found or student not registered yet") unless student?
 			db.Course.find titles: $elemMatch: compcode: $in: (student.get("selectedcourses") ? [])._map((x) -> x.compcode), (err, courses) ->
 				data =
 					studentId: student.get "studentId"
 					studentName: student.get "name"
 					semesterTitle: semester.get "title"
-					registeredDate: student.get "registeredOn"
+					validatedOn: student.get "validatedOn"
 					courses: (student.get("selectedcourses") ? [])._map (selcourse) ->
 						compcode: selcourse.compcode
 						number: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.number
@@ -64,10 +64,18 @@ io = socket_io.listen server
 io.set "log level", 0
 io.sockets.on "connection", (socket) ->
 
+	socket.on "getStudent", ([query]..., callback) ->
+		return callback false unless socket.auth?
+		db.Student.findOne(query).lean().exec (err, student) -> callback? student
+
 	socket.on "getStudents", (query, callback) ->
 		return callback false unless socket.auth?
 		return callback [] if query in ["", null, undefined]
 		db.Student.find($or: [{studentId: $regex: new RegExp(query, "i")}, {name: $regex: new RegExp(query, "i")}]).limit(30).lean().exec (err, students) -> callback students
+
+	socket.on "getCoursesFor", ([query]..., callback) ->
+		return callback false unless socket.auth?
+		db.Course.find(query).lean().exec (err, courses) -> callback? courses
 
 	socket.on "login", (username, password, callback) ->
 		db.Validator.findOne username: username, password: password, (err, authInfo) ->
@@ -90,6 +98,10 @@ io.sockets.on "connection", (socket) ->
 		delete socket.auth
 		callback true
 
+	socket.on "getValidatorById", ([query]..., callback) ->
+		return callback false unless socket.auth?
+		db.Validator.findById(query).lean().exec (err, validator) -> callback? validator
+
 	socket.on "validate", (student_id, callback) ->
 		return callback false unless socket.auth?
 		db.Student.findById student_id, (err, student) ->
@@ -98,12 +110,13 @@ io.sockets.on "connection", (socket) ->
 			console.log "#{student.get("name")} validated by #{socket.auth.username}."
 			student.set "validated", true
 			student.set "validatedBy", socket.auth._id
+			student.set "validatedOn", new Date()
 			student.markModified "validated"
 			student.markModified "validatedBy"
+			student.markModified "validatedOn"
 			student.save()
 			callback true
 			io.sockets.clients()._filter((x) -> x isnt socket)._each (x) -> x.emit "studentStatusChanged", student_id, "validated", true
-			ipc?.emit? "broadcast", "studentStatusChanged", [student_id, "validated", true]
 
 ipc = socket_io_client.connect "http://localhost:#{process.env.IPC_PORT}"
 ipc.on "connect", ->

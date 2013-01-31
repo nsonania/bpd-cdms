@@ -17,6 +17,7 @@
 		<script src="md5.js"></script>
 		<script src="underscore-min.js" type="text/javascript" charset="utf-8"></script>
 		<script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+		<script src="bootstrap/js/bootbox.min.js" type="text/javascript"></script>
 		<script src="moment.min.js" type="text/javascript"></script>
 		<script src="bootstrap/js/bootstrap-datetimepicker.js" type="text/javascript"></script>
 		<script src="socket.io/socket.io.js"></script>
@@ -83,6 +84,83 @@
 					</div>
 				</div>
 			</div>
+			<div id="students-container" data-bind="with: studentsPackagesViewModel, visible: activeView() == 'studentsPackagesView' && authenticated()" class="container">
+				<div class="hero-unit">
+					<h1>Validating Student's Registration</h1>
+					<p>View Student's Registration, print his/her Registration Card and then validate.</p>
+				</div>
+				<div style="height: 1px"></div>
+				<div class="navbar">
+					<div class="navbar-inner">
+						<div class="brand">Student's Package</div>
+						<ul class="nav pull-right">
+							<li class="navbar-form">
+								<div class="input-append">
+									<input type="text" data-bind="value: query, valueUpdate: 'afterkeydown', event: {keyup: fetchStudent}" placeholder="Student Id">
+									<button class="btn btn-narrow" data-bind="click: fetchStudent"><i class="icon-arrow-right"></i></button>
+								</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div data-bind="with: student">
+					<div class="row">
+						<div class="span10 offset1 well">
+							<div class="row">
+								<div class="span3">Student Id: <strong data-bind="text: studentId"></strong></div>
+								<div class="span5">Student Name: <strong data-bind="text: name"></strong></div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="span10 offset1 well">
+							<span>Status:</span>
+							<strong data-bind="visible: !registered()">Not Registered</strong>
+							<strong data-bind="visible: registered() && !validated()">Registered on <span data-bind="text: registeredOn"></span></strong>
+							<strong data-bind="visible: validated()">Validated on <span data-bind="text: validatedOn"></span> by <span data-bind="text: validatedByNI"></span></strong>
+							<strong data-bind="visible: difficultTimetable()">Difficult Timetable</strong>
+							<span class="pull-right wellBtn">
+								<button class="btn" data-bind="click: toggleRegistered, visible: registered() && !validated()">Unregister</button>
+								<a class="btn" target="_blank" data-bind="attr: {href: 'rc/' + studentId()}, visible: registered">View Registration Card</a>
+							</span>
+						</div>
+					</div>
+					<hr data-bind="visible: registered">
+					<div class="row" data-bind="if: registered">
+						<div class="span10 offset1">
+							<p class="lead" style="text-align: center">Registered Courses</p>
+							<table class="table">
+								<thead>
+									<tr>
+										<th style="width: 15%">Comp. Code</th>
+										<th style="width: 15%">Course No.</th>
+										<th>Course Name</th>
+										<th style="width: 300px">Section / Faculty</th>
+									</tr>
+								</thead>
+								<tbody data-bind="foreach: coursesCI">
+									<tr>
+										<td data-bind="text: compcode"></td>
+										<td data-bind="text: number"></td>
+										<td data-bind="text: name"></td>
+										<td>
+											<span data-bind="visible: lectureSections.length > 0">Lecture: <span data-bind="text: lectureSection"></span> (<span data-bind="text: lectureSectionInstructor"></span>)</span>
+											<br data-bind="visible: lectureSections.length > 0 && labSections.length > 0">
+											<span data-bind="visible: labSections.length > 0">Lab: <span data-bind="text: labSection"></span> (<span data-bind="text: labSectionInstructor"></span>)</span>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<hr data-bind="visible: registered() && !validated()">
+					<div data-bind="visible: registered() && !validated()" class="commitBar" style="text-align: center">
+						<button class="btn btn-primary" data-bind="click: validate">Validate Student</button>
+					</div>
+				</div>
+			</div>
+
+
 			<div id="students-container" data-bind="with: studentsViewModel, visible: activeView() == 'studentsView' && authenticated()" class="container">
 				<div class="hero-unit">
 					<h1>Validating Students' Registrations</h1>
