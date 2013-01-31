@@ -140,13 +140,6 @@
 						<span data-bind="visible: el().length > 0"> to enroll into </span>
 						<span data-bind="visible: el().length > 0">overload courses.</span>
 					</span>
-					<span data-bind="visible: bc().length > 0 || psc().length > 0">
-						<span>You are recommended to select all your </span>
-						<span data-bind="visible: bc().length > 0 && psc().length == 0">backlogs. </span>
-						<span data-bind="visible: bc().length > 0 && psc().length > 0">backlogs</span>
-						<span data-bind="visible: bc().length > 0 && psc().length > 0"> and </span>
-						<span data-bind="visible: psc().length > 0">prescribed semester courses.</span>
-					</span>
 					<span data-bind="visible: reqEl() > 0">
 						You are recommended to select <span data-bind="text: reqEl"></span>
 						<span data-bind="visible: reqEl() > 1"> electives.</span>
