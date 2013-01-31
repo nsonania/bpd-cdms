@@ -129,13 +129,13 @@
 						<span data-bind="visible: (bc().length > 0 || psc().length > 0) && el().length > 0"> for the current semester</span>
 						<span data-bind="visible: el().length > 0"> and </span>
 						<em data-bind="visible: el().length > 0">Electives / Overload Courses</em>
-						<span data-bind="visible: el().length > 0"> containing required electives and optional courses that you would like to enroll in. You will have to select all your backlogs to select prescribed and elective courses. </span>
-						<span>You will have to select all your </span>
+						<span data-bind="visible: el().length > 0"> containing required electives and optional courses that you would like to enroll in. You will have to select your backlogs to select prescribed and elective courses. </span>
+						<span>You will have to select your </span>
 						<span data-bind="visible: bc().length > 0">backlogs</span>
-						<span data-bind="visible: psc().length > 0"> to enroll into </span>
+						<span data-bind="visible: psc().length > 0 && bc().length > 0"> to enroll into </span>
 						<span data-bind="visible: psc().length > 0 && el().length == 0">prescribed courses.</span>
 						<span data-bind="visible: psc().length > 0 && el().length > 0">prescribed courses</span>
-						<span data-bind="visible: numberOfSections() == 3"> and all</span>
+						<span data-bind="visible: numberOfSections() == 3"> and </span>
 						<span data-bind="visible: numberOfSections() == 3">prescribed courses</span>
 						<span data-bind="visible: el().length > 0"> to enroll into </span>
 						<span data-bind="visible: el().length > 0">overload courses.</span>
@@ -155,6 +155,9 @@
 					<span>
 						<em>Green</em> denotes that the course is selected. Make sure that none of your selected courses have clashing evaluation components dates. To register for overloads or register for less number of courses than prescribed, click on <em>Options</em> above.
 					</span>
+					<ul data-bind="foreach: groupsNI">
+						<li>Select only one course out of <span data-bind="text: $data"></span></li>
+					</ul>
 				</p>
 			</div>
 			<div class="row">
@@ -183,9 +186,6 @@
 			<div class="row">
 				<div class="courses-selections well span10 offset1" data-bind="visible: psc().length > 0, css: {disabled: !pscEnabled()}">
 					<p class="lead center">Prescribed Courses</p>
-					<ul data-bind="foreach: groupsNI">
-						<li>Select only one course out of <span data-bind="text: $data"></span></li>
-					</ul>
 					<table class="table table-hover">
 						<thead>
 							<tr>
