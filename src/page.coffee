@@ -60,6 +60,7 @@ class CoursesViewModel
 		@psc = ko.observableArray []
 		@allEl = ko.observableArray []
 		@el = ko.computed => _(@allEl()).sortBy (x) -> x.compcode
+		@groups = ko.observableArray []
 		@reqEl = ko.observable 0
 		@electiveQuery = ko.observable ""
 		@selectedValueDropdown = ko.observable undefined
@@ -76,16 +77,14 @@ class CoursesViewModel
 			@selectedValueDropdown els[0]
 			_(els).take 5
 		@blEnabled = ko.computed => _(@psc()).all((x) -> not x.selected()) and _(@el()).filter((x) -> x.selected()).length is 0
-		@pscEnabled = ko.computed =>
-			p1 = _(@bc()).all((x) -> x.selected())
-
-			# p1 = _(@bc()).filter((x) -> )
-
-			p2 = _(@el()).filter((x) -> x.selected()).length <= @reqEl()
-			p1 and p2
+		@pscEnabled = ko.computed => _(@bc()).all((x) -> x.selected()) and _(@el()).filter((x) -> x.selected()).length <= @reqEl()
 		@elEnabled = ko.computed => _(@bc()).all (x) -> x.selected()
-		@elsEnabled = ko.computed => _(@el()).filter((x) -> x.selected()).length < @reqEl() or (_(@psc()).all((x) -> x.selected()) and @enableOverloads()) or not @elEnabled()
-		@nextStepWarning = ko.computed => _(@el()).filter((x) -> x.selected()).length < @reqEl() or _(@psc()).any (x) -> not x.selected()
+		@elsEnabled = ko.computed =>
+			p1 = _(@psc()).filter((x) -> x.selected()).length is @psc().length - _.chain(@groups()).filter((x) -> x?.length > 1).map((x) -> x.length - 1).reduce(((sum, n) -> sum + n), 0).value()
+			_(@el()).filter((x) -> x.selected()).length < @reqEl() or (p1 and @enableOverloads()) or not @elEnabled()
+		@nextStepWarning = ko.computed =>
+			p1 = _(@psc()).filter((x) -> x.selected()).length is @psc().length - _.chain(@groups()).filter((x) -> x?.length > 1).map((x) -> x.length - 1).reduce(((sum, n) -> sum + n), 0).value()
+			_(@el()).filter((x) -> x.selected()).length < @reqEl() or not p1
 		@allSelectedCourses = ko.computed => _.chain([@bc(), @psc(), @el()]).flatten(1).filter((x) -> x.selected()).value()
 		@clashingOtherDates = ko.computed => _(@allSelectedCourses()).any (x) -> _(x.otherDates()).any (y) -> y.clashing()
 		@numberOfSections = ko.computed =>
