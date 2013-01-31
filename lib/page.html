@@ -159,7 +159,7 @@
 							</div>
 							<div class="input-prepend">
 								<div class="add-on">Capacity</div>
-								<input type="text" class="span1" data-bind="value: capacity" readOnly>
+								<input type="text" class="span1" data-bind="value: capacity">
 							</div>
 						</div>
 						<br>
@@ -249,8 +249,8 @@
 								</div>
 								<div class="control-group">
 									<label class="control-label">Test Dates</label>
-									<div class="controls">
-										<input type="text" placeholder="Test Dates" data-bind="value: otherDatesNI" readOnly>
+									<div class="controls" data-bind="foreach: otherDates" style="line-height: 2">
+										<span class="label label-test" data-bind="text: $data"></span>
 									</div>
 								</div>
 							</div>

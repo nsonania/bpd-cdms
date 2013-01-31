@@ -9,6 +9,7 @@ md5 = require "MD5"
 {spawn} = require "child_process"
 core = require "./core"
 db = require "./db"
+fs = require "fs"
 
 expressServer = express()
 expressServer.configure ->
@@ -35,6 +36,13 @@ expressServer.get "/course.csv", (req, res, next) ->
 		res.setHeader "Content-Disposition", "attachment;filename=course.csv"
 		res.setHeader "Cache-Control", "no-cache"
 		res.end body
+
+expressServer.get "/courses.zip", (req, res, next) ->
+	core.exportAllCourses (data) ->
+		res.setHeader "Content-Type", "application/zip"
+		res.setHeader "Content-Disposition", "attachment;filename=courses.zip"
+		res.setHeader "Cache-Control", "no-cache"
+		res.sendfile data, -> fs.unlink data
 
 server = http.createServer expressServer
 
@@ -69,6 +77,14 @@ io.sockets.on "connection", (socket) ->
 		return callback false unless socket.auth?
 		console.log "Delete All Courses"
 		core.deleteAllCourses callback
+
+	socket.on "setSectionCapacity", (course_id, number, type, capacity) ->
+		return unless socket.auth?
+		db.Course.findById course_id, (err, course) ->
+			sections = course.get(type)
+			sections._find((x) -> x.number is number).capacity = capacity
+			course.markModified type
+			course.save -> console.log "Modified Section Capacity"
 
 	socket.on "getStudent", ([query]..., callback) ->
 		return callback false unless socket.auth?

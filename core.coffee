@@ -5,6 +5,7 @@ md5 = require "MD5"
 db = require "./db"
 fs = require "fs"
 uap = require "./uap"
+nzip = require "node-zip"
 
 dumpError = (err) ->
 	if typeof err is "object"
@@ -200,18 +201,29 @@ exports.exportCourse = (compcode, callback) ->
 			str += "\n"
 			str += "By Section\n"
 			for section in course.get("lectureSections") ? []
-				str += "Lecture Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLectureSection is section.number and course.get("titles")._any((z) -> y.compcode is z.compcode))).length}\n"
+				enrolledStudents = students._filter (x) -> x.get("selectedcourses")._any (y) -> y.selectedLectureSection is section.number
+				str += "Lecture Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{enrolledStudents.length}\n"
 				str += "Student Id, Student Name\n"
-				for student in students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLectureSection is section.number and course.get("titles")._any((z) -> y.compcode is z.compcode)))
+				for student in enrolledStudents
 					str += "#{student.get "studentId"}, #{student.get "name"}\n"
 				str += "\n"
 			for section in course.get("labSections") ? []
-				str += "Lab Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLabSection is section.number and course.get("titles")._any((z) -> y.compcode is z.compcode))).length}\n"
+				enrolledStudents = students._filter (x) -> x.get("selectedcourses")._any (y) -> y.selectedLabSection is section.number
+				str += "Lab Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{enrolledStudents.length}\n"
 				str += "Student Id, Student Name\n"
-				for student in students._filter((x) -> x.get("selectedcourses")._any((y) -> y.selectedLabSection is section.number and course.get("titles")._any((z) -> y.compcode is z.compcode)))
+				for student in enrolledStudents
 					str += "#{student.get "studentId"}, #{student.get "name"}\n"
 				str += "\n"
 			callback? str
+
+exports.exportAllCourses = (callback) ->
+	zip = new nzip()
+	db.Course.find {}, (err, courses) ->
+		for course in courses
+			await exports.exportCourse course.get("titles")[0].compcode, defer str
+			zip.file "course_" + course.get("titles")._map((x) -> x.compcode).join("_") + ".csv", str
+		data = zip.generate base64: false, compression: "DEFLATE"
+		fs.writeFile 'lib/courses.zip', data, "binary", -> callback "lib/courses.zip"
 
 exports.getStats = (callback) ->
 	await db.Misc.findOne desc: "Stats", defer err, stats

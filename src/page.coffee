@@ -26,17 +26,18 @@ class ScheduleSlot
 		@busy not @busy()
 
 class SectionViewModel
-	constructor: ({number, instructor, timeslots, capacity} = {number: null, instructor: null, timeslots: [], capacity: null}) ->
+	constructor: ({number, instructor, timeslots, capacity} = {number: null, instructor: null, timeslots: [], capacity: null}, type, course_id) ->
 		@number = ko.observable number
 		@instructor = ko.observable instructor
 		@timetable = ko.observableArray do ->
-			for hour, h in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "E"] then ko.observableArray do ->
-				for day, d in ["Su", "M", "T", "W", "Th", "F", "S"]
+			for day, d in ["Su", "M", "T", "W", "Th", "F", "S"] then ko.observableArray do ->
+				for hour, h in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "E"]
 					new ScheduleSlot
 						day: day
 						hour: hour
 						busy: _(timeslots).any (x) -> x.day is d + 1 and x.hour is h + 1
 		@capacity = ko.observable capacity
+		@capacity.subscribe => socket.emit "setSectionCapacity", course_id, @number(), type, @capacity()
 	editSection: =>
 		viewmodel.coursesViewModel().currentSection @
 		$("#sectiondetails").modal "show"
@@ -137,8 +138,8 @@ class CourseViewModel
 class CoursesViewModel
 	constructor: ({courses}) ->
 		@courses = ko.observableArray _.chain(courses).map((x) ->
-			lectureSections =  ko.observableArray (new SectionViewModel section for section in x.lectureSections ? [])
-			labSections = ko.observableArray (new SectionViewModel section for section in x.labSections ? [])
+			lectureSections =  ko.observableArray (new SectionViewModel section, "lectureSections", x._id for section in x.lectureSections ? [])
+			labSections = ko.observableArray (new SectionViewModel section, "labSections", x._id for section in x.labSections ? [])
 			otherDates = ko.observableArray (date for date in x.otherDates ? [])
 			_(x.titles).map (y) ->
 				new CourseViewModel
@@ -176,8 +177,8 @@ class CoursesViewModel
 			viewmodel.pleaseWaitStatus undefined
 			@courses.removeAll()
 			@courses _.chain(courses).map((x) ->
-				lectureSections =  ko.observableArray (new SectionViewModel section for section in x.lectureSections ? [])
-				labSections = ko.observableArray (new SectionViewModel section for section in x.labSections ? [])
+				lectureSections =  ko.observableArray (new SectionViewModel section, "lectureSections", x._id for section in x.lectureSections ? [])
+				labSections = ko.observableArray (new SectionViewModel section, "labSections", x._id for section in x.labSections ? [])
 				otherDates = ko.observableArray (date for date in x.otherDates ? [])
 				_(x.titles).map (y) ->
 					new CourseViewModel
@@ -188,7 +189,7 @@ class CoursesViewModel
 						labSections: labSections
 						otherDates: otherDates
 			).flatten().value()
-			@currentCourse undefined
+			@currentCourse @courses()[0] if @courses()?.length > 0
 			@currentSection undefined
 	commitCourses: =>
 		viewmodel.pleaseWaitStatus "Saving changes..."
