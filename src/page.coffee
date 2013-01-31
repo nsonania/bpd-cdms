@@ -220,11 +220,12 @@ class BodyViewModel
 	gotoCoursesView: =>
 		@activeView "coursesView"
 		@pleaseWaitVisible true
-		socket.emit "getCourses", ({success, bc, psc, el, reqEl}) =>
+		socket.emit "getCourses", ({success, bc, psc, el, reqEl, groups}) =>
 			@coursesViewModel.bc (new CourseViewModel course for course in bc ? [])
 			@coursesViewModel.psc (new CourseViewModel course for course in psc ? [])
 			@coursesViewModel.allEl (new CourseViewModel course for course in el ? [])
 			@coursesViewModel.reqEl reqEl ? 0
+			@coursesViewModel.groups groups ? []
 			@pleaseWaitVisible false
 	gotoSectionsView: =>
 		@activeView "sectionsView"
