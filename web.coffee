@@ -222,7 +222,7 @@ io.sockets.on "connection", (socket) ->
 				student.markModified "selectedcourses"
 				student.save()
 
-server.listen (port = process.env.PORT ? 5000), -> console.log "worker #{process.pid}: Listening on port #{port}"
+server.listen (port = process.env.PORT ? 5000), -> console.log "Listening on port #{port}"
 
 setInterval ->
 	db.Misc.findOneAndUpdate desc: "Stats", {currentStudents: io.sockets.clients()._filter((x) -> x.student_id?).length}, {upsert: true}, (err) ->
