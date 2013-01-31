@@ -123,7 +123,7 @@
 					<span data-bind="visible: numberOfSections() > 1">
 						<span>Your courses are divided into <span data-bind="text: numberOfSections"></span> sections, namely, </span>
 						<em data-bind="visible: bc().length > 0">Backlogged Courses</em>
-						<span data-bind="visible: numberOfSections() == 3 && bc().length > 0">, </span><span data-bind="visible: numberOfSections() == 2 && bc().length > 0"> and </span>
+						<span data-bind="visible: numberOfSections() == 3 && bc().length > 0">, </span><span data-bind="visible: numberOfSections() == 2 && bc().length > 0 && psc().length > 0"> and </span>
 						<em data-bind="visible: psc().length > 0">Prescribed Courses</em>
 						<span data-bind="visible: (bc().length > 0 || psc().length > 0) && el().length == 0"> for the current semester. </span>
 						<span data-bind="visible: (bc().length > 0 || psc().length > 0) && el().length > 0"> for the current semester</span>
