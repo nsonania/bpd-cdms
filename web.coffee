@@ -97,7 +97,7 @@ io.sockets.on "connection", (socket) ->
 		db.Course.find(titles: $elemMatch: compcode: $in: (x.compcode for x in student.get "selectedcourses")).lean().exec (err, selectedcourses) ->
 			db.Validator.findById student.get("validatedBy"), (err, validator) ->
 				core.generateSchedule student._id, (scheduleconflicts) ->
-					callback? do =>
+					ret =
 						success: true
 						selectedcourses:
 							for selcourse in student.get("selectedcourses")
@@ -126,6 +126,7 @@ io.sockets.on "connection", (socket) ->
 						registeredOn: student.get("registeredOn")?.toString()
 						validatedOn: student.get("validatedOn")?.toString()
 						validatedBy: validator?.get "name"
+					callback? ret
 
 	socket.on "chooseSection", ([sectionInfo]..., callback) ->
 		await db.Student.findById socket.student_id, defer err, student
@@ -152,7 +153,7 @@ io.sockets.on "connection", (socket) ->
 					core.generateSchedule student._id, (scheduleconflicts) ->
 						callback? do =>
 							success: true
-							status: if slotsFull or data.isFull then false else if data.lessThan5 then "yellow" else true
+							status: data
 							schedule: scheduleconflicts.schedule
 
 	socket.on "confirmRegistration", (callback) ->

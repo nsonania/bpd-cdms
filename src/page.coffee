@@ -139,7 +139,13 @@ class SectionViewModel
 			isLectureSection: true
 		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
 			@parent.selectedLectureSection @number
-			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
+			@status do =>
+				if not status or status.isFull
+					"isFull"
+				else if status.lessThan5
+					"lessThan5"
+				else
+					undefined
 			viewmodel.sectionsViewModel.setSchedule schedule
 			callback?()
 	chooseLabSection: (callback) =>
@@ -149,7 +155,13 @@ class SectionViewModel
 			isLabSection: true
 		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
 			@parent.selectedLabSection @number
-			@status if status.isFull then "isFull" else if status.lessThan5 then "lessThan5" else undefined
+			@status do =>
+				if not status or status.isFull
+					"isFull"
+				else if status.lessThan5
+					"lessThan5"
+				else
+					undefined
 			viewmodel.sectionsViewModel.setSchedule schedule
 			callback?()
 
