@@ -283,7 +283,7 @@ $ ->
 				viewmodel.loginViewModel.alertStatus reason
 
 	socket.on "sectionUpdate", (compcode, data) ->
-		return unless viewmodel.activeView is "sectionsView"
+		return unless viewmodel.activeView() is "sectionsView"
 		d = _(viewmodel.sectionsViewModel.courses()).find((x) -> x.compcode is compcode)
 		return unless d?
 		if data.sectionType is "lecture"
