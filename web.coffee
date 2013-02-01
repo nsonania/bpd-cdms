@@ -45,6 +45,7 @@ pdfRC = (studentId, callback) ->
 					studentName: student.get "name"
 					semesterTitle: semester.get "title"
 					validatedOn: student.get "validatedOn"
+					status: student.get "status"
 					courses: (student.get("selectedcourses") ? [])._map (selcourse) ->
 						compcode: selcourse.compcode
 						number: courses?._map((x) -> x.get "titles")._flatten(1)._find((x) -> x.compcode is selcourse.compcode)?.number
