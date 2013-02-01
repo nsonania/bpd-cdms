@@ -30,8 +30,8 @@ exports.generateRC = (data, callback) ->
 
 	columns = [
 		{px: 76, width: 50, name: "Code"}
-		{px: 232, width: 74, name: "Course No."}
-		{px: 306, width: 185.28, name: "Course Name"}
+		{px: 232, width: 84, name: "Course No."}
+		{px: 316, width: 175.28, name: "Course Name"}
 		{px: 126, width: 33, name: "LS"}
 		{px: 159, width: 33, name: "PS"}
 		{px: 192, width: 40, name: "Type"}
