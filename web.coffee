@@ -31,7 +31,7 @@ expressServer.get "/students.csv", (req, res, next) ->
 		res.end body
 
 expressServer.get "/course.csv", (req, res, next) ->
-	db.Course.findOne titles: $elemMatch: compcode: req.query.compcode, (err, course) ->
+	db.Course.findOne titles: $elemMatch: compcode: Number(req.query.compcode), (err, course) ->
 		return res.send 400 unless course?
 		core.exportCourse req.query.compcode, (body) ->
 			res.setHeader "Content-Type", "text/csv"

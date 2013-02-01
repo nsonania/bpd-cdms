@@ -211,14 +211,14 @@ exports.exportCourse = (compcode, callback) ->
 			str += "\n"
 			str += "By Section\n"
 			for section in course.get("lectureSections") ? []
-				enrolledStudents = students._filter (x) -> x.get("selectedcourses")._any (y) -> y.selectedLectureSection is section.number
+				enrolledStudents = students._filter (x) -> x.get("selectedcourses")._filter((y) -> course.get("titles")._any (z) -> z.compcode is y.compcode)._any (y) -> y.selectedLectureSection is section.number
 				str += "Lecture Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{enrolledStudents.length}\n"
 				str += "Student Id, Student Name\n"
 				for student in enrolledStudents
 					str += "#{student.get "studentId"}, #{student.get "name"}\n"
 				str += "\n"
 			for section in course.get("labSections") ? []
-				enrolledStudents = students._filter (x) -> x.get("selectedcourses")._any (y) -> y.selectedLabSection is section.number
+				enrolledStudents = students._filter (x) -> x.get("selectedcourses")._filter((y) -> course.get("titles")._any (z) -> z.compcode is y.compcode)._any (y) -> y.selectedLabSection is section.number
 				str += "Lab Section: #{section.number}, Instructor: #{section.instructor}, Enrolled: #{enrolledStudents.length}\n"
 				str += "Student Id, Student Name\n"
 				for student in enrolledStudents
