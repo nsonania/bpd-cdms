@@ -274,6 +274,7 @@ class StudentViewModel
 		@password.subscribe => @modified true
 		@registered.subscribe => @modified true
 		@validated.subscribe => @modified true
+		@difficultTimetable.subscribe => @modified true
 		@bc.subscribe => @modified true
 		@psc.subscribe => @modified true
 		@el.subscribe => @modified true
