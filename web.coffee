@@ -26,14 +26,14 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "login", ([{studentId, password}]..., callback) ->
 		await db.Misc.findOne desc: "Semester Details", defer err, semester
-		return callback success: false, reason: "notOpen" unless semester?
+		return callback? success: false, reason: "notOpen" unless semester?
 		startTime = new Date semester.get "startTime"
-		return callback success: false, reason: "notOpen" if startTime > new Date()
+		return callback? success: false, reason: "notOpen" if startTime > new Date()
 		db.Student.findOne studentId: studentId.toUpperCase(), password: password, (err, student) ->
-			return callback success: false, reason: "authFailure" unless student?
+			return callback? success: false, reason: "authFailure" unless student?
 			io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.equals(student._id) and x isnt socket)._each (x) -> x.emit "destroySession"
 			socket.student_id = student.get "_id"
-			callback
+			callback? do =>
 				success: true
 				student:
 					studentId: student.get "studentId"
@@ -42,7 +42,7 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "getCourses", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student?
+		return callback? success: false unless student?
 		bc = student.get("bc") ? []
 		psc = student.get("psc") ? []
 		el = student.get("el") ? []
@@ -61,7 +61,7 @@ io.sockets.on "connection", (socket) ->
 					leftCapacity: leftCapacity
 					selected: (student.get("selectedcourses") ? [])._any (y) -> x is y.compcode
 					otherDates: c.get "otherDates"
-			callback
+			callback? do =>
 				bc:
 					for x in bc when (c = courses._find (y) -> y.get("titles")._any (z) -> z.compcode is x)?
 						compcode: x
@@ -82,23 +82,22 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "saveCourses", ([data]..., callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student? and data?
+		return callback? success: false unless student? and data?
 		selectedcourses = student.get("selectedcourses") ? []
 		allC = [data.bc, data.psc, data.el]._flatten()
 		selectedcourses = selectedcourses._filter (x) -> x.compcode in allC._filter((y) -> y.selected)._map (y) -> y.compcode
 		selectedcourses = selectedcourses.concat allC._filter((x) -> x.selected and x.compcode not in selectedcourses._map (y) -> y.compcode)._map (x) -> compcode: x.compcode
 		student.set "selectedcourses", selectedcourses
 		student.markModified "selectedcourses"
-		student.save ->
-			callback true
+		student.save -> callback? true
 
 	socket.on "initializeSectionsScreen", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student?
+		return callback? success: false unless student?
 		db.Course.find(titles: $elemMatch: compcode: $in: (x.compcode for x in student.get "selectedcourses")).lean().exec (err, selectedcourses) ->
 			db.Validator.findById student.get("validatedBy"), (err, validator) ->
 				core.generateSchedule student._id, (scheduleconflicts) ->
-					callback
+					callback? do =>
 						success: true
 						selectedcourses:
 							for selcourse in student.get("selectedcourses")
@@ -130,7 +129,7 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "chooseSection", ([sectionInfo]..., callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student? and sectionInfo?
+		return callback? success: false unless student? and sectionInfo?
 		db.Course.find(titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)).lean().exec (err, courses) ->
 			thisCourse = courses._find (x) -> x.titles._any (y) -> y.compcode is sectionInfo.compcode
 			thisCourse.sections = if sectionInfo.isLectureSection then thisCourse.lectureSections else if sectionInfo.isLabSection then thisCourse.labSections
@@ -151,27 +150,26 @@ io.sockets.on "connection", (socket) ->
 				student.markModified "selectedcourses"
 				student.save ->
 					core.generateSchedule student._id, (scheduleconflicts) ->
-						callback
+						callback? do =>
 							success: true
 							status: if slotsFull or data.isFull then false else if data.lessThan5 then "yellow" else true
 							schedule: scheduleconflicts.schedule
 
 	socket.on "confirmRegistration", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student?
+		return callback? success: false unless student?
 		for selectedcourse in student.get "selectedcourses"
 			if selectedcourse.selectedLectureSection?
 				await core.sectionStatus compcode: selectedcourse.compcode, section_number: selectedcourse.selectedLectureSection, isLectureSection: true, defer result
-				return callback success: false, invalidRegistration: true if result.isFull?
+				return callback? success: false, invalidRegistration: true if result.isFull?
 			if selectedcourse.selectedLabSection?
 				await core.sectionStatus compcode: selectedcourse.compcode, section_number: selectedcourse.selectedLabSection, isLabSection: true, defer result
-				return callback success: false, invalidRegistration: true if result.isFull?
+				return callback? success: false, invalidRegistration: true if result.isFull?
 		student.set "registered", true
 		student.markModified "registered"
 		student.set "registeredOn", new Date()
 		student.markModified "registeredOn"
-		student.save ->
-			callback success: true
+		student.save -> callback? success: true
 		db.Course.find({titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)}, "compcode").lean().exec (err, courses) ->
 			for course in student.get("selectedcourses") then do (course) ->
 				if course.selectedLectureSection?
@@ -189,29 +187,28 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "getSemesterDetails", (callback) ->
 		db.Misc.findOne desc: "Semester Details", (err, semester) ->
-			return callback success: false, reason: "notSetup" unless semester?
-			callback
+			return callback? success: false, reason: "notSetup" unless semester?
+			callback? do =>
 				success: true
 				semesterTitle: semester.get "title"
 				startTime: semester.get "startTime"
 
 	socket.on "difficultTimetable", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student?
+		return callback? success: false unless student?
 		student.set "difficultTimetable", true
 		student.markModified "difficultTimetable"
-		student.save ->
-			callback true
+		student.save -> callback? true
 
 	socket.on "logout", (callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback success: false unless student?
+		return callback? success: false unless student?
 		if not student.get("registered") and not student.get("difficultTimetable") and student.get("selectedcourses")?
 			student.set "selectedcourses", []
 			student.markModified "selectedcourses"
-			student.save -> callback true
+			student.save -> callback? true
 		else
-			callback true
+			callback? true
 		delete socket.student_id
 
 	socket.on "disconnect", ->
