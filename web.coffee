@@ -101,27 +101,27 @@ io.sockets.on "connection", (socket) ->
 						success: true
 						selectedcourses:
 							for selcourse in student.get("selectedcourses")
-								continue unless selectedcourses._any((x) -> x.titles._any (y) -> y.compcode is selcourse.compcode)
+								continue unless selectedcourses?._any((x) -> x.titles._any (y) -> y.compcode is selcourse.compcode)
 								title = selectedcourses._map((x) -> x.titles)._flatten()._find (x) -> x.compcode is selcourse.compcode
 								course = selectedcourses._find (x) -> x.titles._any (y) -> y.compcode is selcourse.compcode
 								compcode: title.compcode
 								number: title.number
 								name: title.name
-								hasLectures: course.hasLectureSections
-								hasLab: course.hasLabSections
-								lectureSections: if course.hasLectureSections then for section in course.lectureSections
+								hasLectures: course?.hasLectureSections
+								hasLab: course?.hasLabSections
+								lectureSections: if course?.hasLectureSections then for section in course?.lectureSections
 									await core.sectionStatus compcode: selcourse.compcode, section_number: section.number, isLectureSection: true, defer status
 									number: section.number
 									instructor: section.instructor
 									status: status
-								labSections: if course.hasLabSections then for section in course.labSections
+								labSections: if course?.hasLabSections then for section in course?.labSections
 									await core.sectionStatus compcode: selcourse.compcode, section_number: section.number, isLabSection: true, defer status
 									number: section.number
 									instructor: section.instructor
 									status: status
 								selectedLectureSection: selcourse.selectedLectureSection
 								selectedLabSection: selcourse.selectedLabSection
-								otherDates: course.otherDates
+								otherDates: course?.otherDates
 						schedule: scheduleconflicts.schedule
 						registeredOn: student.get("registeredOn")?.toString()
 						validatedOn: student.get("validatedOn")?.toString()
@@ -133,6 +133,7 @@ io.sockets.on "connection", (socket) ->
 		return callback? success: false unless student? and sectionInfo?
 		db.Course.find(titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)).lean().exec (err, courses) ->
 			thisCourse = courses._find (x) -> x.titles._any (y) -> y.compcode is sectionInfo.compcode
+			callback? success: false unless thisCourse?
 			thisCourse.sections = if sectionInfo.isLectureSection then thisCourse.lectureSections else if sectionInfo.isLabSection then thisCourse.labSections
 			stringifiedTimeslots = JSON.stringify thisCourse.sections._find((x) -> x.number is sectionInfo.section_number).timeslots
 			slotsFull = student.get("selectedcourses")
