@@ -204,9 +204,10 @@ exports.exportCourse = (compcode, callback) ->
 			str = "By Course\n"
 			for title in course.get "titles"
 				str += "Compcode: #{title.compcode}, Course No: #{title.number}, Course Name: #{title.name}, Enrolled: #{students._filter((x) -> x.get("selectedcourses")._any (y) -> y.compcode is title.compcode).length}\n"
-				str += "Student Id, Student Name\n"
+				str += "Student Id, Student Name, Lecture Section, Lab Section\n"
 				for student in students._filter((x) -> x.get("selectedcourses")._any (y) -> y.compcode is title.compcode)
-					str += "#{student.get "studentId"}, #{student.get "name"}\n"
+					selcourse = student.get("selectedcourses")?._find((x) -> x.compcode is title.compcode)
+					str += "#{student.get "studentId"}, #{student.get "name"}, #{selcourse.selectedLectureSection ? ""}, #{selcourse.selectedLabSection ? ""}\n"
 				str += "\n"
 			str += "\n"
 			str += "By Section\n"
