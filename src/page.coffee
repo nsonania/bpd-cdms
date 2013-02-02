@@ -65,6 +65,7 @@ class CoursesViewModel
 		@el = ko.computed => _(@allEl()).sortBy (x) -> x.compcode
 		@reqEl = ko.observable 0
 		@groups = ko.observableArray []
+		@groupsPsc = ko.computed => _(@groups()).filter (x) -> _(x).any (y) -> y in @psc()
 		@groupsNI = ko.computed =>
 			for group in @groups()
 				g = group[0...group.length - 1].join ", "
@@ -87,10 +88,10 @@ class CoursesViewModel
 		@pscEnabled = ko.computed => _(@bc()).all((x) -> x.selected()) and _(@el()).filter((x) -> x.selected()).length <= @reqEl()
 		@elEnabled = ko.computed => _(@bc()).all (x) -> x.selected()
 		@elsEnabled = ko.computed =>
-			p1 = _(@psc()).filter((x) -> x.selected()).length is @psc().length - _.chain(@groups()).filter((x) -> x?.length > 1).map((x) -> x.length - 1).reduce(((sum, n) -> sum + n), 0).value()
+			p1 = _(@psc()).filter((x) -> x.selected()).length is @psc().length - _.chain(@groupsPsc()).filter((x) -> x?.length > 1).map((x) -> x.length - 1).reduce(((sum, n) -> sum + n), 0).value()
 			_(@el()).filter((x) -> x.selected()).length < @reqEl() or (p1 and @enableOverloads()) or not @elEnabled()
 		@nextStepWarning = ko.computed =>
-			p1 = _(@psc()).filter((x) -> x.selected()).length is @psc().length - _.chain(@groups()).filter((x) -> x?.length > 1).map((x) -> x.length - 1).reduce(((sum, n) -> sum + n), 0).value()
+			p1 = _(@psc()).filter((x) -> x.selected()).length is @psc().length - _.chain(@groupsPsc()).filter((x) -> x?.length > 1).map((x) -> x.length - 1).reduce(((sum, n) -> sum + n), 0).value()
 			_(@el()).filter((x) -> x.selected()).length < @reqEl() or not p1
 		@allSelectedCourses = ko.computed => _.chain([@bc(), @psc(), @el()]).flatten(1).filter((x) -> x.selected()).value()
 		@clashingOtherDates = ko.computed => _(@allSelectedCourses()).any (x) -> _(x.otherDates()).any (y) -> y.clashing()
