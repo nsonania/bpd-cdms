@@ -66,7 +66,7 @@ class CoursesViewModel
 		@el = ko.computed => _(@allEl()).sortBy (x) -> x.compcode
 		@reqEl = ko.observable 0
 		@groups = ko.observableArray []
-		@groupsPsc = ko.computed => _(@groups()).filter (x) => _(@psc).any (y) => y.compcode in x
+		@groupsPsc = ko.computed => _(@groups()).filter (x) => _(@psc()).any (y) => y.compcode in x
 		@groupsNI = ko.computed =>
 			for group in @groups()
 				g = group[0...group.length - 1].join ", "
