@@ -315,6 +315,7 @@ class StudentViewModel
 				.value()
 	removeBc: =>
 		$data = arguments[0]
+		_.chain(@groups()).filter((x) -> x?).each (x) -> x.remove $data.compcode
 		@bc.remove $data.compcode
 	removePsc: =>
 		$data = arguments[0]
@@ -322,6 +323,7 @@ class StudentViewModel
 		@psc.remove $data.compcode
 	removeEl: =>
 		$data = arguments[0]
+		_.chain(@groups()).filter((x) -> x?).each (x) -> x.remove $data.compcode
 		@el.remove $data.compcode
 	toggleGroup: =>
 		$data = arguments[0]

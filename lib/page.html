@@ -440,6 +440,7 @@
 										<tr>
 											<td data-bind="text: compcode"></td>
 											<td data-bind="text: number"></td>
+											<td><button class="btn btn-small" data-bind="click: $parent.toggleGroup, disable: $parent.dreg, text: group" title="Group" rel="tooltip"></button></td>
 											<td><button class="btn btn-small" data-bind="click: $parent.removeEl, disable: $parent.dreg"><i class="icon-minus"></i></button></td>
 										</tr>
 									</tbody>
