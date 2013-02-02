@@ -350,6 +350,11 @@ class StudentViewModel
 			else
 				c = _(courses[0].titles).find (x) => x.compcode is Number @aqBc()
 				_.chain(@groups()).filter((x) -> x?).each (x) -> x.remove c.compcode
+				c = 
+					compcode: c.compcode
+					number: c.number
+					name: c.name
+					group: ko.observable "-"
 				@courses.remove (x) => x.compcode is Number @aqBc()
 				@courses.push c
 				@bc.remove c.compcode
@@ -365,6 +370,7 @@ class StudentViewModel
 				bootbox.alert "Course not found."
 			else
 				c = _(courses[0].titles).find (x) => x.compcode is Number @aqPsc()
+				_.chain(@groups()).filter((x) -> x?).each (x) -> x.remove c.compcode
 				c = 
 					compcode: c.compcode
 					number: c.number
@@ -386,6 +392,11 @@ class StudentViewModel
 			else
 				c = _(courses[0].titles).find (x) => x.compcode is Number @aqEl()
 				_.chain(@groups()).filter((x) -> x?).each (x) -> x.remove c.compcode
+				c = 
+					compcode: c.compcode
+					number: c.number
+					name: c.name
+					group: ko.observable "-"
 				@courses.remove (x) => x.compcode is Number @aqEl()
 				@courses.push
 				@bc.remove c.compcode
