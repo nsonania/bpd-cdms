@@ -398,7 +398,7 @@ class StudentViewModel
 					name: c.name
 					group: ko.observable "-"
 				@courses.remove (x) => x.compcode is Number @aqEl()
-				@courses.push
+				@courses.push c
 				@bc.remove c.compcode
 				@psc.remove c.compcode
 				@el.remove c.compcode
