@@ -134,8 +134,8 @@ io.sockets.on "connection", (socket) ->
 		db.Course.find(titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)).lean().exec (err, courses) ->
 			thisCourse = courses._find (x) -> x.titles._any (y) -> y.compcode is sectionInfo.compcode
 			callback? success: false unless thisCourse?
-			thisCourse.sections = if sectionInfo.isLectureSection then thisCourse.lectureSections else if sectionInfo.isLabSection then thisCourse.labSections
-			stringifiedTimeslots = JSON.stringify thisCourse.sections._find((x) -> x.number is sectionInfo.section_number).timeslots
+			thisCourse.sections = (if sectionInfo.isLectureSection then thisCourse?.lectureSections else if sectionInfo.isLabSection then thisCourse?.labSections) ? []
+			stringifiedTimeslots = (JSON.stringify thisCourse?.sections._find((x) -> x.number is sectionInfo.section_number).timeslots) ? []
 			slotsFull = student.get("selectedcourses")
 				._select((x) -> x.selectedLabSection? or x.selectedLectureSection?)
 				._map((x) -> lecture: x.selectedLectureSection, lab: x.selectedLabSection, course: courses._find (y) -> y.titles._any (z) -> z.compcode is x.compcode)
