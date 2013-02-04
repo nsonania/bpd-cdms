@@ -47,6 +47,14 @@ expressServer.get "/courses.zip", (req, res, next) ->
 		res.setHeader "Cache-Control", "no-cache"
 		res.sendfile data, -> fs.unlink data
 
+expressServer.get "/enrolled.csv", (req, res, next) ->
+	core.exportCourseTitles (body) ->
+		res.setHeader "Content-Type", "text/csv"
+		res.setHeader "Content-Length", body.length
+		res.setHeader "Content-Disposition", "attachment;filename=enrolled.csv"
+		res.setHeader "Cache-Control", "no-cache"
+		res.end body
+
 server = http.createServer expressServer
 
 io = socket_io.listen server

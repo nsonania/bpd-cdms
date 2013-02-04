@@ -236,6 +236,14 @@ exports.exportAllCourses = (callback) ->
 		data = zip.generate base64: false, compression: "DEFLATE"
 		fs.writeFile 'lib/courses.zip', data, "binary", -> callback "lib/courses.zip"
 
+export.exportCourseTitles = (callback) ->
+	db.Course.find {}, (err, courses) ->
+		str = "Compcode, Course No., Course Name, Enrolled\n"
+		for title in courses.get("titles")._flatten()
+			await db.Student.count validated: true, selectedcourses: $elemMatch: compcode: $in: course.get("titles").map((x) -> Number x.compcode), defer, err, count
+			str += "#{title.compcode}, #{title.number}, #{title.name}, #{count}\n"
+		callback? str
+
 exports.getStats = (callback) ->
 	await db.Misc.findOne desc: "Stats", defer err, stats
 	await db.Student.count registered: $ne: true, defer err, notRegistered
