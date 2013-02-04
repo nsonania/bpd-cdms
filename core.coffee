@@ -240,7 +240,7 @@ exports.exportCourseTitles = (callback) ->
 	db.Course.find {}, (err, courses) ->
 		str = "Compcode, Course No., Course Name, Enrolled\n"
 		for title in courses.get("titles")._flatten()
-			await db.Student.count validated: true, selectedcourses: $elemMatch: compcode: $in: course.get("titles").map((x) -> Number x.compcode), defer, err, count
+			await db.Student.count validated: true, selectedcourses: $elemMatch: compcode: $in: course.get("titles").map((x) -> Number x.compcode) defer, err, count
 			str += "#{title.compcode}, #{title.number}, #{title.name}, #{count}\n"
 		callback? str
 
