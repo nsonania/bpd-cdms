@@ -236,7 +236,7 @@ exports.exportAllCourses = (callback) ->
 		data = zip.generate base64: false, compression: "DEFLATE"
 		fs.writeFile 'lib/courses.zip', data, "binary", -> callback "lib/courses.zip"
 
-export.exportCourseTitles = (callback) ->
+exports.exportCourseTitles = (callback) ->
 	db.Course.find {}, (err, courses) ->
 		str = "Compcode, Course No., Course Name, Enrolled\n"
 		for title in courses.get("titles")._flatten()
