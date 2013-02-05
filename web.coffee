@@ -55,6 +55,14 @@ expressServer.get "/enrolled.csv", (req, res, next) ->
 		res.setHeader "Cache-Control", "no-cache"
 		res.end body
 
+expressServer.get "/enrolledsections.csv", (req, res, next) ->
+	core.exportCourseSectionCapacities (body) ->
+		res.setHeader "Content-Type", "text/csv"
+		res.setHeader "Content-Length", body.length
+		res.setHeader "Content-Disposition", "attachment;filename=enrolledsections.csv"
+		res.setHeader "Cache-Control", "no-cache"
+		res.end body
+
 server = http.createServer expressServer
 
 io = socket_io.listen server

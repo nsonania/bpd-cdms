@@ -244,6 +244,21 @@ exports.exportCourseTitles = (callback) ->
 			str += "#{title.compcode}, #{title.number}, #{title.name}, #{count}\n"
 		callback? str
 
+exports.exportCourseSectionCapacities = (callback) ->
+	db.Course.find {}, (err, courses) ->
+		str = "Compcode, Course No., Course Name, Total Enrolled, Enrolled in Section (Section Capacity)...\n"
+		for course in courses
+			await db.Student.find validated: true, selectedcourses: $elemMatch: compcode: $in: course.get("titles")._map((x) -> x.compcode), defer err, students
+			str += "#{course.get("titles")._map((x) -> x.compcode).join " / "}, #{course.get("titles")._map((x) -> x.number).join " / "}, #{course.get("titles")[0].name}, #{students.length}"
+			for section, i in course.get("lectureSections") ? []
+				c = students._filter (x) -> x.get("selectedcourses")._any (y) -> y.compcode in course.get("titles")._map((z) -> z.compcode) and y.selectedLectureSection is section.number
+				str += ", LS#{section.number}: #{c.length} (#{section.capacity})"
+			for section, i in course.get("labSections") ? []
+				c = students._filter (x) -> x.get("selectedcourses")._any (y) -> y.compcode in course.get("titles")._map((z) -> z.compcode) and y.selectedLabSection is section.number
+				str += ", PS#{section.number}: #{c.length} (#{section.capacity})"
+			str += "\n"
+		callback? str
+
 exports.getStats = (callback) ->
 	await db.Misc.findOne desc: "Stats", defer err, stats
 	await db.Student.count registered: $ne: true, defer err, notRegistered
