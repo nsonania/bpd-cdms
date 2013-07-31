@@ -211,7 +211,7 @@ class SectionsViewModel
 					@schedule[k2 - 1][k1 - 1].push course_number
 	register: =>
 		socket.emit "confirmRegistration", (result) =>
-			return bootbox.alert "One or more of your selections aren't available. Please refresh your browser and register again." if not result.success and result.invalidRegistration?
+			return bootbox.alert "One or more of your selections aren't available. Modify your selections and try registering again." if not result.success and result.invalidRegistration?
 			window.scrollTo 0, 0
 			$('input[rel=tooltip]').tooltip()
 			viewmodel.studentStatus "registered"
