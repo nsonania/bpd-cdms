@@ -82,7 +82,7 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "saveCourses", ([data]..., callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback? success: false unless student? and data?
+		return callback? success: false unless student? and data? and not student.get "registered"
 		selectedcourses = student.get("selectedcourses") ? []
 		allC = [data.bc, data.psc, data.el]._flatten()
 		selectedcourses = selectedcourses._filter (x) -> x.compcode in allC._filter((y) -> y.selected)._map (y) -> y.compcode
@@ -130,10 +130,10 @@ io.sockets.on "connection", (socket) ->
 
 	socket.on "chooseSection", ([sectionInfo]..., callback) ->
 		await db.Student.findById socket.student_id, defer err, student
-		return callback? success: false unless student? and sectionInfo?
+		return callback? success: false unless student? and sectionInfo? and not student.get "registered"
 		db.Course.find(titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)).lean().exec (err, courses) ->
 			thisCourse = courses._find (x) -> x.titles._any (y) -> y.compcode is sectionInfo.compcode
-			callback? success: false unless thisCourse?
+			return callback? success: false unless thisCourse?
 			thisCourse.sections = (if sectionInfo.isLectureSection then thisCourse?.lectureSections else if sectionInfo.isLabSection then thisCourse?.labSections) ? []
 			stringifiedTimeslots = (JSON.stringify thisCourse?.sections._find((x) -> x.number is sectionInfo.section_number).timeslots) ? []
 			slotsFull = student.get("selectedcourses")
@@ -147,10 +147,13 @@ io.sockets.on "connection", (socket) ->
 						return false if x.course.titles._any((y) -> y.compcode is sectionInfo.compcode) and sectionInfo.isLabSection
 						return true if x.course.labSections._find((y) -> y.number is x.lab).timeslots._map((y) -> JSON.stringify y)._intersection(stringifiedTimeslots).length > 0
 			core.sectionStatus compcode: sectionInfo.compcode, section_number: sectionInfo.section_number, isLectureSection: sectionInfo.isLectureSection, isLabSection:sectionInfo.isLabSection, (data) ->
-				selectedSection = if sectionInfo.isLectureSection then "selectedLectureSection" else if sectionInfo.isLabSection then "selectedLabSection"
-				student.get("selectedcourses")._find((x) -> x.compcode is sectionInfo.compcode)[selectedSection] = sectionInfo.section_number
-				student.markModified "selectedcourses"
-				student.save ->
+				updateQuery =
+					if sectionInfo.isLectureSection
+						"selectedcourses.$.selectedLectureSection": sectionInfo.section_number
+					else if sectionInfo.isLabSection
+						"selectedcourses.$.selectedLabSection": sectionInfo.section_number
+				db.Student.update _id: socket.student_id, registered: {$ne: true}, "selectedcourses.compcode": sectionInfo.compcode, updateQuery, (err, nA) ->
+					return callback? success: false if nA isnt 1
 					core.generateSchedule student._id, (scheduleconflicts) ->
 						callback? do =>
 							success: true
@@ -167,25 +170,23 @@ io.sockets.on "connection", (socket) ->
 			if selectedcourse.selectedLabSection?
 				await core.sectionStatus compcode: selectedcourse.compcode, section_number: selectedcourse.selectedLabSection, isLabSection: true, defer result
 				return callback? success: false, invalidRegistration: true if result.isFull?
-		student.set "registered", true
-		student.markModified "registered"
-		student.set "registeredOn", new Date()
-		student.markModified "registeredOn"
-		student.save -> callback? success: true
-		db.Course.find({titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)}, "compcode").lean().exec (err, courses) ->
-			for course in student.get("selectedcourses") then do (course) ->
-				if course.selectedLectureSection?
-					core.sectionStatus compcode: course.compcode, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
-						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
-							db.Course.findOne titles: $elemMatch: compcode: course.compcode, (err, sharedCourses) ->
-								stds = students._filter((x) -> x.selectedcourses?._any((y) -> sharedCourses.get("titles")._any (z) -> z.compcode is course.compcode)).map (x) -> x._id.toString()
-								io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
-				if course.selectedLabSection?
-					core.sectionStatus compcode: course.compcode, section_number: course.selectedLabSection, isLabSection: true, (data) ->
-						db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
-							db.Course.findOne titles: $elemMatch: compcode: course.compcode, (err, sharedCourses) ->
-								stds = students._filter((x) -> x.selectedcourses?._any((y) -> sharedCourses.get("titles")._any (z) -> z.compcode is course.compcode)).map (x) -> x._id.toString()
-								io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
+		db.Student.update {_id: socket.student_id, selectedcourses: student.get("selectedcourses")}, registered: true, registeredOn: new Date, (err, nA) ->
+			return callback? success: false, invalidRegistration: true if nA isnt 1
+			callback? success: true
+			db.Course.find({titles: $elemMatch: compcode: $in: student.get("selectedcourses")._map((x) -> x.compcode)}, "compcode").lean().exec (err, courses) ->
+				for course in student.get("selectedcourses") then do (course) ->
+					if course.selectedLectureSection?
+						core.sectionStatus compcode: course.compcode, section_number: course.selectedLectureSection, isLectureSection: true, (data) ->
+							db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
+								db.Course.findOne titles: $elemMatch: compcode: course.compcode, (err, sharedCourses) ->
+									stds = students._filter((x) -> x.selectedcourses?._any((y) -> sharedCourses.get("titles")._any (z) -> z.compcode is course.compcode)).map (x) -> x._id.toString()
+									io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lecture", sectionNumber: course.selectedLectureSection, status: data
+					if course.selectedLabSection?
+						core.sectionStatus compcode: course.compcode, section_number: course.selectedLabSection, isLabSection: true, (data) ->
+							db.Student.find(_id: $in: io.sockets.clients().map((x) -> x.student_id)._filter((x) -> x?)).lean().exec (err, students) ->
+								db.Course.findOne titles: $elemMatch: compcode: course.compcode, (err, sharedCourses) ->
+									stds = students._filter((x) -> x.selectedcourses?._any((y) -> sharedCourses.get("titles")._any (z) -> z.compcode is course.compcode)).map (x) -> x._id.toString()
+									io.sockets.clients()._filter((x) -> x.student_id? and x.student_id.toString() in stds)._each (x) -> x.emit "sectionUpdate", course.compcode, sectionType: "lab", sectionNumber: course.selectedLabSection, status: data
 
 	socket.on "getSemesterDetails", (callback) ->
 		db.Misc.findOne desc: "Semester Details", (err, semester) ->

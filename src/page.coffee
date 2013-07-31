@@ -139,7 +139,8 @@ class SectionViewModel
 			compcode: @parent.compcode
 			section_number: @number
 			isLectureSection: true
-		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
+		socket.emit "chooseSection", sectionInfo, ({success, status, schedule}) =>
+			return callback?() unless success
 			@parent.selectedLectureSection @number
 			@status do =>
 				if not status or status.isFull
@@ -155,7 +156,8 @@ class SectionViewModel
 			compcode: @parent.compcode
 			section_number: @number
 			isLabSection: true
-		socket.emit "chooseSection", sectionInfo, ({status, schedule}) =>
+		socket.emit "chooseSection", sectionInfo, ({success, status, schedule}) =>
+			return callback?() unless success
 			@parent.selectedLabSection @number
 			@status do =>
 				if not status or status.isFull
