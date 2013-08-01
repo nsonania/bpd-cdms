@@ -139,7 +139,9 @@ class SectionViewModel
 			compcode: @parent.compcode
 			section_number: @number
 			isLectureSection: true
+		@parent.loadingState true
 		socket.emit "chooseSection", sectionInfo, ({success, status, schedule}) =>
+			@parent.loadingState false
 			return callback?() unless success
 			@parent.selectedLectureSection @number
 			@status do =>
@@ -156,7 +158,9 @@ class SectionViewModel
 			compcode: @parent.compcode
 			section_number: @number
 			isLabSection: true
+		@parent.loadingState true
 		socket.emit "chooseSection", sectionInfo, ({success, status, schedule}) =>
+			@parent.loadingState false
 			return callback?() unless success
 			@parent.selectedLabSection @number
 			@status do =>
@@ -171,6 +175,7 @@ class SectionViewModel
 
 class CourseSectionsViewModel
 	constructor: ({@compcode, @number, @name, @hasLectures, @hasLab, lectureSections, labSections, selectedLectureSection, selectedLabSection, @otherDates}) ->
+		@loadingState = ko.observable false
 		@lectureSections = ko.observableArray (new SectionViewModel section, @ for section in lectureSections ? [])
 		@labSections = ko.observableArray (new SectionViewModel section, @ for section in labSections ? [])
 		@selectedLectureSection = ko.observable selectedLectureSection
@@ -199,6 +204,7 @@ class SectionsViewModel
 		@registeredOn = ko.observable ""
 		@validatedOn = ko.observable ""
 		@validatedBy = ko.observable ""
+		@sectionsLoadingState = ko.computed => _(@courses()).any (x) -> x.loadingState()
 	gotoCoursesView: =>
 		viewmodel.gotoCoursesView()
 	setSchedule: (schedule) =>

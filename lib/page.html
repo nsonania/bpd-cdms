@@ -309,8 +309,9 @@
 								<td data-bind="text: name"></td>
 								<td class="btn-toolbar" data-bind="visible: $root.studentStatus() == 'not registered'">
 									<div class="btn-group" data-bind="if: lectureSections().length > 0">
-										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLectureSectionStatus() == 'isFull', 'btn-warning': selectedLectureSectionStatus() == 'lessThan5', 'btn-success': selectedLectureSectionStatus() == 'success'}" data-toggle="dropdown">
-											<span data-bind="text: selectedLectureSectionText"></span> <span class="caret"></span>
+										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLectureSectionStatus() == 'isFull', 'btn-warning': selectedLectureSectionStatus() == 'lessThan5', 'btn-success': selectedLectureSectionStatus() == 'success'}, disable: loadingState" data-toggle="dropdown">
+											<span data-bind="if: loadingState">Loading...</span>
+											<span data-bind="ifnot: loadingState"><span data-bind="text: selectedLectureSectionText"></span> <span class="caret"></span></span>
 										</button>
 										<ul class="dropdown-menu" data-bind="foreach: lectureSections">
 											<li data-bind="css: {error: status() == 'isFull', warning: status() == 'lessThan5', active: $parent.selectedLectureSection() == number}, click: chooseLectureSection">
@@ -319,8 +320,9 @@
 										</ul>
 									</div>
 									<div class="btn-group" data-bind="if: labSections().length > 0">
-										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLabSectionStatus() == 'isFull', 'btn-warning': selectedLabSectionStatus() == 'lessThan5', 'btn-success': selectedLabSectionStatus() == 'success'}" data-toggle="dropdown">
-											<span data-bind="text: selectedLabSectionText"></span> <span class="caret"></span>
+										<button class="btn dropdown-toggle" data-bind="css: {'btn-danger': selectedLabSectionStatus() == 'isFull', 'btn-warning': selectedLabSectionStatus() == 'lessThan5', 'btn-success': selectedLabSectionStatus() == 'success'}, disable: loadingState" data-toggle="dropdown">
+											<span data-bind="if: loadingState">Loading...</span>
+											<span data-bind="ifnot: loadingState"><span data-bind="text: selectedLabSectionText"></span> <span class="caret"></span></span>
 										</button>
 										<ul class="dropdown-menu" data-bind="foreach: labSections">
 											<li data-bind="css: {error: status() == 'isFull', warning: status() == 'lessThan5', active: $parent.selectedLabSection() == number}, click: chooseLabSection">
@@ -483,7 +485,8 @@
 			</div>
 			<hr data-bind="visible: $root.studentStatus() == 'not registered'">
 			<div class="center" data-bind="visible: $root.studentStatus() == 'not registered'">
-				<button class="btn btn-primary commitBtn" data-bind="click: register, enable: registerEnabled">Confirm &amp; Register</button>
+				<button class="btn btn-primary commitBtn" data-bind="visible: sectionsLoadingState" disabled>Loading...</button>
+				<button class="btn btn-primary commitBtn" data-bind="visible: !sectionsLoadingState(), click: register, enable: registerEnabled">Confirm &amp; Register</button>
 			</div>
 		</div>
 	</body>
