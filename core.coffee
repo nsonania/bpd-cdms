@@ -10,8 +10,8 @@ exports.sectionStatus = (sectionInfo, callback) ->
 		registered: true
 		selectedcourses: $elemMatch:
 			compcode: sectionInfo.compcode
-			selectedLectureSection: sectionInfo.section_number if sectionInfo.isLectureSection
-			selectedLabSection: sectionInfo.section_number if sectionInfo.isLabSection
+	query.selectedcourses.$elemMatch.selectedLectureSection = sectionInfo.section_number if sectionInfo.isLectureSection
+	query.selectedcourses.$elemMatch.selectedLabSection = sectionInfo.section_number if sectionInfo.isLabSection
 	db.Student.find(query).count (err, doneCount) ->
 		db.Course.findOne(titles: $elemMatch: compcode: sectionInfo.compcode).lean().exec (err, course) ->
 			course.sections = if sectionInfo.isLectureSection then course.lectureSections else if sectionInfo.isLabSection then course.labSections
@@ -23,6 +23,7 @@ exports.sectionStatus = (sectionInfo, callback) ->
 					lessThan5: true
 				else
 					isFull: true
+			#console.log sectionInfo: sectionInfo, seatsLeft: seatsLeft
 
 exports.generateSchedule = (student_id, callback) ->
 	db.Student.findById(student_id).lean().exec (err, student) ->
