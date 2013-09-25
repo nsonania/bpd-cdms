@@ -6,14 +6,14 @@ uap = require "./uap"
 PDFDocument = require "pdfkit"
 
 exports.sectionStatus = (sectionInfo, callback) ->
-	query =
-		registered: true
-		selectedcourses: $elemMatch:
-			compcode: sectionInfo.compcode
-	query.selectedcourses.$elemMatch.selectedLectureSection = sectionInfo.section_number if sectionInfo.isLectureSection
-	query.selectedcourses.$elemMatch.selectedLabSection = sectionInfo.section_number if sectionInfo.isLabSection
-	db.Student.find(query).count (err, doneCount) ->
-		db.Course.findOne(titles: $elemMatch: compcode: sectionInfo.compcode).lean().exec (err, course) ->
+	db.Course.findOne(titles: $elemMatch: compcode: sectionInfo.compcode).lean().exec (err, course) ->
+		query =
+			registered: true
+			selectedcourses: $elemMatch:
+				compcode: $in: course.titles._map (x) -> x.compcode
+		query.selectedcourses.$elemMatch.selectedLectureSection = sectionInfo.section_number if sectionInfo.isLectureSection
+		query.selectedcourses.$elemMatch.selectedLabSection = sectionInfo.section_number if sectionInfo.isLabSection
+		db.Student.find(query).count (err, doneCount) ->
 			course.sections = if sectionInfo.isLectureSection then course.lectureSections else if sectionInfo.isLabSection then course.labSections
 			seatsLeft = course.sections._find((x) -> x.number is sectionInfo.section_number).capacity - doneCount
 			callback? do =>
