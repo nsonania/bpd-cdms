@@ -197,9 +197,9 @@ class SectionsViewModel
 			return false unless c1
 			c2 = _(@courses()).all (x) -> (!x.selectedLectureSection()? or x.selectedLectureSectionStatus() isnt "isFull") and (!x.selectedLabSection()? or x.selectedLabSectionStatus() isnt "isFull")
 			return false unless c2
-			not _([0..6]).any (j) => _([4..6]).all (i) => @schedule[i][j]().length is 1
+			not _([0..6]).any (j) => _([5..7]).all (i) => @schedule[i][j]().length is 1
 		@lunchHourProblem = ko.computed =>
-			_([0..6]).any (j) => _([4..6]).all (i) => @schedule[i][j]().length is 1
+			_([0..6]).any (j) => _([5..7]).all (i) => @schedule[i][j]().length is 1
 		@dtcEnabled = ko.computed => _(@schedule).any (x) -> _(x).any (y) -> y().length > 1
 		@registeredOn = ko.observable ""
 		@validatedOn = ko.observable ""
